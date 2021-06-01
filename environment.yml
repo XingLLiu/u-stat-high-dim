@@ -1,0 +1,4 @@
+name: fast-mcmc
+channels:
+  - defaults
+prefix: /home/xing/anaconda3/envs/fast-mcmc
