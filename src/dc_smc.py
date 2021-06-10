@@ -10,7 +10,10 @@ from src.utils import resample
 def dc_smc(samples, weights, model):
     
     if model.left is None:
-        xt = model.proposal.sample((samples.shape[0], 1), None)
+        if model.update:
+            xt = model.proposal.sample((samples.shape[0], 1), None)
+        else:
+            xt = tf.gather(samples, [model.tag], axis=1)
         # update samples
         samples = samples.numpy()
         samples[:, model.tag] = tf.reshape(xt, (-1,))
@@ -24,9 +27,16 @@ def dc_smc(samples, weights, model):
         samples, log_w_right = dc_smc(samples, weights, model.right)
         xc_right = tf.gather(samples, [model.right.tag], axis=1)
         
-        # resample
-        xc_left_resamp = resample(log_w_left, xc_left)
-        xc_right_resamp = resample(log_w_right, xc_right)
+        # resample if needed
+        if model.left.update:
+            xc_left_resamp = resample(log_w_left, xc_left)
+        else: 
+            xc_left_resamp = xc_left
+
+        if model.right.update:
+            xc_right_resamp = resample(log_w_right, xc_right)
+        else:
+            xc_right_resamp = xc_right
         
         # update samples
         samples = samples.numpy()
@@ -34,8 +44,11 @@ def dc_smc(samples, weights, model):
         samples[:, model.right.tag] = tf.reshape(xc_right_resamp, (-1,))
         samples = tf.convert_to_tensor(samples)
         
-        # draw samples from proposal
-        xt = model.proposal.sample((samples.shape[0], 1), samples)
+        if model.update:
+            # draw samples from proposal
+            xt = model.proposal.sample((samples.shape[0], 1), samples)
+        else:
+            xt = tf.gather(samples, [model.tag], axis=1)
         samples = samples.numpy()
         samples[:, model.tag] = tf.reshape(xt, (-1,))
         samples = tf.convert_to_tensor(samples)
