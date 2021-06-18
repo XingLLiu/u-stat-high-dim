@@ -1,8 +1,0 @@
-{
-    "python.pythonPath": "/opt/anaconda3/envs/fast-mcmc/bin/python",
-    "python.condaPath": "/opt/anaconda3/condabin/conda",
-    "terminal.integrated.inheritEnv": true,
-    "python.terminal.activateEnvironment": true,
-    "python.terminal.activateEnvInCurrentTerminal": true,
-    // "terminal.integrated.automationShell.osx": "conda activate fast-mcmc",
-}
