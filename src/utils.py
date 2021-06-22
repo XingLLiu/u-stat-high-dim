@@ -11,7 +11,7 @@ def resample(log_probs, x):
 
 def effective_sample_size(log_weights):
     weights = tf.exp(log_weights)
-    ess = 1 / tf.reduce_sum(weights ** 2)
+    ess = tf.reduce_sum(weights) ** 2 / tf.reduce_sum(weights ** 2)
     return ess
 
 class IS:
