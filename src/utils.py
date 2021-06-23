@@ -10,6 +10,8 @@ def resample(log_probs, x):
     return tf.gather_nd(x, ind)
 
 def effective_sample_size(log_weights):
+    # scale for numerical stability
+    log_weights -= tf.reduce_max(log_weights)
     weights = tf.exp(log_weights)
     ess = tf.reduce_sum(weights) ** 2 / tf.reduce_sum(weights ** 2)
     return ess
