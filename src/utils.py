@@ -14,7 +14,7 @@ def effective_sample_size(log_weights):
     log_weights -= tf.reduce_max(log_weights)
     weights = tf.exp(log_weights)
     ess = tf.reduce_sum(weights) ** 2 / tf.reduce_sum(weights ** 2)
-    return ess
+    return ess.numpy()
 
 def weighted_sum(f, x, log_w=None):
     """Compute \sum_i w_i * f(x_i) / \sum_i w_i
