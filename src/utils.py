@@ -5,9 +5,13 @@ tfd = tfp.distributions
 
 def resample(log_probs, x):
     log_probs = tf.reshape(log_probs, (-1,))
-    ind = tfd.Categorical(logits=log_probs).sample(log_probs.shape[0])
-    ind = tf.reshape(ind, (-1, 1))
-    return tf.gather_nd(x, ind)
+    if not tf.math.reduce_all(log_probs == 0):
+        ind = tfd.Categorical(logits=log_probs).sample(log_probs.shape[0])
+        ind = tf.reshape(ind, (-1, 1))
+        return tf.gather_nd(x, ind)
+    else:
+        ind = np.random.choice(range(log_probs.shape[0]), size=log_probs.shape[0], replace=True)
+        return tf.gather(x, indices=ind, axis=0)
 
 def effective_sample_size(log_weights):
     # scale for numerical stability

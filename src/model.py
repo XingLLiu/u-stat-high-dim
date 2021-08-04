@@ -20,6 +20,16 @@ class Model:
     def __str__(self):
         return "nodes:" + str(self.seq)
 
+    def get_successor_indices(self):
+        ls = [self.tag]
+        if not self.children:
+            return ls
+        else:
+            for child in self.children:
+                # ls += [child.tag]
+                ls += child.get_successor_indices()
+            return ls
+
 
 #! matrix multiplication is wrong!
 class LinearGaussian:
