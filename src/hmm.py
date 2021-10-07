@@ -97,7 +97,7 @@ class LinearHMM:
     if n_step == 0:
       log_alpha_n = 1
     elif n_step > 0:
-      log_alpha_n = self.log_prob_cond(n_step-1) - proposal.log_prob(self.latent[n_step, :, :])
+      log_alpha_n = self.log_prob_cond(n_step-1) - proposal.logcdf(self.latent[n_step, :, :])
     return log_alpha_n
 
   def log_weight(self, steps, proposal):
@@ -105,6 +105,22 @@ class LinearHMM:
     Output:
       log_w_n: N
     """
-    log_w_n = self.log_prob_cond(0) - proposal.log_prob(self.latent[0, :, :])
+    log_w_n = self.log_prob_cond(0) - proposal.logcdf(self.latent[0, :, :])
     for i in range(steps):
-      log_w_n += self.log_alpha(i)
+      log_w_n += self.log_alpha(i, proposal)
+
+  def sis(self, proposal, steps=None):
+    """sequential importance sampling"""
+    steps = self.latent.shape[0]-1 if steps is None else steps
+
+    posterior_samples = np.zeros((steps, self.N, self.dim_x))
+    log_weights = np.zeros((steps, self.N))
+    for i in range(steps):
+      posterior_samples[i, :] = proposal.rvs(self.N)
+      if i == 0:
+        log_weights[i, :] = self.log_prob_cond(0) - proposal.logcdf(self.latent[0, :, :])
+      else:
+        log_weights[i, :] = log_weights[i-1, :] + self.log_alpha(i, proposal)
+      
+    return posterior_samples, log_weights
+      
