@@ -110,3 +110,38 @@ class RBF(tf.Module):
         gradgrad_K_all = tf.transpose(gradgrad_K_all, (2, 3, 0, 1))
         return gradgrad_K_all
 
+
+class IMQ(tf.Module):
+    """For GSVGD to work, a kernel class need to have the following methods:
+        forward: kernel evaluation k(x, y)
+        grad_first: grad_x k(x, y)
+        grad_second: grad_y k(x, y)
+        gradgrad: grad_x grad_y k(x, y)
+    """
+
+    def __init__(self, sigma_sq=None, beta=-0.5):
+        super().__init__()
+        self.sigma_sq = sigma_sq
+        self.beta = beta
+
+    def bandwidth(self, X, Y):
+        """Compute magic bandwidth
+        """
+        dnorm2 = l2norm(X, Y)
+        med_heuristic_sq = median_heuristic(dnorm2, device=X.device)
+        self.sigma_sq = med_heuristic_sq / (X.shape[0]**(- 1/self.beta) - 1)
+
+    def __call__(self, X, Y):
+        """
+        Args:
+            Xr: tf.Tensor of shape (n, dim)
+            Yr: tf.Tensor of shape (m, dim)
+        Output:
+            tf.Tensor of shape (n, m)
+        """
+        dnorm2 = l2norm(X, Y)
+        sigma2_inv = 1.0 / (self.sigma_sq + 1e-9)
+        sigma2_inv = tf.expand_dims(tf.expand_dims(sigma2_inv, 0), 0)
+        K_XY = tf.pow(1 + sigma2_inv * dnorm2, self.beta)
+
+        return K_XY
