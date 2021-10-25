@@ -1,3 +1,4 @@
+# run "pip install -e ." to setup
 from setuptools import setup, find_packages
 
 setup(

@@ -11,3 +11,6 @@
 
 # figs
 /figs/*
+
+# egg-info
+*.egg-info/*
