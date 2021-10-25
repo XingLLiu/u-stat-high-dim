@@ -42,17 +42,28 @@ class KSD:
     # median heuristic
     self.k.bandwidth(X, Y)
     
-    # kernel
-    K_XY = self.k(X, Y) # n x m
-    
-    # kernel grad
-    #! this is taking a long time
-    grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
-    grad_K_X = self.k.grad_first(X, Y) # n x m x dim
-    
+    # kernel, grad and hessian
+    with tf.GradientTape() as g:
+      g.watch(X)
+      with tf.GradientTape() as tapeY, tf.GradientTape() as tapeX:
+        tapeY.watch(Y)
+        tapeX.watch(X)
+        
+        K_XY = self.k(X, Y) # n x m
+        K_XY_Y = tf.reduce_sum(K_XY, axis=1)
+        K_XY_X = tf.reduce_sum(K_XY, axis=0)
+
+      # grad_k_Y
+      grad_K_Y = tapeY.jacobian(K_XY_Y, Y) # n x m x dim
+      grad_K_Y_sum = tf.reduce_sum(grad_K_Y, axis=0)
+      
+      # grad_k_X
+      grad_K_X = tapeX.jacobian(K_XY_X, X) # n x m x dim
+
+    gradgrad_K = g.jacobian(grad_K_Y_sum, X) # n x dim x m x dim
+    gradgrad_K = tf.transpose(gradgrad_K, (0, 2, 1, 3)) # n x m x dim x dim
+
     # term 1
-    # term1 = tf.expand_dims(score_X, 1) * tf.expand_dims(score_Y, 0) * tf.expand_dims(K_XY, 2) # n x m x dim
-    # term1 = tf.reduce_sum(term1)
     term1 = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
     term1 = tf.reduce_sum(term1)
     # term 2
@@ -62,8 +73,8 @@ class KSD:
     term3 = tf.expand_dims(score_Y, 0) * grad_K_X # n x m x dim
     term3 = tf.reduce_sum(term3)
     # term4
-    gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
     diag_gradgrad_K = tf.linalg.diag_part(gradgrad_K) # n x m
+    print(diag_gradgrad_K.shape)
     term4 = tf.reduce_sum(diag_gradgrad_K)
 
     ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
