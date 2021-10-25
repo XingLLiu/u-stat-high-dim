@@ -57,8 +57,9 @@ class KSD:
       grad_K_Y = tapeY.jacobian(K_XY_Y, Y) # n x m x dim
       grad_K_Y_sum = tf.reduce_sum(grad_K_Y, axis=0)
       
-      # grad_k_X
-      grad_K_X = tapeX.jacobian(K_XY_X, X) # n x m x dim
+      # grad_k_X (assuming radial kernel)
+      # TODO: figure out why this is not automatically correct
+      grad_K_X = - grad_K_Y
 
     gradgrad_K = g.jacobian(grad_K_Y_sum, X) # n x dim x m x dim
     gradgrad_K = tf.transpose(gradgrad_K, (0, 2, 1, 3)) # n x m x dim x dim
@@ -74,9 +75,8 @@ class KSD:
     term3 = tf.reduce_sum(term3)
     # term4
     diag_gradgrad_K = tf.linalg.diag_part(gradgrad_K) # n x m
-    print(diag_gradgrad_K.shape)
     term4 = tf.reduce_sum(diag_gradgrad_K)
 
     ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
-    # print("terms:", tf.reduce_sum(term1), tf.reduce_sum(term2), tf.reduce_sum(term3), tf.reduce_sum(term4))
+
     return ksd
