@@ -15,8 +15,8 @@ tf.random.set_seed(0)
 target = tfd.MultivariateNormalDiag([0.])
 proposal = tfd.MultivariateNormalDiag([0.])
 
-# kernel = RBF()
-kernel = IMQ()
+kernel = RBF()
+# kernel = IMQ()
 
 def run_ksd_experiment(nrep, target, proposal):
     """compute KSD and repeat for nrep times"""
