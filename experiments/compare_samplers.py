@@ -5,7 +5,7 @@ import tensorflow_probability as tfp
 tfd = tfp.distributions
 import matplotlib.pyplot as plt
 import seaborn as sns
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
@@ -16,11 +16,12 @@ def run_ksd_experiment(nrep, target, proposal, kernel):
     """compute KSD and repeat for nrep times"""
     ksd = KSD(target=target, kernel=kernel)
     
-    nsamples_list = list(range(10, 100, 10)) + list(range(100, 1100, 100))
+    nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) + list(range(1000, 4000, 1000))
+    # nsamples_list = [10, 1000]
     ksd_list = []
     ksd_df = pd.DataFrame(columns=["n", "ksd", "seed", "type"])
-    for n in nsamples_list:
-        print(f"n = {n}")
+    for n in tqdm(nsamples_list):
+        # print(f"n = {n}")
         for seed in range(nrep):
             # off-target sample
             proposal_sample = proposal.sample(n)
@@ -45,11 +46,13 @@ def create_mixture_gaussian(dim, delta):
     
 
 nrep = 10
-delta_list = [0.5, 1.5, 3.0]
+delta_list = [0.5, 1.5, 2.5, 3.0]
 dim = 5
 
-subfigs = plt.subfigures(1, len(delta_list))
+fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 9))
+subfigs = fig.subfigures(1, len(delta_list))
 for ind, delta in enumerate(delta_list):
+    print(f"Running with delta = {delta}")
     # target distribution
     target = create_mixture_gaussian(dim=dim, delta=delta)
 
@@ -67,15 +70,24 @@ for ind, delta in enumerate(delta_list):
 
     # plot
     subfig = subfigs.flat[ind]
-    fig, axs = subfig.subplots(2, 1)
-    sns.lineplot(ax=axs[0, 0], data=ksd_imq_df, x="n", y="ksd", hue="type")
-    _ = plt.ylim((0, None))
-    axs[0, 0].set_title("IMQ")
-    plt.xscale("log")
-    
-    sns.lineplot(ax=axs[0, 1], data=ksd_rbf_df, x="n", y="ksd", hue="type")
-    _ = plt.ylim((0, None))
-    axs[0, 0].set_title("RBF")
-    plt.xscale("log")
+    subfig.suptitle(f"delta = {delta}")
+    axs = subfig.subplots(3, 1)
+    axs = axs.flat
+    axs[0].hist(proposal.sample(10000).numpy()[:, 0], label="off-target", alpha=0.2)
+    axs[0].hist(target.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
+    axs[0].legend()
 
-subfigs.savefig("figs/mixture_gaussian.png")
+    sns.lineplot(ax=axs[1], data=ksd_imq_df, x="n", y="ksd", hue="type", style="type", markers=True)
+    # _ = plt.ylim((0, None))
+    axs[1].axis(ymin=0.)
+    axs[1].set_title("IMQ")
+    axs[1].set_xscale("log")
+    
+    sns.lineplot(ax=axs[2], data=ksd_rbf_df, x="n", y="ksd", hue="type", style="type", markers=True)
+    # _ = plt.ylim((0, None))
+    axs[2].axis(ymin=0.)
+    axs[2].set_title("RBF")
+    axs[2].set_xscale("log")
+
+# plt.tight_layout()
+fig.savefig("figs/mixture_gaussian.png")
