@@ -15,14 +15,13 @@ def l2norm(X, Y):
     return dnorm2
 
 
-def median_heuristic(dnorm2, device):
+def median_heuristic(dnorm2):
     """Compute median heuristic.
     Inputs:
         dnorm2: (n x n) tensor of \|X - Y\|_2^2
     Return:
         med(\|X_i - Y_j\|_2^2, 1 \leq i < j \leq n)
     """
-    # TODO: initialize on device to save memory
     ind_array = tf.experimental.numpy.triu(tf.ones_like(dnorm2), k=1) == 1
     med_heuristic = tfp.stats.percentile(dnorm2[ind_array], 50.0, interpolation="midpoint")
     return med_heuristic
@@ -44,7 +43,7 @@ class RBF(tf.Module):
         """Compute magic bandwidth
         """
         dnorm2 = l2norm(X, Y)
-        med_heuristic_sq = median_heuristic(dnorm2, device=X.device)
+        med_heuristic_sq = median_heuristic(dnorm2)
         sigma2 = med_heuristic_sq / np.log(X.shape[0])
         self.sigma = tf.math.sqrt(sigma2)
 
@@ -102,7 +101,6 @@ class RBF(tf.Module):
         # product of differences
         diff_outerprod = -tf.expand_dims(diff, 0) * tf.expand_dims(diff, 1)
         # compute gradgrad_K
-        # TODO: initialize tensor on device to save memory
         diag = 2 * sigma2_inv * tf.expand_dims(tf.expand_dims(tf.eye(X.shape[1]), -1), -1)
         gradgrad_K_all = (diag + 4 * sigma2_inv ** 2 * diff_outerprod) * K
         gradgrad_K_all = tf.transpose(gradgrad_K_all, (2, 3, 0, 1))
@@ -126,8 +124,9 @@ class IMQ(tf.Module):
         """Compute magic bandwidth
         """
         dnorm2 = l2norm(X, Y)
-        med_heuristic_sq = median_heuristic(dnorm2, device=X.device)
-        self.sigma_sq = med_heuristic_sq / (X.shape[0]**(- 1/self.beta) - 1)
+        med_heuristic_sq = median_heuristic(dnorm2)
+        # self.sigma_sq = med_heuristic_sq / (X.shape[0]**(- 1/self.beta) - 1)
+        self.sigma_sq = med_heuristic_sq
 
     def __call__(self, X, Y):
         """

@@ -8,7 +8,6 @@ class KSD:
     self,
     target: tfp.distributions,
     kernel: tf.Module,
-    device: tf.device="cpu",
   ):
     """
     Inputs:
@@ -18,7 +17,6 @@ class KSD:
     """
     self.p = target
     self.k = kernel
-    self.device = device
 
   def __call__(self, X: tf.Tensor, Y: tf.Tensor):
     """
