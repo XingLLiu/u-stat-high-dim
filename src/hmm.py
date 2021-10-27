@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 class LinearHMM:
-  def __init__(self, A, B, C, D, Q, R, P, N=1):
+  def __init__(self, A, B, C, D, Q, R, P, N_y=1):
     """
       shape of latent vars = (n_step, n_particles, dim_x)
       shape of obs = (n_step, n_particles, dim_y)
@@ -10,7 +10,8 @@ class LinearHMM:
       R: var of noise to observations
       P: var of x_0
     """
-    self.N = N
+    self.Ny = N_y
+    self.Nx = 1
     self.A = A # dx x dx
     self.B = B # dx x dv
     self.C = C # dy x dx
@@ -32,23 +33,22 @@ class LinearHMM:
 
   def initialize_latent(self):
     """initialize x0"""
-    x0 = np.random.multivariate_normal(self.x0_mean, self.P, (1, self.N)) # 1 x N x dx
+    x0 = np.random.multivariate_normal(self.x0_mean, self.P, (1, self.Nx)) # 1 x N x dx
     self.latent = x0
   
   def simulate_latent(self):
     """simulate 1 more latent vars"""
-    v_n = np.random.multivariate_normal(self.v_mean, self.Q, (1, self.N)) # 1 x N x dv
+    v_n = np.random.multivariate_normal(self.v_mean, self.Q, (1, self.Nx)) # 1 x N x dv
     x_n = self.latent[-1] @ self.A.T + v_n @ self.B.T # 1 x N x dx
     # self.latent.append(x_n)
     self.latent = np.concatenate((self.latent, x_n), axis=0)
     
   def simulate_obs(self):
-    """simulate 1 more observation"""
-    if len(self.latent) >= 2:  
-      n = len(self.obs) + 1 # index to simulate; starting from 1
-      w_n = np.random.multivariate_normal(self.w_mean, self.R, (1, self.N)) # 1 x N x dw
+    """simulate 1 more observation and append to obs list"""
+    if len(self.latent) >= 1:  
+      n = len(self.obs) # index to simulate; starting from 0
+      w_n = np.random.multivariate_normal(self.w_mean, self.R, (1, self.Ny)) # 1 x N x dw
       y_n = self.latent[n] @ self.C.T + w_n @ self.D.T # 1 x N x dy
-      # self.obs.append(y_n)
       if len(self.obs) == 0:
         self.obs = y_n
       else:
@@ -58,6 +58,7 @@ class LinearHMM:
     """simulate 'steps' more latent vars and obs"""
     if len(self.latent) == 0:
       self.initialize_latent()
+      self.simulate_obs()
 
     for i in range(steps):
       self.simulate_latent()
@@ -113,10 +114,10 @@ class LinearHMM:
     """sequential importance sampling"""
     steps = self.latent.shape[0]-1 if steps is None else steps
 
-    posterior_samples = np.zeros((steps, self.N, self.dim_x))
-    log_weights = np.zeros((steps, self.N))
+    posterior_samples = np.zeros((steps, self.Ny, self.dim_x))
+    log_weights = np.zeros((steps, self.Ny))
     for i in range(steps):
-      posterior_samples[i, :] = proposal.rvs(self.N)
+      posterior_samples[i, :] = proposal.rvs(self.Ny)
       if i == 0:
         log_weights[i, :] = self.log_prob_cond(0) - proposal.logcdf(self.latent[0, :, :])
       else:

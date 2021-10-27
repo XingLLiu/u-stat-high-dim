@@ -19,6 +19,10 @@ class KalmanFilter:
     self.v_var = D @ R @ D.T
     self.w_var = B @ Q @ B.T
     self.R = R # dw x dw, symmetric
+    self.x1_0 = None # dx
+    self.x1_1 = None # dx
+    self.Sigma1_0 = None # dx x dx
+    self.sigma1_1 = None # dx x dx
 
   def update_one_step(self, yn):
     """
