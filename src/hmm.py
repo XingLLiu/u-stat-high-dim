@@ -33,13 +33,13 @@ class LinearHMM:
 
   def initialize_latent(self):
     """initialize x0"""
-    x0 = np.random.multivariate_normal(self.x0_mean, self.P, (1, self.Nx)) # 1 x N x dx
+    x0 = np.random.multivariate_normal(self.x0_mean, self.P, (1,)) # 1 x dx
     self.latent = x0
   
   def simulate_latent(self):
     """simulate 1 more latent vars"""
-    v_n = np.random.multivariate_normal(self.v_mean, self.Q, (1, self.Nx)) # 1 x N x dv
-    x_n = self.latent[-1] @ self.A.T + v_n @ self.B.T # 1 x N x dx
+    v_n = np.random.multivariate_normal(self.v_mean, self.Q, (1,)) # 1 x dv
+    x_n = self.latent[-1] @ self.A.T + v_n @ self.B.T # 1 x dx
     # self.latent.append(x_n)
     self.latent = np.concatenate((self.latent, x_n), axis=0)
     
@@ -47,8 +47,8 @@ class LinearHMM:
     """simulate 1 more observation and append to obs list"""
     if len(self.latent) >= 1:  
       n = len(self.obs) # index to simulate; starting from 0
-      w_n = np.random.multivariate_normal(self.w_mean, self.R, (1, self.Ny)) # 1 x N x dw
-      y_n = self.latent[n] @ self.C.T + w_n @ self.D.T # 1 x N x dy
+      w_n = np.random.multivariate_normal(self.w_mean, self.R, (1,)) # 1 x dw
+      y_n = self.latent[n] @ self.C.T + w_n @ self.D.T # 1 x dy
       if len(self.obs) == 0:
         self.obs = y_n
       else:
