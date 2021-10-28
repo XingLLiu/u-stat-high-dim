@@ -17,11 +17,10 @@ def run_ksd_experiment(nrep, target, proposal, kernel):
     ksd = KSD(target=target, kernel=kernel)
     
     nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) + list(range(1000, 4000, 1000))
-    # nsamples_list = [10, 1000]
+    # nsamples_list = [10, 5000]
     ksd_list = []
     ksd_df = pd.DataFrame(columns=["n", "ksd", "seed", "type"])
     for n in tqdm(nsamples_list):
-        # print(f"n = {n}")
         for seed in range(nrep):
             # off-target sample
             proposal_sample = proposal.sample(n)
@@ -79,15 +78,17 @@ for ind, delta in enumerate(delta_list):
 
     sns.lineplot(ax=axs[1], data=ksd_imq_df, x="n", y="ksd", hue="type", style="type", markers=True)
     # _ = plt.ylim((0, None))
-    axs[1].axis(ymin=0.)
+    # axs[1].axis(ymin=0.)
     axs[1].set_title("IMQ")
     axs[1].set_xscale("log")
+    axs[1].set_yscale("log")
     
     sns.lineplot(ax=axs[2], data=ksd_rbf_df, x="n", y="ksd", hue="type", style="type", markers=True)
     # _ = plt.ylim((0, None))
-    axs[2].axis(ymin=0.)
+    # axs[2].axis(ymin=0.)
     axs[2].set_title("RBF")
     axs[2].set_xscale("log")
+    axs[2].set_yscale("log")
 
 # plt.tight_layout()
 fig.savefig("figs/mixture_gaussian.png")
