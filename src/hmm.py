@@ -70,6 +70,7 @@ class LinearHMM:
     Output:
       gamma: N
     """
+    #! only works for steps=0 now
     steps = self.latent.shape[0]-1 if steps is None else steps
 
     log_gamma = self.log_prob_cond(0)
@@ -78,12 +79,15 @@ class LinearHMM:
       log_gamma = log_gamma + new_log_prob
     return log_gamma
 
-  def log_prob_cond(self, n_step):
+  def log_prob_cond(self, n_step, posterior_samples):
     """compute the conditional log_prob(x_{n_step} | x_{n_step-1}). When n_step = 0,
     log_prob(x_0) is calculated.
     """
+    #! only works for steps=0 now
     if n_step == 0:
-      log_prob = np.diag(-0.5 * self.latent[0, :] @ np.linalg.inv(self.P) @ self.latent[0, :].T)
+      mean = self.obs[0, :] - posterior_samples[0, :] @ self.C.T # nsample x dy
+      log_prob = np.diag(-0.5 * mean @ np.linalg.inv(self.P) @ mean.T) # nsample
+      log_prob = log_prob + np.diag(-0.5 * posterior_samples[0, :] @ self.P @ posterior_samples[0, :].T) # nsample
     else:
       diff = self.latent[n_step, :] - self.latent[n_step-1, :] @ self.A.T
       log_prob = np.diag(-0.5 * diff @ np.linalg.inv(self.B @ self.Q @ self.B.T) @ diff.T)
@@ -94,31 +98,25 @@ class LinearHMM:
     Output:
       log_alpha_n: N
     """
+    #! only works for steps=0 now
     if n_step == 0:
       log_alpha_n = 1
     elif n_step > 0:
       log_alpha_n = self.log_prob_cond(n_step) - proposal.logpdf(self.latent[n_step, :])
     return log_alpha_n
 
-  # def log_weight(self, steps, proposal):
-  #   """compute log of *unnormalized* weights w_n(x_n)
-  #   Output:
-  #     log_w_n: N
-  #   """
-  #   log_w_n = self.log_prob_cond(0) - proposal.logpdf(self.latent[0, :])
-  #   for i in range(steps):
-  #     log_w_n += self.log_alpha(i+1, proposal)
-
-  def sis(self, proposal, steps=None):
+  def sis(self, N, proposal, steps=None):
     """sequential importance sampling"""
+    #! only works for steps=0 now
     steps = self.latent.shape[0]-1 if steps is None else steps
 
-    posterior_samples = np.zeros((steps, self.dim_x)) # nsteps x dx
-    log_weights = np.zeros((steps, self.Nx)) # nstep x 1
-    for i in range(steps):
-      posterior_samples[i, :] = proposal.rvs(1)
+    posterior_samples = np.zeros((steps+1, N, self.dim_x)) # nsteps x N x dx
+    log_weights = np.zeros((steps+1, N)) # nstep x N
+    simulate_shape = (N, self.dim_x)
+    for i in range(steps+1):
+      posterior_samples[i, :] = proposal.rvs(N).reshape(simulate_shape)
       if i == 0:
-        log_weights[i, :] = self.log_prob_cond(0) - proposal.logpdf(self.latent[0, :])
+        log_weights[i, :] = self.log_prob_cond(0, posterior_samples) - proposal.logpdf(posterior_samples[0, :])
       else:
         log_weights[i, :] = log_weights[i-1, :] + self.log_alpha(i, proposal)
       
