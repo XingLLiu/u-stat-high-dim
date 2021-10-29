@@ -27,6 +27,14 @@ def median_heuristic(dnorm2):
     return med_heuristic
 
 
+def bandwidth(X, Y):
+        """Compute magic bandwidth
+        """
+        dnorm2 = l2norm(X, Y)
+        med_heuristic_sq = median_heuristic(dnorm2)
+        sigma2 = med_heuristic_sq / np.log(X.shape[0])
+        return tf.math.sqrt(sigma2)
+
 class RBF(tf.Module):
     """For GSVGD to work, a kernel class need to have the following methods:
         forward: kernel evaluation k(x, y)
