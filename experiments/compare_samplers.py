@@ -45,7 +45,7 @@ def create_mixture_gaussian(dim, delta):
     
 
 nrep = 10
-delta_list = [0.5, 1.5, 2.5, 3.0]
+delta_list = [1.0, 2.0, 3.0, 4.0]
 dim = 5
 
 if __name__ == '__main__':

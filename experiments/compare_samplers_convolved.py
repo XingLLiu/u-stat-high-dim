@@ -61,7 +61,7 @@ def create_convolved_proposal(dim, proposal_mean, mean, var):
 
 
 nrep = 10
-delta = 3.0 # [0.5, 1.5, 2.5, 3.0]
+delta = 4.0 # [0.5, 1.5, 2.5, 3.0]
 mean = 0.
 var_list = [0.01, 1., 5., 10.]
 dim = 5
