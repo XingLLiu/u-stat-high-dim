@@ -86,33 +86,42 @@ class ConvolvedKSD:
     """
     self.p = target
     self.k = kernel
+    self.conv_kernel = conv_kernel
 
-  def __call__(self, X: tf.Tensor, Y: tf.Tensor):
+  def __call__(self, X: tf.Tensor, Y: tf.Tensor, num_est: int):
     """
     Inputs:
       X: n x dim
       Y: m x dim
     """
     # copy data for score computation
-    X_cp = tf.reshape(tf.identity(X), (1, X.shape)) # 1 x n x dim
-    Y_cp = tf.reshape(tf.identity(Y), (1, X.shape)) # 1 x m x dim
+    X_cp = tf.expand_dims(tf.identity(X), axis=0) # 1 x n x dim
+    Y_cp = tf.expand_dims(tf.identity(Y), axis=0) # 1 x m x dim
 
     ## estimate score for convolution
-    Z = self.conv_kernel.sample((X.shape[0], 1)) # l x 1 x dim
+    Z = tf.expand_dims(
+      self.conv_kernel.sample(num_est), axis=1) # l x 1 x dim
     with tf.GradientTape() as g:
-      diff_1 = X_cp - Z # l x n x dim
       g.watch(X_cp)
-      prob_X = self.p.prob(diff_1) # l x n x dim
-    diff_X = g.gradient(prob_X, X_cp) # 1 x n x dim
-    print(diff_X.shape)
+      diff_1 = X_cp - Z # l x n x dim #TODO broadcasting is potentially causing problems
+      # print("diff", diff_1.shape)
+      # print("x_cp", X_cp.shape)
+      prob_1 = self.p.prob(diff_1) # l x n
+    grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
+    grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
+    score_X = grad_1 / tf.expand_dims(
+      tf.math.reduce_sum(prob_1, axis=0), axis=1) # n x dim
+    # print(score_X.shape)
+    # print(diff_X.shape)
+    # print("prob", prob_X.shape)
     with tf.GradientTape() as g:
-      diff_2 = Y_cp - tf.identity(Z)
       g.watch(Y_cp)
-      prob_Y = self.p.prob(diff_2) # m x dim
-    diff_Y = g.gradient(prob_Y, Y_cp)
-
-    score_X = self.p.score(X_cp) # n x dim
-    score_Y = self.p.score(Y_cp) # n x dim
+      diff_2 = Y_cp - tf.identity(Z)
+      prob_2 = self.p.prob(diff_2) # m x dim
+    grad_2 = g.gradient(prob_2, Y_cp)
+    grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
+    score_Y = grad_2 / tf.expand_dims(
+      tf.math.reduce_sum(prob_2, axis=0), axis=1) # m x dim
 
     # median heuristic
     self.k.bandwidth(X, Y)
