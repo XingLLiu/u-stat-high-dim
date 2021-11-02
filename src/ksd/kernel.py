@@ -52,7 +52,7 @@ class RBF(tf.Module):
         """
         dnorm2 = l2norm(X, Y)
         med_heuristic_sq = median_heuristic(dnorm2)
-        sigma2 = med_heuristic_sq / np.log(X.shape[0])
+        sigma2 = med_heuristic_sq # med_heuristic_sq / np.log(X.shape[0])
         self.sigma = tf.math.sqrt(sigma2)
 
     def __call__(self, X, Y):
