@@ -91,55 +91,56 @@ mean = 0.
 var_list = [0.01, 1., 5., 10.]
 dim = 5
 
-fig = plt.figure(constrained_layout=True, figsize=(5*len(var_list), 9))
-subfigs = fig.subfigures(1, len(var_list))
-for ind, var in enumerate(var_list):
-    print(f"Running with var = {var}")
-    # target distribution
-    target = create_convolved_mixture_gaussian(dim=dim, delta=delta, mean=mean, var=var)
+if __name__ == '__main__':
+    fig = plt.figure(constrained_layout=True, figsize=(5*len(var_list), 9))
+    subfigs = fig.subfigures(1, len(var_list))
+    for ind, var in enumerate(var_list):
+        print(f"Running with var = {var}")
+        # target distribution
+        target = create_convolved_mixture_gaussian(dim=dim, delta=delta, mean=mean, var=var)
 
-    # convolution kernel
-    convolution = tfd.MultivariateNormalDiag(mean, tf.math.sqrt(var) * tf.ones(dim))
+        # convolution kernel
+        convolution = tfd.MultivariateNormalDiag(mean, tf.math.sqrt(var) * tf.ones(dim))
 
-    # off-target proposal distribution
-    proposal_mean = - delta * tf.eye(dim)[:, 0]
-    # proposal_off = create_convolved_proposal(dim, proposal_mean, mean, var)
-    proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
+        # off-target proposal distribution
+        proposal_mean = - delta * tf.eye(dim)[:, 0]
+        # proposal_off = create_convolved_proposal(dim, proposal_mean, mean, var)
+        proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
 
-    # on-target proposal distribution
-    # proposal_on = create_convolved_mixture_gaussian(dim, delta, mean, var)
-    proposal_on = create_mixture_gaussian(dim=dim, delta=delta)
+        # on-target proposal distribution
+        # proposal_on = create_convolved_mixture_gaussian(dim, delta, mean, var)
+        proposal_on = create_mixture_gaussian(dim=dim, delta=delta)
 
-    # with IMQ
-    imq = IMQ()
-    ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, imq)
+        # with IMQ
+        imq = IMQ()
+        ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, imq)
 
-    # with RBF
-    rbf = RBF()
-    ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, rbf)
+        # with RBF
+        rbf = RBF()
+        ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, rbf)
 
-    # plot
-    subfig = subfigs.flat[ind]
-    subfig.suptitle(f"var = {var}")
-    axs = subfig.subplots(3, 1)
-    axs = axs.flat
-    axs[0].hist((proposal_off.sample(10000) + convolution.sample(10000)).numpy()[:, 0], label="off-target", alpha=0.2)
-    axs[0].hist(target.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
-    axs[0].legend()
+        # plot
+        subfig = subfigs.flat[ind]
+        subfig.suptitle(f"var = {var}")
+        axs = subfig.subplots(3, 1)
+        axs = axs.flat
+        axs[0].hist((proposal_off.sample(10000) + convolution.sample(10000)).numpy()[:, 0], label="off-target", alpha=0.2)
+        axs[0].hist(target.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
+        axs[0].legend()
 
-    sns.lineplot(ax=axs[1], data=ksd_imq_df, x="n", y="ksd", hue="type", style="type", markers=True)
-    # _ = plt.ylim((0, None))
-    axs[1].axis(ymin=1e-3)
-    axs[1].set_title("IMQ")
-    axs[1].set_xscale("log")
-    axs[1].set_yscale("log")
-    
-    sns.lineplot(ax=axs[2], data=ksd_rbf_df, x="n", y="ksd", hue="type", style="type", markers=True)
-    # _ = plt.ylim((0, None))
-    axs[2].axis(ymin=1e-3)
-    axs[2].set_title("RBF")
-    axs[2].set_xscale("log")
-    axs[2].set_yscale("log")
+        sns.lineplot(ax=axs[1], data=ksd_imq_df, x="n", y="ksd", hue="type", style="type", markers=True)
+        # _ = plt.ylim((0, None))
+        axs[1].axis(ymin=1e-3)
+        axs[1].set_title("IMQ")
+        axs[1].set_xscale("log")
+        axs[1].set_yscale("log")
+        
+        sns.lineplot(ax=axs[2], data=ksd_rbf_df, x="n", y="ksd", hue="type", style="type", markers=True)
+        # _ = plt.ylim((0, None))
+        axs[2].axis(ymin=1e-3)
+        axs[2].set_title("RBF")
+        axs[2].set_xscale("log")
+        axs[2].set_yscale("log")
 
-# plt.tight_layout()
-fig.savefig("figs/mixture_gaussian_convolved.png")
+    # plt.tight_layout()
+    fig.savefig("figs/mixture_gaussian_convolved.png")
