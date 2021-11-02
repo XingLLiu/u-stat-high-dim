@@ -60,18 +60,19 @@ def create_convolved_proposal(dim, proposal_mean, mean, var):
     return tfd.MultivariateNormalDiag(proposal_mean + mean, tf.math.sqrt(1 + var) * tf.ones(proposal_mean.shape[0]))
 
 
-class MixtureGaussian(tfd.distributions):
-    def __init__(self, delta, dim):
-        super().__init__()
+class MixtureGaussian(tfd.Distribution):
+    def __init__(self, delta, dim, *args, **kwargs):
+        # super().__init__(*args, **kwargs)
+        super(tfd.Distribution, self).__init__(*args, **kwargs)
         self.delta = delta
-        e1 = tf.eye(dim)[:, 0].reshape((1, -1))
+        e1 = tf.reshape(tf.eye(dim)[:, 0], (1, -1))
         self.mean1 = -delta * e1
         self.mean2 = delta * e1
         self.mix_gauss = tfd.Mixture(
             cat=tfd.Categorical(probs=[0.5, 0.5]),
             components=[
-                tfd.MultivariateNormalDiag(self.mean1),
-                tfd.MultivariateNormalDiag(self.mean2)
+                tfd.MultivariateNormalDiag(tf.reshape(self.mean1, (-1,))),
+                tfd.MultivariateNormalDiag(tf.reshape(self.mean2, (-1,)))
         ])
     
     def log_prob(self, x):
