@@ -41,8 +41,8 @@ def create_mixture_gaussian(dim, delta):
         tfd.MultivariateNormalDiag(-delta * e1),
         tfd.MultivariateNormalDiag(delta * e1)
     ])
-    return mix_gauss
-    
+    return mix_gauss    
+        
 
 nrep = 10
 delta_list = [1.0, 2.0, 3.0, 4.0]

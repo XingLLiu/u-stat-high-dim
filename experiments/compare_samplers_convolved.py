@@ -60,6 +60,31 @@ def create_convolved_proposal(dim, proposal_mean, mean, var):
     return tfd.MultivariateNormalDiag(proposal_mean + mean, tf.math.sqrt(1 + var) * tf.ones(proposal_mean.shape[0]))
 
 
+class MixtureGaussian(tfd.distributions):
+    def __init__(self, delta, dim):
+        super().__init__()
+        self.delta = delta
+        e1 = tf.eye(dim)[:, 0].reshape((1, -1))
+        self.mean1 = -delta * e1
+        self.mean2 = delta * e1
+        self.mix_gauss = tfd.Mixture(
+            cat=tfd.Categorical(probs=[0.5, 0.5]),
+            components=[
+                tfd.MultivariateNormalDiag(self.mean1),
+                tfd.MultivariateNormalDiag(self.mean2)
+        ])
+    
+    def log_prob(self, x):
+        return self.mix_gauss.log_prob(x)
+
+    def grad(self, x):
+        """gradient upto normalizing constant"""
+        grad1 = - (x - self.mean1) * tf.math.exp(
+            - 0.5 * tf.math.reduce_sum((x - self.mean1)**2, axis=1, keepdims=True))
+        grad2 = - (x - self.mean2) * tf.math.exp(
+            - 0.5 * tf.math.reduce_sum((x - self.mean2)**2, axis=1, keepdims=True))
+        return grad1 + grad2
+
 nrep = 10
 delta = 4.0 # [0.5, 1.5, 2.5, 3.0]
 mean = 0.
@@ -99,7 +124,6 @@ for ind, var in enumerate(var_list):
     axs = subfig.subplots(3, 1)
     axs = axs.flat
     axs[0].hist((proposal_off.sample(10000) + convolution.sample(10000)).numpy()[:, 0], label="off-target", alpha=0.2)
-    axs[0].hist((proposal_on.sample(10000) + convolution.sample(10000)).numpy()[:, 0], label="on-target", alpha=0.2)
     axs[0].hist(target.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
     axs[0].legend()
 

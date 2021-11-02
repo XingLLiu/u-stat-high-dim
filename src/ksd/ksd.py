@@ -28,6 +28,7 @@ class KSD:
     X_cp = tf.identity(X)
     Y_cp = tf.identity(Y)
 
+    ## calculate scores using autodiff
     with tf.GradientTape() as g:
       g.watch(X_cp)
       log_prob_X = self.p.log_prob(X_cp)
@@ -36,6 +37,10 @@ class KSD:
       g.watch(Y_cp)
       log_prob_Y = self.p.log_prob(Y_cp) # m x dim
     score_Y = g.gradient(log_prob_Y, Y_cp)
+    
+    ## estimate score for convolution
+    # score_X = self.p.score(X_cp) # n x dim
+    # score_Y = self.p.score(Y_cp) # n x dim
 
     # median heuristic
     self.k.bandwidth(X, Y)
