@@ -7,14 +7,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm, trange
 
-from src.ksd.ksd import KSD
+from src.ksd.ksd import KSD, ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
 from experiments.compare_samplers import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel):
+def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, num_est):
     """compute KSD and repeat for nrep times"""
+    # ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=convolution)
     ksd = KSD(target=target, kernel=kernel)
     
     nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) # + list(range(1000, 4000, 1000))
@@ -26,13 +27,15 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, ker
             proposal_off_sample = proposal_off.sample(n)
             conv_sample = convolution.sample(n)
             proposal_off_sample += conv_sample
+            # ksd_val = ksd(proposal_off_sample, tf.identity(proposal_off_sample), num_est).numpy()
             ksd_val = ksd(proposal_off_sample, tf.identity(proposal_off_sample)).numpy()
             ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "off-target"]
 
             # on-target sample
             proposal_on_sample = proposal_on.sample(n)
-            conv_sample = convolution.sample(n)
+            # conv_sample = convolution.sample(n)
             proposal_on_sample += conv_sample
+            # ksd_val = ksd(proposal_on_sample, tf.identity(proposal_on_sample), num_est).numpy()
             ksd_val = ksd(proposal_on_sample, tf.identity(proposal_on_sample)).numpy()
             ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "target"]
     return ksd_df
@@ -62,7 +65,6 @@ def create_convolved_proposal(dim, proposal_mean, mean, var):
 
 class MixtureGaussian(tfd.Distribution):
     def __init__(self, delta, dim, *args, **kwargs):
-        # super().__init__(*args, **kwargs)
         super(tfd.Distribution, self).__init__(*args, **kwargs)
         self.delta = delta
         e1 = tf.reshape(tf.eye(dim)[:, 0], (1, -1))
@@ -87,10 +89,11 @@ class MixtureGaussian(tfd.Distribution):
         return grad1 + grad2
 
 nrep = 10
-delta = 4.0 # [0.5, 1.5, 2.5, 3.0]
+delta = 4.0
 mean = 0.
 var_list = [0.01, 1., 5., 10.]
 dim = 5
+num_est = 10000 # num samples used to estimate concolved target
 
 if __name__ == '__main__':
     fig = plt.figure(constrained_layout=True, figsize=(5*len(var_list), 9))
@@ -98,6 +101,7 @@ if __name__ == '__main__':
     for ind, var in enumerate(var_list):
         print(f"Running with var = {var}")
         # target distribution
+        # target = create_mixture_gaussian(dim=dim, delta=delta)
         target = create_convolved_mixture_gaussian(dim=dim, delta=delta, mean=mean, var=var)
 
         # convolution kernel
@@ -114,11 +118,11 @@ if __name__ == '__main__':
 
         # with IMQ
         imq = IMQ()
-        ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, imq)
+        ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, imq, num_est)
 
         # with RBF
         rbf = RBF()
-        ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, rbf)
+        ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, rbf, num_est)
 
         # plot
         subfig = subfigs.flat[ind]
