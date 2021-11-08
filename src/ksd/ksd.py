@@ -1,4 +1,3 @@
-
 import tensorflow as tf
 import numpy as np
 import tensorflow_probability as tfp
@@ -18,7 +17,7 @@ class KSD:
     self.p = target
     self.k = kernel
 
-  def __call__(self, X: tf.Tensor, Y: tf.Tensor):
+  def __call__(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
     """
     Inputs:
       X: n x dim
@@ -53,22 +52,31 @@ class KSD:
     grad_K_X = self.k.grad_first(X, Y) # n x m x dim
 
     # term 1
-    term1 = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
-    term1 = tf.reduce_sum(term1)
+    term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
+    term1 = tf.reduce_sum(term1_mat)
     # term 2
-    term2 = tf.expand_dims(score_X, 1) * grad_K_Y # n x m x dim
-    term2 = tf.reduce_sum(term2)
+    term2_mat = tf.expand_dims(score_X, 1) * grad_K_Y # n x m x dim
+    term2_mat = tf.reduce_sum(term2_mat, axis=-1)
+    term2 = tf.reduce_sum(term2_mat)
     # term3
-    term3 = tf.expand_dims(score_Y, 0) * grad_K_X # n x m x dim
-    term3 = tf.reduce_sum(term3)
+    term3_mat = tf.expand_dims(score_Y, 0) * grad_K_X # n x m x dim
+    term3_mat = tf.reduce_sum(term3_mat, axis=-1)
+    term3 = tf.reduce_sum(term3_mat)
     # term4
     gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
-    diag_gradgrad_K = tf.linalg.diag_part(gradgrad_K) # n x m
-    term4 = tf.reduce_sum(diag_gradgrad_K)
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # 1 x n x m
+    term4_mat = tf.squeeze(term4_mat, axis=-1) # n x m
+    term4 = tf.reduce_sum(term4_mat)
 
-    ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
-
-    return ksd
+    if output_dim == 1:
+      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
+      return ksd
+    elif output_dim == 2:
+      assert term1_mat.shape == (X.shape[0], Y.shape[0])
+      assert term2_mat.shape == (X.shape[0], Y.shape[0])
+      assert term3_mat.shape == (X.shape[0], Y.shape[0])
+      assert term4_mat.shape == (X.shape[0], Y.shape[0]), term4_mat.shape
+      return term1_mat + term2_mat + term3_mat + term4_mat
 
 
 class ConvolvedKSD:
@@ -88,11 +96,14 @@ class ConvolvedKSD:
     self.k = kernel
     self.conv_kernel = conv_kernel
 
-  def __call__(self, X: tf.Tensor, Y: tf.Tensor, num_est: int):
+  def __call__(self, X: tf.Tensor, Y: tf.Tensor, num_est: int, output_dim: int=1):
     """
     Inputs:
       X: n x dim
       Y: m x dim
+      num_est: number of samples for estimating score of convolution
+      output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
+        the matrix [ u_p(xi, xj) ]_{ij} is returned
     """
     # copy data for score computation
     X_cp = tf.expand_dims(tf.identity(X), axis=0) # 1 x n x dim
@@ -101,19 +112,16 @@ class ConvolvedKSD:
     ## estimate score for convolution
     Z = tf.expand_dims(
       self.conv_kernel.sample(num_est), axis=1) # l x 1 x dim
+
     with tf.GradientTape() as g:
       g.watch(X_cp)
       diff_1 = X_cp - Z # l x n x dim #TODO broadcasting is potentially causing problems
-      # print("diff", diff_1.shape)
-      # print("x_cp", X_cp.shape)
       prob_1 = self.p.prob(diff_1) # l x n
     grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
     score_X = grad_1 / tf.expand_dims(
       tf.math.reduce_sum(prob_1, axis=0), axis=1) # n x dim
-    # print(score_X.shape)
-    # print(diff_X.shape)
-    # print("prob", prob_X.shape)
+
     with tf.GradientTape() as g:
       g.watch(Y_cp)
       diff_2 = Y_cp - tf.identity(Z)
@@ -134,19 +142,29 @@ class ConvolvedKSD:
     grad_K_X = self.k.grad_first(X, Y) # n x m x dim
 
     # term 1
-    term1 = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
-    term1 = tf.reduce_sum(term1)
+    term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
+    term1 = tf.reduce_sum(term1_mat)
     # term 2
-    term2 = tf.expand_dims(score_X, 1) * grad_K_Y # n x m x dim
-    term2 = tf.reduce_sum(term2)
+    term2_mat = tf.expand_dims(score_X, 1) * grad_K_Y # n x m x dim
+    term2_mat = tf.reduce_sum(term2_mat, axis=-1)
+    term2 = tf.reduce_sum(term2_mat)
     # term3
-    term3 = tf.expand_dims(score_Y, 0) * grad_K_X # n x m x dim
-    term3 = tf.reduce_sum(term3)
+    term3_mat = tf.expand_dims(score_Y, 0) * grad_K_X # n x m x dim
+    term3_mat = tf.reduce_sum(term3_mat, axis=-1)
+    term3 = tf.reduce_sum(term3_mat)
     # term4
     gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
-    diag_gradgrad_K = tf.linalg.diag_part(gradgrad_K) # n x m
-    term4 = tf.reduce_sum(diag_gradgrad_K)
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # 1 x n x m
+    term4_mat = tf.squeeze(term4_mat, axis=-1) # n x m
+    term4 = tf.reduce_sum(term4_mat)
 
-    ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
+    if output_dim == 1:
+      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
+      return ksd
+    elif output_dim == 2:
+      assert term1_mat.shape == (X.shape[0], Y.shape[0])
+      assert term2_mat.shape == (X.shape[0], Y.shape[0])
+      assert term3_mat.shape == (X.shape[0], Y.shape[0])
+      assert term4_mat.shape == (X.shape[0], Y.shape[0])
+      return term1_mat + term2_mat + term3_mat + term4_mat
 
-    return ksd
