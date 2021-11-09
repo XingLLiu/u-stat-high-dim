@@ -38,12 +38,13 @@ class Bootstrap:
     """
     """
     n = X.shape[0]
-    # compute u_p(xi, xj)
+    # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
     u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
+    u_p = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
     u_p = tf.expand_dims(u_p, axis=0) # 1 x n x n
 
     # compute test statistic
-    self.ksd_hat = tf.reduce_sum(u_p).numpy() / n**2
+    self.ksd_hat = tf.reduce_sum(u_p).numpy() / (n*(n - 1))
 
     # draw multinomial samples
     w = self.sample_multinomial(n, num_boot) # num_boot x n
@@ -63,7 +64,8 @@ class Bootstrap:
     Returns:
       reject: 1 if test is rejected; 0 otherwise
     """
-    critical_val = tfp.stats.percentile(self.ksd_star, 1-alpha).numpy()
+    # critical_val = tfp.stats.percentile(self.ksd_star, 100*(1-alpha)).numpy()
+    critical_val = np.quantile(self.ksd_star.numpy(), 1-alpha)
     reject = True if self.ksd_hat > critical_val else False
     conclusion = "Rejected" if reject else "NOT rejected"
     self.test_summary = "Significance\t: {} \nCritical value\t: {:.5f} \nTest statistic\t: {:.5f} \nTest result\t: {:s}".format(
