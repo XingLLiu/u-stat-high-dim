@@ -40,11 +40,11 @@ class Bootstrap:
     n = X.shape[0]
     # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
     u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-    u_p = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
+    u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
     u_p = tf.expand_dims(u_p, axis=0) # 1 x n x n
 
     # compute test statistic
-    self.ksd_hat = tf.reduce_sum(u_p).numpy() / (n*(n - 1))
+    self.ksd_hat = tf.reduce_sum(u_p_nodiag).numpy() / (n*(n - 1))
 
     # draw multinomial samples
     w = self.sample_multinomial(n, num_boot) # num_boot x n
