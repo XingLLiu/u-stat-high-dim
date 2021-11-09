@@ -64,8 +64,8 @@ class KSD:
     term3 = tf.reduce_sum(term3_mat)
     # term4
     gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
-    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # 1 x n x m
-    term4_mat = tf.squeeze(term4_mat, axis=-1) # n x m
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x dim
+    term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
     term4 = tf.reduce_sum(term4_mat)
 
     if output_dim == 1:
@@ -154,8 +154,8 @@ class ConvolvedKSD:
     term3 = tf.reduce_sum(term3_mat)
     # term4
     gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
-    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # 1 x n x m
-    term4_mat = tf.squeeze(term4_mat, axis=-1) # n x m
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x dim
+    term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
     term4 = tf.reduce_sum(term4_mat)
 
     if output_dim == 1:

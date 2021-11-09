@@ -78,9 +78,11 @@ class Bootstrap:
     num_test: int, 
     num_boost: int, 
     X: tf.Tensor, 
+    verbose: bool=True,
     **kwargs
   ):
     """
+    Repeat bootstrap tests for num_test times for computing error rate
     Inputs:
       alpha: significance level of test
       num_test: number of tests to repeat
@@ -91,10 +93,12 @@ class Bootstrap:
     """
     test_res = [-1] * num_test
     ksd_star = [-1] * num_test
-    for i in trange(num_test):
+    iterator = trange(num_test) # if verbose else range(num_test)
+    for i in iterator:
       self.compute_bootstrap(num_boot=num_boost, X=X, **kwargs)
       ksd_star[i] = self.ksd_star
       test_res[i] = self.test(alpha=alpha)
+      iterator.set_description(f"Repeating tests: {i+1} of {num_test}")
 
     return ksd_star, test_res
 

@@ -15,3 +15,6 @@
 
 # egg-info
 *.egg-info/*
+
+# results
+/res/*
