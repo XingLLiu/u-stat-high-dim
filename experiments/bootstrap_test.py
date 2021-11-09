@@ -7,6 +7,7 @@ tfd = tfp.distributions
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm, trange
+import pickle
 
 from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
@@ -21,7 +22,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
     bootstrap = Bootstrap(ksd)
     
     # nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) # + list(range(1000, 4000, 1000))
-    nsamples_list = [10, 50, 100, 250, 500]
+    nsamples_list = [10, 20, 50, 100, 250, 500]
     ksd_list = []
     ksd_df = pd.DataFrame(columns=["n", "error_rate", "seed", "type"])
     iterator = tqdm(nsamples_list)
@@ -69,14 +70,14 @@ if __name__ == '__main__':
         imq = IMQ()
         test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_test, num_boost)
 
-        # with RBF
-        rbf = RBF()
-        test_rbf_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, rbf, alpha, num_test, num_boost)
+        # # with RBF
+        # rbf = RBF()
+        # test_rbf_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, rbf, alpha, num_test, num_boost)
 
         # plot
         subfig = subfigs.flat[ind]
         subfig.suptitle(f"delta = {delta}")
-        axs = subfig.subplots(3, 1)
+        axs = subfig.subplots(2, 1)
         axs = axs.flat
         axs[0].hist(proposal_off.sample(10000).numpy()[:, 0], label="off-target", alpha=0.2)
         axs[0].hist(proposal_on.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
@@ -88,11 +89,16 @@ if __name__ == '__main__':
         # axs[1].set_xscale("log")
         # axs[1].set_yscale("log")
         
-        sns.lineplot(ax=axs[2], data=test_rbf_df, x="n", y="error_rate", hue="type", style="type", markers=True)
-        # axs[2].axis(ymin=0.)
-        axs[2].set_title("RBF")
-        # axs[2].set_xscale("log")
-        # axs[2].set_yscale("log")
+        # sns.lineplot(ax=axs[2], data=test_rbf_df, x="n", y="error_rate", hue="type", style="type", markers=True)
+        # # axs[2].axis(ymin=0.)
+        # axs[2].set_title("RBF")
+        # # axs[2].set_xscale("log")
+        # # axs[2].set_yscale("log")
+
+        # save res
+        # pickle.dump({"imq": test_imq_df, "rbf": test_rbf_df}, open(f"res/bootstrap/delta{delta}", "wb"))
+        # pickle.dump({"imq": test_imq_df}, open(f"res/bootstrap/delta{delta}", "wb"))
+        test_imq_df.to_csv(f"res/bootstrap/delta{delta}.csv", index=False)
 
     # plt.tight_layout()
     fig.savefig("figs/bootstrap.png")
