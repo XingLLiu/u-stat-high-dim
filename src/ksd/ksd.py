@@ -36,13 +36,10 @@ class KSD:
       g.watch(Y_cp)
       log_prob_Y = self.p.log_prob(Y_cp) # m x dim
     score_Y = g.gradient(log_prob_Y, Y_cp)
-    
-    ## estimate score for convolution
-    # score_X = self.p.score(X_cp) # n x dim
-    # score_Y = self.p.score(Y_cp) # n x dim
 
-    # median heuristic
-    self.k.bandwidth(X, Y)
+    # median heuristic #TODO using pre-specified bandwidth
+    if self.k.med_heuristic:
+      self.k.bandwidth(X, Y)
     
     # kernel
     K_XY = self.k(X, Y) # n x m
@@ -50,7 +47,7 @@ class KSD:
     # kernel grad
     grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
     grad_K_X = self.k.grad_first(X, Y) # n x m x dim
-
+    
     # term 1
     term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
     term1 = tf.reduce_sum(term1_mat)

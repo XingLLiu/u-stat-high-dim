@@ -43,9 +43,10 @@ class RBF(tf.Module):
         gradgrad: grad_x grad_y k(x, y)
     """
 
-    def __init__(self, sigma=None):
+    def __init__(self, sigma_sq=None, med_heuristic=False):
         super().__init__()
-        self.sigma = sigma
+        self.sigma_sq = sigma_sq
+        self.med_heuristic = med_heuristic
 
     def bandwidth(self, X, Y):
         """Compute magic bandwidth
@@ -53,8 +54,8 @@ class RBF(tf.Module):
         dnorm2 = l2norm(X, Y)
         med_heuristic_sq = median_heuristic(dnorm2)
         sigma2 = med_heuristic_sq # med_heuristic_sq / np.log(X.shape[0])
-        self.sigma = tf.math.sqrt(sigma2)
-
+        self.sigma_sq = sigma2
+    
     def __call__(self, X, Y):
         """
         Args:
@@ -64,7 +65,7 @@ class RBF(tf.Module):
             tf.Tensor of shape (n, m)
         """
         dnorm2 = l2norm(X, Y)
-        sigma2_inv = 1.0 / (self.sigma**2 + 1e-9)
+        sigma2_inv = 1.0 / (self.sigma_sq + 1e-9)
         sigma2_inv = tf.expand_dims(tf.expand_dims(sigma2_inv, 0), 0)
         K_XY = tf.math.exp(- sigma2_inv * dnorm2)
 
@@ -83,7 +84,7 @@ class RBF(tf.Module):
         Output:
             tf.Tensor of shape (n, m, dim)
         """
-        sigma2_inv = 1 / (1e-9 + self.sigma ** 2)
+        sigma2_inv = 1 / (1e-9 + self.sigma_sq)
         K = tf.expand_dims(tf.math.exp(-l2norm(X, Y) * sigma2_inv), 0) # 1 x n x m
         # diff_{ijk} = y^i_j - x^i_k
         diff = tf.transpose(tf.expand_dims(Y, 1) - X, (2, 1, 0)) # n x m x dim
@@ -102,7 +103,7 @@ class RBF(tf.Module):
             tf.Tensor of shape (n, m, dim, dim)
         """
         # Gram matrix
-        sigma2_inv = 1 / (1e-9 + self.sigma ** 2)
+        sigma2_inv = 1 / (1e-9 + self.sigma_sq)
         K = tf.expand_dims(tf.math.exp(-l2norm(X, Y) * sigma2_inv), 0)
         # diff_{ijk} = y^i_j - x^i_k
         diff = tf.transpose(tf.expand_dims(Y, 1) - X, (2, 1, 0))
@@ -123,19 +124,19 @@ class IMQ(tf.Module):
         gradgrad: grad_x grad_y k(x, y)
     """
 
-    def __init__(self, sigma_sq=None, beta=-0.5):
+    def __init__(self, sigma_sq=None, beta=-0.5, med_heuristic=False):
         super().__init__()
         self.sigma_sq = sigma_sq
         self.beta = beta
+        self.med_heuristic = med_heuristic
 
     def bandwidth(self, X, Y):
         """Compute magic bandwidth
         """
         dnorm2 = l2norm(X, Y)
         med_heuristic_sq = median_heuristic(dnorm2)
-        # self.sigma_sq = med_heuristic_sq / (X.shape[0]**(- 1/self.beta) - 1)
         self.sigma_sq = med_heuristic_sq
-
+        
     def __call__(self, X, Y):
         """
         Args:

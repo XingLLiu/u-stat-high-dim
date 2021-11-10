@@ -45,14 +45,15 @@ def create_mixture_gaussian(dim, delta):
         
 
 nrep = 10
-delta_list = [1.0, 2.0, 3.0, 4.0]
+delta = 4.0
+bandwidth_list = ["med_heuristic", 1e-5, 1e-4, 1e-3, 1e-2]# ["med_heuristic", 0.1, 1., 2.5, 5., 7.5, 10., 25., 50., 75., 100., 125., 500., 725., 1000., 1250., 1500., 1750., 2000., 5000., 1e4, 1e5]
 dim = 5
 
 if __name__ == '__main__':
-    fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 9))
-    subfigs = fig.subfigures(1, len(delta_list))
-    for ind, delta in enumerate(delta_list):
-        print(f"Running with delta = {delta}")
+    fig = plt.figure(constrained_layout=True, figsize=(5*len(bandwidth_list), 9))
+    subfigs = fig.subfigures(1, len(bandwidth_list))
+    for ind, bandwidth in enumerate(bandwidth_list):
+        print(f"Running with bandwidth = {bandwidth}")
         # target distribution
         target = create_mixture_gaussian(dim=dim, delta=delta)
 
@@ -64,16 +65,16 @@ if __name__ == '__main__':
         proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
 
         # with IMQ
-        imq = IMQ()
+        imq = IMQ(med_heuristic=True) if bandwidth == "med_heuristic" else IMQ(sigma_sq=bandwidth)
         ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, imq)
 
         # with RBF
-        rbf = RBF()
+        rbf = RBF(med_heuristic=True) if bandwidth == "med_heuristic" else RBF(sigma_sq=bandwidth)
         ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, rbf)
 
         # plot
         subfig = subfigs.flat[ind]
-        subfig.suptitle(f"delta = {delta}")
+        subfig.suptitle(f"bandwidth sigma^2 = {bandwidth}")
         axs = subfig.subplots(3, 1)
         axs = axs.flat
         axs[0].hist(proposal_off.sample(10000).numpy()[:, 0], label="off-target", alpha=0.2)
