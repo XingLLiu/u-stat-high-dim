@@ -62,8 +62,10 @@ class KSD:
     # term4
     gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
     term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x dim
+    # print(tf.reduce_sum(term4_mat, axis=2))
     term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
     term4 = tf.reduce_sum(term4_mat)
+    # print(term1.numpy(), term2.numpy(), term3.numpy(), term4.numpy())
 
     if output_dim == 1:
       ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])

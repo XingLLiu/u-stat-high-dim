@@ -16,39 +16,35 @@ from experiments.compare_samplers import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_test, num_boost):
+def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boost):
     """compute KSD and repeat for nrep times"""
     ksd = KSD(target=target, kernel=kernel)
-    bootstrap = Bootstrap(ksd)
     
     # nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) # + list(range(1000, 4000, 1000))
-    nsamples_list = [10, 20, 50, 100, 250, 500]
+    nsamples_list = [50]
     ksd_list = []
-    ksd_df = pd.DataFrame(columns=["n", "error_rate", "seed", "type"])
+    ksd_df = pd.DataFrame(columns=["n", "p_value", "seed", "type"])
     iterator = tqdm(nsamples_list)
     for n in iterator:
+        bootstrap = Bootstrap(ksd, n)
         iterator.set_description(f"Running with sample size {n}")
         for seed in range(nrep):
+            iterator.set_description(f"Repetition: {seed+1} of {nrep}")
             # off-target sample
             proposal_off_sample = proposal_off.sample(n)
-            # ksd_val = ksd(proposal_off_sample, tf.identity(proposal_off_sample)).numpy()
-            _, test_res = bootstrap.test_repeated(alpha=alpha, num_test=num_test, num_boost=num_boost, X=proposal_off_sample, verbose=False)
-            err_rate = (np.array(test_res) != 1).sum() / num_test # error if not rejected
-            ksd_df.loc[len(ksd_df)] = [n, err_rate, seed, "off-target"]
+            _, p_val = bootstrap.test_once(alpha=alpha, num_boost=num_boost, X=proposal_off_sample)
+            ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "off-target"]
 
             # on-target sample
             proposal_on_sample = proposal_on.sample(n)
-            # ksd_val = ksd(proposal_on_sample, tf.identity(proposal_on_sample)).numpy()
-            _, test_res = bootstrap.test_repeated(alpha=alpha, num_test=num_test, num_boost=num_boost, X=proposal_on_sample, verbose=False)
-            err_rate = (np.array(test_res) != 0).sum() / num_test # error if rejected
-            ksd_df.loc[len(ksd_df)] = [n, err_rate, seed, "target"]
+            _, p_val = bootstrap.test_once(alpha=alpha, num_boost=num_boost, X=proposal_on_sample)
+            ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "target"]
     return ksd_df
 
-nrep = 1
-num_test = 100 # number of tests to calculate the error rate
-num_boost = 1000 # number of bootstrap samples to compute critical val
+nrep = 50
+num_boost = 100 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
-delta_list = [1.0, 4.0] # [1.0, 2.0, 3.0, 4.0]
+delta_list = [1.0, 2.0]#, 3.0, 4.0]
 dim = 5
 
 if __name__ == '__main__':
@@ -67,8 +63,8 @@ if __name__ == '__main__':
         proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
 
         # with IMQ
-        imq = IMQ()
-        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_test, num_boost)
+        imq = IMQ(med_heuristic=True)
+        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boost)
 
         # # with RBF
         # rbf = RBF()
@@ -77,23 +73,21 @@ if __name__ == '__main__':
         # plot
         subfig = subfigs.flat[ind]
         subfig.suptitle(f"delta = {delta}")
-        axs = subfig.subplots(2, 1)
+        axs = subfig.subplots(3, 1)
         axs = axs.flat
         axs[0].hist(proposal_off.sample(10000).numpy()[:, 0], label="off-target", alpha=0.2)
         axs[0].hist(proposal_on.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
         axs[0].legend()
 
-        sns.lineplot(ax=axs[1], data=test_imq_df, x="n", y="error_rate", hue="type", style="type", markers=True)
-        # axs[1].axis(ymin=0.)
-        axs[1].set_title("IMQ")
-        # axs[1].set_xscale("log")
-        # axs[1].set_yscale("log")
+        sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type")
+        # axs[1].axis(ymin=-0.1, ymax=1.1)
+        axs[1].set_title("off target")
+        axs[1].set_xlabel("p-value")
         
-        # sns.lineplot(ax=axs[2], data=test_rbf_df, x="n", y="error_rate", hue="type", style="type", markers=True)
-        # # axs[2].axis(ymin=0.)
-        # axs[2].set_title("RBF")
-        # # axs[2].set_xscale("log")
-        # # axs[2].set_yscale("log")
+        sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type")
+        # axs[2].axis(ymin=-0.1, ymax=1.1)
+        axs[2].set_title("On target")
+        axs[2].set_xlabel("p-value")
 
         # save res
         # pickle.dump({"imq": test_imq_df, "rbf": test_rbf_df}, open(f"res/bootstrap/delta{delta}", "wb"))

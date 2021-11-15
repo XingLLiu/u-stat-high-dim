@@ -46,7 +46,7 @@ def create_mixture_gaussian(dim, delta):
 
 nrep = 10
 delta = 4.0
-bandwidth_list = ["med_heuristic", 1e-5, 1e-4, 1e-3, 1e-2]# ["med_heuristic", 0.1, 1., 2.5, 5., 7.5, 10., 25., 50., 75., 100., 125., 500., 725., 1000., 1250., 1500., 1750., 2000., 5000., 1e4, 1e5]
+bandwidth_list = [1e-5, 1e-3, 1e-2]# ["med_heuristic", 0.1, 1., 2.5, 5., 7.5, 10., 25., 50., 75., 100., 125., 500., 725., 1000., 1250., 1500., 1750., 2000., 5000., 1e4, 1e5]
 dim = 5
 
 if __name__ == '__main__':

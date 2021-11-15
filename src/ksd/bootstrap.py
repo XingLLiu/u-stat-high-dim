@@ -4,15 +4,17 @@ import tensorflow_probability as tfp
 from tqdm import trange
 
 class Bootstrap:
-  def __init__(self, ksd):
+  def __init__(self, ksd, n):
     """
     Inputs:
       ksd: instance of KSD class
+      n: number of samples
     """
     self.ksd = ksd
     self.ksd_hat = None
     self.ksd_star = None
     self.alpha = None
+    self.multinom = tfp.distributions.Multinomial(n, probs=tf.ones(int(n))/n)
   
   def sample_multinomial(self, n: int, num_boot: int):
     """
@@ -24,8 +26,7 @@ class Bootstrap:
       w \sim 1/n * Multi(n; 1/n, \ldots, 1/n)
     """
     n = float(n)
-    multinom = tfp.distributions.Multinomial(n, probs=tf.ones(int(n))/n)
-    w = multinom.sample(num_boot) # num_boot x n
+    w = self.multinom.sample(num_boot) # num_boot x n
     w /= n # num_boot x n
     return w
 
@@ -55,23 +56,25 @@ class Bootstrap:
     u_p = tf.expand_dims(u_p, axis=0) # 1 x n x n
 
     # draw multinomial samples
-    w = self.sample_multinomial(n, num_boot) # num_boot x n
+    w = self.sample_multinomial(n, num_boot) # num_boot x n #TODO change this to a loop
     # center
     w -= 1/float(n)
 
-    # compute outerproduct
+    # compute outerproduct #TODO check if this is efficient vs low end implementation
     w_outer = tf.expand_dims(w, axis=2) * tf.expand_dims(w, axis=1) # num_boot x n x n
     # remove diagonal
     w_outer = w_outer - tf.linalg.diag(tf.linalg.diag_part(w_outer)) # num_boot x n x n
     # compute bootstrap samples
-    self.ksd_star = tf.reduce_sum(w_outer * u_p, [1, 2]) # num_book
+    self.ksd_star = tf.reduce_sum(w_outer * u_p, [1, 2]) # num_boot
     return w_outer * u_p
 
   def _test_once(self, alpha):
+    """Utility function that performs bootstrap test once"""
     # critical_val = tfp.stats.percentile(self.ksd_star, 100*(1-alpha)).numpy()
     critical_val = np.quantile(self.ksd_star.numpy(), 1-alpha)
     reject = True if self.ksd_hat > critical_val else False
-    return reject, critical_val
+    p_val = np.count_nonzero(self.ksd_star.numpy() >= self.ksd_hat) / self.ksd_star.shape[0]
+    return reject, critical_val, p_val
 
   def test_once(
     self, 
@@ -82,6 +85,7 @@ class Bootstrap:
     **kwargs
   ):
     """
+    Perform bootstrap test once and return summary
     Inputs:
       alpha: significance level of test
 
@@ -91,11 +95,11 @@ class Bootstrap:
     u_p = self.compute_test_statistic(X, **kwargs)
     self.compute_bootstrap(num_boot=num_boost, u_p=u_p)
 
-    reject, critical_val = self._test_once(alpha)
+    reject, critical_val, p_val = self._test_once(alpha)
     conclusion = "Rejected" if reject else "NOT rejected"
-    self.test_summary = "Significance\t: {} \nCritical value\t: {:.5f} \nTest statistic\t: {:.5f} \nTest result\t: {:s}".format(
-      alpha, critical_val, self.ksd_hat, conclusion)
-    return reject
+    self.test_summary = "Significance\t: {} \nCritical value\t: {:.5f} \np-value\t: {:.5f} \nTest statistic\t: {:.5f} \nTest result\t: {:s}".format(
+      alpha, critical_val, p_val, self.ksd_hat, conclusion)
+    return reject, p_val
 
   def test(
     self, 
@@ -119,18 +123,19 @@ class Bootstrap:
     test_res = [-1] * num_test
     ksd_star = [-1] * num_test
     critical_val = [-1] * num_test
-    iterator = trange(num_test) # if verbose else range(num_test)
+    p_val = [-1] * num_test
+    iterator = trange(num_test) if verbose else range(num_test)
     # compute u_p (only need to do so once)
     u_p = self.compute_test_statistic(X, **kwargs)
 
     for i in iterator:
       self.compute_bootstrap(num_boot=num_boost, u_p=u_p)
       ksd_star[i] = self.ksd_star
-      test_res[i], critical_val[i] = self._test_once(alpha=alpha)
-      iterator.set_description(f"Repeating tests: {i+1} of {num_test}")
+      test_res[i], critical_val[i], p_val[i] = self._test_once(alpha=alpha)
+      if verbose:
+        iterator.set_description(f"Repeating tests: {i+1} of {num_test}")
 
-    return ksd_star, test_res, critical_val
-
+    return ksd_star, test_res, critical_val, p_val
 
 
 
