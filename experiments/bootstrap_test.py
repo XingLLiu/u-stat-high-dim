@@ -16,35 +16,35 @@ from experiments.compare_samplers import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boost):
+def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boot):
     """compute KSD and repeat for nrep times"""
     ksd = KSD(target=target, kernel=kernel)
     
     # nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) # + list(range(1000, 4000, 1000))
-    nsamples_list = [50]
-    ksd_list = []
+    nsamples_list = [500]
     ksd_df = pd.DataFrame(columns=["n", "p_value", "seed", "type"])
     iterator = tqdm(nsamples_list)
     for n in iterator:
         bootstrap = Bootstrap(ksd, n)
+        multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
         iterator.set_description(f"Running with sample size {n}")
         for seed in range(nrep):
             iterator.set_description(f"Repetition: {seed+1} of {nrep}")
             # off-target sample
             proposal_off_sample = proposal_off.sample(n)
-            _, p_val = bootstrap.test_once(alpha=alpha, num_boost=num_boost, X=proposal_off_sample)
+            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_off_sample, multinom_samples=multinom_samples[seed, :])
             ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "off-target"]
 
             # on-target sample
             proposal_on_sample = proposal_on.sample(n)
-            _, p_val = bootstrap.test_once(alpha=alpha, num_boost=num_boost, X=proposal_on_sample)
+            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_on_sample, multinom_samples=multinom_samples[seed, :])
             ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "target"]
     return ksd_df
 
-nrep = 50
-num_boost = 100 # number of bootstrap samples to compute critical val
+nrep = 1000
+num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
-delta_list = [1.0, 2.0]#, 3.0, 4.0]
+delta_list = [1.0, 2.0, 3.0, 4.0]
 dim = 5
 
 if __name__ == '__main__':
@@ -64,11 +64,11 @@ if __name__ == '__main__':
 
         # with IMQ
         imq = IMQ(med_heuristic=True)
-        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boost)
+        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot)
 
         # # with RBF
         # rbf = RBF()
-        # test_rbf_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, rbf, alpha, num_test, num_boost)
+        # test_rbf_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, rbf, alpha, num_test, num_boot)
 
         # plot
         subfig = subfigs.flat[ind]
@@ -79,13 +79,13 @@ if __name__ == '__main__':
         axs[0].hist(proposal_on.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
         axs[0].legend()
 
-        sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type")
-        # axs[1].axis(ymin=-0.1, ymax=1.1)
+        sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
+        # axs[1].axis(xmin=0.1, xmax=1.)
         axs[1].set_title("off target")
         axs[1].set_xlabel("p-value")
         
-        sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type")
-        # axs[2].axis(ymin=-0.1, ymax=1.1)
+        sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
+        axs[2].axis(xmin=0.1, xmax=1.)
         axs[2].set_title("On target")
         axs[2].set_xlabel("p-value")
 

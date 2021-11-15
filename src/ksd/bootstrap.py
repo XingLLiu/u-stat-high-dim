@@ -14,7 +14,7 @@ class Bootstrap:
     self.ksd_hat = None
     self.ksd_star = None
     self.alpha = None
-    self.multinom = tfp.distributions.Multinomial(n, probs=tf.ones(int(n))/n)
+    self.multinom = tfp.distributions.Multinomial(float(n), probs=tf.ones(n)/n)
   
   def sample_multinomial(self, n: int, num_boot: int):
     """
@@ -25,9 +25,8 @@ class Bootstrap:
     Returns:
       w \sim 1/n * Multi(n; 1/n, \ldots, 1/n)
     """
-    n = float(n)
+    # n = float(n)
     w = self.multinom.sample(num_boot) # num_boot x n
-    w /= n # num_boot x n
     return w
 
   def compute_test_statistic(self, X: tf.Tensor, **kwargs):
@@ -45,7 +44,8 @@ class Bootstrap:
   def compute_bootstrap(
     self, 
     num_boot: int, 
-    u_p: tf.Tensor
+    u_p: tf.Tensor,
+    multinom_samples: tf.Tensor=None
   ):
     """
     Inputs:
@@ -56,11 +56,16 @@ class Bootstrap:
     u_p = tf.expand_dims(u_p, axis=0) # 1 x n x n
 
     # draw multinomial samples
-    w = self.sample_multinomial(n, num_boot) # num_boot x n #TODO change this to a loop
+    if multinom_samples is None:
+      w = self.sample_multinomial(n, num_boot) # num_boot x n
+    else:
+      w = multinom_samples
+    # scale to [0, 1]
+    w /= n # num_boot x n
     # center
     w -= 1/float(n)
 
-    # compute outerproduct #TODO check if this is efficient vs low end implementation
+    # compute outerproduct
     w_outer = tf.expand_dims(w, axis=2) * tf.expand_dims(w, axis=1) # num_boot x n x n
     # remove diagonal
     w_outer = w_outer - tf.linalg.diag(tf.linalg.diag_part(w_outer)) # num_boot x n x n
@@ -79,9 +84,9 @@ class Bootstrap:
   def test_once(
     self, 
     alpha: float, 
-    num_boost: int, 
+    num_boot: int, 
     X: tf.Tensor=None,
-
+    multinom_samples: tf.Tensor=None,
     **kwargs
   ):
     """
@@ -93,7 +98,7 @@ class Bootstrap:
       reject: 1 if test is rejected; 0 otherwise
     """
     u_p = self.compute_test_statistic(X, **kwargs)
-    self.compute_bootstrap(num_boot=num_boost, u_p=u_p)
+    self.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_samples)
 
     reject, critical_val, p_val = self._test_once(alpha)
     conclusion = "Rejected" if reject else "NOT rejected"
@@ -105,7 +110,7 @@ class Bootstrap:
     self, 
     alpha: float, 
     num_test: int, 
-    num_boost: int, 
+    num_boot: int, 
     X: tf.Tensor, 
     verbose: bool=True,
     **kwargs
@@ -129,7 +134,7 @@ class Bootstrap:
     u_p = self.compute_test_statistic(X, **kwargs)
 
     for i in iterator:
-      self.compute_bootstrap(num_boot=num_boost, u_p=u_p)
+      self.compute_bootstrap(num_boot=num_boot, u_p=u_p)
       ksd_star[i] = self.ksd_star
       test_res[i], critical_val[i], p_val[i] = self._test_once(alpha=alpha)
       if verbose:
