@@ -80,12 +80,12 @@ if __name__ == '__main__':
         axs[0].legend()
 
         sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
-        axs[1].axis(xmin=0., xmax=1.)
+        axs[1].axis(xmin=-0.01, xmax=1.)
         axs[1].set_title("off target")
         axs[1].set_xlabel("p-value")
         
         sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
-        axs[2].axis(xmin=0., xmax=1.)
+        axs[2].axis(xmin=-0.01, xmax=1.)
         axs[2].set_title("On target")
         axs[2].set_xlabel("p-value")
 
