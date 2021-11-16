@@ -91,7 +91,7 @@ class MixtureGaussian(tfd.Distribution):
 nrep = 10
 delta = 4.0
 mean = 0.
-var_list = [0.01, 1., 5., 10., 20., 100., 500., 1e3, 1e4, 1e5]
+var_list = [0.01, 0.1, 1., 5., 10., 50., 100.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
 

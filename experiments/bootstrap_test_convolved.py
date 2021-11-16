@@ -9,18 +9,17 @@ import seaborn as sns
 from tqdm import tqdm, trange
 import pickle
 
-from src.ksd.ksd import KSD
+from src.ksd.ksd import ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 from experiments.compare_samplers import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boot):
+def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, alpha, num_boot, num_est):
     """compute KSD and repeat for nrep times"""
-    ksd = KSD(target=target, kernel=kernel)
+    ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=convolution)
     
-    # nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) # + list(range(1000, 4000, 1000))
     nsamples_list = [500]
     ksd_df = pd.DataFrame(columns=["n", "p_value", "seed", "type"])
     iterator = tqdm(nsamples_list)
@@ -32,28 +31,36 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
             iterator.set_description(f"Repetition: {seed+1} of {nrep}")
             # off-target sample
             proposal_off_sample = proposal_off.sample(n)
-            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_off_sample, multinom_samples=multinom_samples[seed, :])
+            conv_sample = convolution.sample(n)
+            proposal_off_sample += conv_sample
+            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_off_sample, multinom_samples=multinom_samples[seed, :], num_est=num_est)
             ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "off-target"]
 
             # on-target sample
             proposal_on_sample = proposal_on.sample(n)
-            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_on_sample, multinom_samples=multinom_samples[seed, :])
+            proposal_on_sample += conv_sample
+            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_on_sample, multinom_samples=multinom_samples[seed, :], num_est=num_est)
             ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "target"]
     return ksd_df
 
 nrep = 1000
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
-delta_list = [1.0, 2.0, 3.0, 4.0]
+delta = 4.0
+var_list = [1e-2, 0.1, 1., 5., 10., 50., 100., ]
 dim = 5
+num_est = 10000 # num samples used to estimate concolved target
 
 if __name__ == '__main__':
-    fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 9))
-    subfigs = fig.subfigures(1, len(delta_list))
-    for ind, delta in enumerate(delta_list):
-        print(f"Running with delta = {delta}")
+    fig = plt.figure(constrained_layout=True, figsize=(5*len(var_list), 9))
+    subfigs = fig.subfigures(1, len(var_list))
+    for ind, var in enumerate(var_list):
+        print(f"Running with var = {var}")
         # target distribution
         target = create_mixture_gaussian(dim=dim, delta=delta)
+
+        # convolution kernel
+        convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
 
         # off-target proposal distribution
         proposal_on = create_mixture_gaussian(dim=dim, delta=delta)
@@ -64,7 +71,7 @@ if __name__ == '__main__':
 
         # with IMQ
         imq = IMQ(med_heuristic=True)
-        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot)
+        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, imq, alpha, num_boot, num_est)
 
         # # with RBF
         # rbf = RBF()
@@ -72,11 +79,12 @@ if __name__ == '__main__':
 
         # plot
         subfig = subfigs.flat[ind]
-        subfig.suptitle(f"delta = {delta}")
+        subfig.suptitle(f"var = {var}")
         axs = subfig.subplots(3, 1)
         axs = axs.flat
-        axs[0].hist(proposal_off.sample(10000).numpy()[:, 0], label="off-target", alpha=0.2)
-        axs[0].hist(proposal_on.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
+        convolution_sample = convolution.sample(10000)
+        axs[0].hist((proposal_off.sample(10000) + convolution_sample).numpy()[:, 0], label="off-target", alpha=0.2)
+        axs[0].hist((proposal_on.sample(10000) + convolution_sample).numpy()[:, 0], label="target", alpha=0.2)
         axs[0].legend()
 
         sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
@@ -90,9 +98,7 @@ if __name__ == '__main__':
         axs[2].set_xlabel("p-value")
 
         # save res
-        # pickle.dump({"imq": test_imq_df, "rbf": test_rbf_df}, open(f"res/bootstrap/delta{delta}", "wb"))
-        # pickle.dump({"imq": test_imq_df}, open(f"res/bootstrap/delta{delta}", "wb"))
-        test_imq_df.to_csv(f"res/bootstrap/delta{delta}.csv", index=False)
+        test_imq_df.to_csv(f"res/bootstrap/var{var}.csv", index=False)
 
     # plt.tight_layout()
-    fig.savefig("figs/bootstrap.png")
+    fig.savefig("figs/bootstrap_convolved.png")
