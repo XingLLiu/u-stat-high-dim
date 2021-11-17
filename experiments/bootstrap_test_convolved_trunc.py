@@ -47,12 +47,36 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolutio
         ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "target"]
     return ksd_df
 
+class TruncatedDistribution:
+    def __init__(self, dist, low, high):
+        """truncate the **first** coordinate to [low, high].
+        
+        Inputs:
+            low, high: scalars
+        """
+        self.dist = dist
+        self.low = low
+        self.high = high
+    def prob(self, x):
+        """prob upto normalizing const"""
+        return self.dist.prob(x)
+    def sample(self, size):
+        x = self.dist.sample(size*5)
+        samples = tf.boolean_mask(x, (x[:, 0] >= self.low) & (x[:, 0] <= self.high))
+        n = samples.shape[0]
+        while n < size:
+            x = self.dist.sample(size) # size x dim
+            samples = tf.concat([samples, tf.boolean_mask(x, (x[:, 0] >= self.low) & (x[:, 0] <= self.high))], axis=0)
+            n = samples.shape[0]
+        return samples[:size, :]
+
+
 parser = argparse.ArgumentParser()
 nrep = 1000
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta = 4.0
-var_list = [1e-2, 0.1, 1., 5., 10., 20., 30., 40., 50., 100., ]
+var_list = [1e-4, 1e-2, 1., 5., 10.] # [1e-2, 0.1, 1., 5., 10., 20., 30., 40., 50., 100., ]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
 parser.add_argument("--load", type=str, default="")
@@ -76,11 +100,11 @@ if __name__ == '__main__':
         
         # off-target proposal distribution
         proposal_mean = - delta * tf.eye(dim)[:, 0]
-        proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
+        proposal_off = TruncatedDistribution(dist=proposal_on, low=proposal_mean[0]*2, high=0.)
 
         if len(args.load) > 0 :
             try:
-                test_imq_df = pd.read_csv(args.load + f"/convolved_var{var}.csv")
+                test_imq_df = pd.read_csv(args.load + f"/trunc_convolved_var{var}.csv")
                 print(f"Loaded pre-saved data for var={var}")
             except:
                 print(f"Pre-saved data for var={var} not found. Running from scratch now.")
@@ -113,7 +137,7 @@ if __name__ == '__main__':
         axs[2].set_xlabel("p-value")
 
         # save res
-        test_imq_df.to_csv(f"res/bootstrap/convolved_var{var}.csv", index=False)
+        test_imq_df.to_csv(f"res/bootstrap/trunc_convolved_var{var}.csv", index=False)
 
     # plt.tight_layout()
-    fig.savefig("figs/bootstrap_convolved.png")
+    fig.savefig("figs/bootstrap_convolved_truncated.png")
