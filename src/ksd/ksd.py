@@ -95,12 +95,11 @@ class ConvolvedKSD:
     self.k = kernel
     self.conv_kernel = conv_kernel
 
-  def __call__(self, X: tf.Tensor, Y: tf.Tensor, num_est: int, output_dim: int=1):
+  def __call__(self, X: tf.Tensor, Y: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
     """
     Inputs:
       X: n x dim
       Y: m x dim
-      num_est: number of samples for estimating score of convolution
       output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
         the matrix [ u_p(xi, xj) ]_{ij} is returned
     """
@@ -109,8 +108,7 @@ class ConvolvedKSD:
     Y_cp = tf.expand_dims(tf.identity(Y), axis=0) # 1 x m x dim
 
     ## estimate score for convolution
-    Z = tf.expand_dims(
-      self.conv_kernel.sample(num_est), axis=1) # l x 1 x dim
+    Z = tf.expand_dims(conv_samples, axis=1) # l x 1 x dim
 
     with tf.GradientTape() as g:
       g.watch(X_cp)
