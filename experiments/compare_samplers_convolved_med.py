@@ -9,61 +9,53 @@ from tqdm import tqdm
 import argparse
 
 from src.ksd.ksd import ConvolvedKSD
-from src.ksd.kernel import RBF, IMQ
+from src.ksd.kernel import RBF, IMQ, median_heuristic, l2norm
 from experiments.compare_samplers import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, num_est):
+def var_med_heuristic(samples):
+    """Med heuristic for computing the variance of Gaussian noise"""
+    dim = samples.shape[1]
+    l2norm_mat = l2norm(samples, tf.identity(samples))
+    return median_heuristic(l2norm_mat) / dim
+
+def run_ksd_experiment(nrep, target, proposal_on, proposal_off, kernel, num_est):
     """compute KSD and repeat for nrep times"""
-    ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=convolution)
     
     nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) + list(range(1000, 4000, 1000))
-    ksd_df = pd.DataFrame(columns=["n", "ksd", "seed", "type"])
+    ksd_df = pd.DataFrame(columns=["n", "ksd", "var_est", "seed", "type"])
     for n in tqdm(nsamples_list):
         for seed in range(nrep):
+            # draw samples from two samplers
+            proposal_off_sample = proposal_off.sample(n)
+            proposal_on_sample = proposal_on.sample(n)
+            
+            # estimate noise var
+            var = var_med_heuristic(proposal_on_sample)
+
+            # define noise distribution
+            convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
+            
             # convolution sample
             conv_sample_full = convolution.sample(num_est) # for p
 
             conv_ind = tf.experimental.numpy.random.randint(low=0, high=num_est, size=n)
             conv_sample = tf.gather(conv_sample_full, conv_ind, axis=0) # for q
 
+            ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=convolution)
+            
             # off-target sample
-            proposal_off_sample = proposal_off.sample(n)
             # conv_sample = convolution.sample(n)
             proposal_off_sample += conv_sample
             ksd_val = ksd(proposal_off_sample, tf.identity(proposal_off_sample), conv_samples=conv_sample_full).numpy()
-            ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "off-target"]
+            ksd_df.loc[len(ksd_df)] = [n, ksd_val, var.numpy(), seed, "off-target"]
 
             # on-target sample
-            proposal_on_sample = proposal_on.sample(n)
             proposal_on_sample += conv_sample
             ksd_val = ksd(proposal_on_sample, tf.identity(proposal_on_sample), conv_samples=conv_sample_full).numpy()
-            ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "target"]
+            ksd_df.loc[len(ksd_df)] = [n, ksd_val, var.numpy(), seed, "target"]
     return ksd_df
-
-def create_convolved_mixture_gaussian(dim, delta, mean, var):
-    """
-    """
-    e1 = tf.eye(dim)[:, 0]
-    convolved_scale = tf.math.sqrt(1 + var) * tf.ones(e1.shape[0])
-    mix_gauss = tfd.Mixture(
-      cat=tfd.Categorical(probs=[0.5, 0.5]),
-      components=[
-        tfd.MultivariateNormalDiag(-delta * e1 + mean, convolved_scale),
-        tfd.MultivariateNormalDiag(delta * e1 + mean, convolved_scale)
-    ])
-    return mix_gauss
-
-def create_convolved_proposal(dim, proposal_mean, mean, var):
-    """
-    Convolving with auxiliary variable N(mu, sigma^2) to give
-    N(proposal_mean + mean, proposal_var + var).
-    This is feasible when only samples are available, as sampling from
-    it equivalent to X + Z, where X \sim proposal, and Z \sim auxiliary.
-    """
-    return tfd.MultivariateNormalDiag(proposal_mean + mean, tf.math.sqrt(1 + var) * tf.ones(proposal_mean.shape[0]))
-
 
 class MixtureGaussian(tfd.Distribution):
     def __init__(self, delta, dim, *args, **kwargs):
@@ -92,48 +84,40 @@ class MixtureGaussian(tfd.Distribution):
 
 parser = argparse.ArgumentParser()
 nrep = 10
-delta = 4.0
+delta_list = [1., 2., 4., 6.]
 mean = 0.
-var_list = [0.01, 1., 5., 10.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
 parser.add_argument("--ratio", type=float, default="0.5", help="mixture ratio of the off-target")
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    fig = plt.figure(constrained_layout=True, figsize=(5*len(var_list), 9))
-    subfigs = fig.subfigures(1, len(var_list))
-    for ind, var in enumerate(var_list):
-        print(f"Running with var = {var}")
+    fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 9))
+    subfigs = fig.subfigures(1, len(delta_list))
+    for ind, delta in enumerate(delta_list):
+        print(f"Running with delta = {delta}")
         # target distribution
         target = create_mixture_gaussian(dim=dim, delta=delta, ratio=args.ratio)
-        # target = create_convolved_mixture_gaussian(dim=dim, delta=delta, mean=mean, var=var)
-
-        # convolution kernel
-        convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
 
         # off-target proposal distribution
         proposal_mean = - delta * tf.eye(dim)[:, 0]
-        # proposal_off = create_convolved_proposal(dim, proposal_mean, mean, var)
         proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
 
         # on-target proposal distribution
-        # proposal_on = create_convolved_mixture_gaussian(dim, delta, mean, var)
         proposal_on = create_mixture_gaussian(dim=dim, delta=delta, ratio=args.ratio)
 
         # with IMQ
         imq = IMQ()
-        ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, imq, num_est)
-
-        # with RBF
-        rbf = RBF()
-        ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, rbf, num_est)
+        ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, imq, num_est)
 
         # plot
         subfig = subfigs.flat[ind]
-        subfig.suptitle(f"var = {var}")
+        subfig.suptitle(f"delta = {delta}")
         axs = subfig.subplots(3, 1)
         axs = axs.flat
+
+        var = tf.constant(ksd_imq_df.loc[ksd_imq_df.n == ksd_imq_df.n.max(), "var_est"].mean(), dtype=tf.float32)
+        convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
         convolution_sample = convolution.sample(10000)
         axs[0].hist((proposal_off.sample(10000) + convolution_sample).numpy()[:, 0], label="off-target", alpha=0.2)
         axs[0].hist((target.sample(10000) + convolution_sample).numpy()[:, 0], label="target", alpha=0.2)
@@ -146,12 +130,17 @@ if __name__ == '__main__':
         axs[1].set_xscale("log")
         axs[1].set_yscale("log")
         
-        sns.lineplot(ax=axs[2], data=ksd_rbf_df, x="n", y="ksd", hue="type", style="type", markers=True)
-        # _ = plt.ylim((0, None))
-        axs[2].axis(ymin=1e-3)
-        axs[2].set_title("RBF")
+        # sns.lineplot(ax=axs[2], data=ksd_rbf_df, x="n", y="ksd", hue="type", style="type", markers=True)
+        # # _ = plt.ylim((0, None))
+        # axs[2].axis(ymin=1e-3)
+        # axs[2].set_title("RBF")
+        # axs[2].set_xscale("log")
+        # axs[2].set_yscale("log")
+
+        sns.lineplot(ax=axs[2], data=ksd_imq_df.loc[ksd_imq_df.type == "target"], x="n", y="var_est", style="type", markers=True)
+        axs[2].set_title("IMQ var estimates of noise")
         axs[2].set_xscale("log")
         axs[2].set_yscale("log")
 
     # plt.tight_layout()
-    fig.savefig(f"figs/mix_gaussian/dim{dim}_ratio{args.ratio}.png")
+    fig.savefig(f"figs/mix_gaussian/dim{dim}_ratio{args.ratio}_med.png")

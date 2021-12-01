@@ -16,9 +16,7 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, kernel):
     """compute KSD and repeat for nrep times"""
     ksd = KSD(target=target, kernel=kernel)
     
-    nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) # + list(range(1000, 4000, 1000))
-    # nsamples_list = [10, 5000]
-    ksd_list = []
+    nsamples_list = [10, 20, 40, 60, 80] + list(range(100, 1000, 100)) + list(range(1000, 5000, 1000))
     ksd_df = pd.DataFrame(columns=["n", "ksd", "seed", "type"])
     for n in tqdm(nsamples_list):
         for seed in range(nrep):
@@ -33,10 +31,10 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, kernel):
             ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "target"]
     return ksd_df
 
-def create_mixture_gaussian(dim, delta):
+def create_mixture_gaussian(dim, delta, ratio=0.5):
     e1 = tf.eye(dim)[:, 0]
     mix_gauss = tfd.Mixture(
-      cat=tfd.Categorical(probs=[0.5, 0.5]),
+      cat=tfd.Categorical(probs=[ratio, 1-ratio]),
       components=[
         tfd.MultivariateNormalDiag(-delta * e1),
         tfd.MultivariateNormalDiag(delta * e1)
@@ -45,7 +43,7 @@ def create_mixture_gaussian(dim, delta):
         
 
 nrep = 10
-delta_list = [1.0, 2.0, 3.0, 4.0]
+delta_list = [1., 2., 4.0, 6.0]
 dim = 5
 
 if __name__ == '__main__':
@@ -64,11 +62,11 @@ if __name__ == '__main__':
         proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
 
         # with IMQ
-        imq = IMQ()
+        imq = IMQ(med_heuristic=True)
         ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, imq)
 
         # with RBF
-        rbf = RBF()
+        rbf = RBF(med_heuristic=True)
         ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, rbf)
 
         # plot
@@ -95,4 +93,4 @@ if __name__ == '__main__':
         axs[2].set_yscale("log")
 
     # plt.tight_layout()
-    fig.savefig("figs/mixture_gaussian_bandwidth.png")
+    fig.savefig("figs/mixture_gaussian.png")
