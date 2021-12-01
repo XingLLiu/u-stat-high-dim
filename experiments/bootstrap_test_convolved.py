@@ -52,7 +52,7 @@ nrep = 1000
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta = 4.0
-var_list = [1e-2, 0.1, 1., 5., 10., 20., 30., 40., 50., 100., ]
+var_list = [1e-2, 1., 5., 10., 50.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
 parser.add_argument("--load", type=str, default="")

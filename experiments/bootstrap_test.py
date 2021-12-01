@@ -81,18 +81,20 @@ if __name__ == '__main__':
 
         sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
         axs[1].axis(xmin=-0.01, xmax=1.)
-        axs[1].set_title("off target")
+        err = (test_imq_df.loc[test_imq_df.type == "off-target", "p_value"] > alpha).mean()
+        axs[1].set_title(f"off target (type II error = {err})")
         axs[1].set_xlabel("p-value")
         
         sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
         axs[2].axis(xmin=-0.01, xmax=1.)
-        axs[2].set_title("On target")
+        err = (test_imq_df.loc[test_imq_df.type == "target", "p_value"] <= alpha).mean()
+        axs[2].set_title(f"On target (type I error = {err})")
         axs[2].set_xlabel("p-value")
 
         # save res
         # pickle.dump({"imq": test_imq_df, "rbf": test_rbf_df}, open(f"res/bootstrap/delta{delta}", "wb"))
         # pickle.dump({"imq": test_imq_df}, open(f"res/bootstrap/delta{delta}", "wb"))
-        test_imq_df.to_csv(f"res/bootstrap/delta{delta}.csv", index=False)
+        # test_imq_df.to_csv(f"res/bootstrap/delta{delta}.csv", index=False)
 
     # plt.tight_layout()
     fig.savefig("figs/bootstrap.png")
