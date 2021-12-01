@@ -13,7 +13,7 @@ from experiments.compare_samplers import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, num_est):
+def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, num_est, var):
     """compute KSD and repeat for nrep times"""
     ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=convolution)
     
@@ -31,13 +31,13 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, ker
             proposal_off_sample = proposal_off.sample(n)
             # conv_sample = convolution.sample(n)
             proposal_off_sample += conv_sample
-            ksd_val = ksd(proposal_off_sample, tf.identity(proposal_off_sample), conv_samples=conv_sample_full).numpy()
+            ksd_val = ksd.eval(proposal_off_sample, tf.identity(proposal_off_sample), noise_var=var, conv_samples=conv_sample_full).numpy()
             ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "off-target"]
 
             # on-target sample
             proposal_on_sample = proposal_on.sample(n)
             proposal_on_sample += conv_sample
-            ksd_val = ksd(proposal_on_sample, tf.identity(proposal_on_sample), conv_samples=conv_sample_full).numpy()
+            ksd_val = ksd.eval(proposal_on_sample, tf.identity(proposal_on_sample), noise_var=var, conv_samples=conv_sample_full).numpy()
             ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "target"]
     return ksd_df
 
@@ -106,24 +106,22 @@ if __name__ == '__main__':
         # target = create_convolved_mixture_gaussian(dim=dim, delta=delta, mean=mean, var=var)
 
         # convolution kernel
-        convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
+        convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
 
         # off-target proposal distribution
         proposal_mean = - delta * tf.eye(dim)[:, 0]
-        # proposal_off = create_convolved_proposal(dim, proposal_mean, mean, var)
         proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
 
         # on-target proposal distribution
-        # proposal_on = create_convolved_mixture_gaussian(dim, delta, mean, var)
         proposal_on = create_mixture_gaussian(dim=dim, delta=delta)
 
         # with IMQ
         imq = IMQ()
-        ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, imq, num_est)
+        ksd_imq_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, imq, num_est, var)
 
         # with RBF
         rbf = RBF()
-        ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, rbf, num_est)
+        ksd_rbf_df = run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, rbf, num_est, var)
 
         # plot
         subfig = subfigs.flat[ind]
