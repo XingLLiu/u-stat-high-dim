@@ -62,12 +62,11 @@ class KSD:
     # term4
     gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
     term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x dim
-    # print(tf.reduce_sum(term4_mat, axis=2))
     term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
     term4 = tf.reduce_sum(term4_mat)
-    # print(term1.numpy(), term2.numpy(), term3.numpy(), term4.numpy())
 
     if output_dim == 1:
+      # print(term1.numpy(), term2.numpy(), term3.numpy(), term4.numpy())
       ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
       return ksd
     elif output_dim == 2:
@@ -165,3 +164,93 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
 
+
+  def eval(self, X: tf.Tensor, Y: tf.Tensor, conv_samples: tf.Tensor, noise_var: float, output_dim: int=1):
+    """
+    Inputs:
+      X: n x dim
+      Y: m x dim
+      output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
+        the matrix [ u_p(xi, xj) ]_{ij} is returned
+    """
+    noise_sd = tf.sqrt(noise_var)
+
+    ## estimate score for convolution
+    Z = tf.expand_dims(conv_samples, axis=1) # l x 1 x dim
+    
+    ## copy data for score computation
+    X = tf.expand_dims(tf.identity(X), axis=0) # 1 x n x dim
+    Y = tf.expand_dims(tf.identity(Y), axis=0) # 1 x m x dim
+
+    ## compute k_0(\sigma*z_r + x_i, \sigma*z_s + x_j)
+    X = noise_sd * tf.identity(Z) + X # l x n x dim
+    Y = noise_sd * tf.identity(Z) + Y # l x m x dim
+
+    ## reshape
+    X = tf.reshape(X, (-1, X.shape[-1])) # l*n x dim
+    Y = tf.reshape(Y, (-1, X.shape[-1])) # l*m x dim
+
+    ## make copies for estimating the score
+    X_cp = tf.expand_dims(tf.identity(X), axis=0) # 1 x l*n x dim
+    Y_cp = tf.expand_dims(tf.identity(Y), axis=0) # 1 x l*m x dim
+
+    ## calculate scores using autodiff
+    #? if this doesn't work, replace Z with an indep sample
+    with tf.GradientTape() as g:
+      g.watch(X_cp)
+      diff_1 = noise_sd * Z + X_cp # l x l*n x dim #TODO broadcasting is potentially causing problems
+      prob_1 = self.p.prob(diff_1) # l x l*n
+    grad_1 = g.gradient(prob_1, X_cp) # 1 x l*n x dim
+    grad_1 = tf.squeeze(grad_1, axis=0) # l*n x dim
+    score_X = grad_1 / tf.expand_dims(
+      tf.math.reduce_sum(prob_1, axis=0), axis=1) # l*n x dim
+
+    with tf.GradientTape() as g:
+      g.watch(Y_cp)
+      diff_2 = noise_sd * tf.identity(Z) + Y_cp # l xl* m x dim
+      prob_2 = self.p.prob(diff_2) # l*m x dim
+    grad_2 = g.gradient(prob_2, Y_cp)
+    grad_2 = tf.squeeze(grad_2, axis=0) # l*m x dim
+    score_Y = grad_2 / tf.expand_dims(
+      tf.math.reduce_sum(prob_2, axis=0), axis=1) # l*m x dim
+
+    # median heuristic
+    self.k.bandwidth(X, Y) #? maybe should use med heuristic between original X and Y?
+    
+    # kernel matrix
+    K_XY = self.k(X, Y) # l*n x l*m
+    
+    # kernel grad
+    grad_K_Y = self.k.grad_second(X, Y) # l*n x l*m x dim
+    grad_K_X = self.k.grad_first(X, Y) # l*n x l*m x dim
+    
+    # term 1
+    term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # l*n x l*m
+    term1 = tf.reduce_sum(term1_mat)
+    # term 2
+    term2_mat = tf.expand_dims(score_X, 1) * grad_K_Y # l*n x l*m x dim
+    term2_mat = tf.reduce_sum(term2_mat, axis=-1)
+    term2 = tf.reduce_sum(term2_mat)
+    # term3
+    term3_mat = tf.expand_dims(score_Y, 0) * grad_K_X # l*n x l*m x dim
+    term3_mat = tf.reduce_sum(term3_mat, axis=-1)
+    term3 = tf.reduce_sum(term3_mat)
+    # term4
+    gradgrad_K = self.k.gradgrad(X, Y) # l*n x l*m x dim x dim
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # l*n x l*m x dim
+    term4_mat = tf.reduce_sum(term4_mat, axis=2) # l*n x l*m
+    term4 = tf.reduce_sum(term4_mat)
+
+    ksd = noise_var * (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
+    return ksd
+    
+    # if output_dim == 1:
+    #   # print(term1.numpy(), term2.numpy(), term3.numpy(), term4.numpy())
+    #   ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
+    #   return ksd
+    # elif output_dim == 2:
+    # assert term1_mat.shape == (X.shape[0], Y.shape[0])
+    # assert term2_mat.shape == (X.shape[0], Y.shape[0])
+    # assert term3_mat.shape == (X.shape[0], Y.shape[0])
+    # assert term4_mat.shape == (X.shape[0], Y.shape[0]), term4_mat.shape
+    # return term1_mat + term2_mat + term3_mat + term4_mat

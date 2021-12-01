@@ -47,7 +47,7 @@ def create_mixture_gaussian(dim, delta):
 nrep = 10
 delta = 4.0
 bandwidth_list = ["med_heuristic", 1e-5, 1e-3, 1e-2, 0.1, 1., 10., 50., 100., 500., 1e3, 5*1e3, 1e4]
-dim = 1
+dim = 5
 
 if __name__ == '__main__':
     fig = plt.figure(constrained_layout=True, figsize=(5*len(bandwidth_list), 9))
