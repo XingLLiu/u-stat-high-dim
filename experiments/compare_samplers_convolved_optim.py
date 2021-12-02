@@ -29,7 +29,6 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, convolution, ker
 
             # off-target sample
             proposal_off_sample = proposal_off.sample(n)
-            # conv_sample = convolution.sample(n)
             proposal_off_sample += conv_sample
             ksd_val = ksd.eval(proposal_off_sample, tf.identity(proposal_off_sample), noise_var=var, conv_samples=conv_sample_full).numpy()
             ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "off-target"]

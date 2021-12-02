@@ -166,7 +166,7 @@ class ConvolvedKSD:
       return term1_mat + term2_mat + term3_mat + term4_mat
 
 
-  def eval(self, noise_var: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
+  def eval(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
     """
     Inputs:
       X: n x dim
@@ -174,7 +174,8 @@ class ConvolvedKSD:
       output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
         the matrix [ u_p(xi, xj) ]_{ij} is returned
     """
-    noise_sd = tf.sqrt(noise_var)
+    # noise_sd = tf.sqrt(noise_var)
+    noise_sd = tf.exp(log_noise_std)
 
     assert conv_samples.shape == X.shape
     ## add noise to samples
@@ -190,7 +191,7 @@ class ConvolvedKSD:
 
     with tf.GradientTape() as g:
       g.watch(X_cp)
-      input_1 = noise_sd * Z + X_cp # l x n x dim #TODO broadcasting is potentially causing problems
+      input_1 = X_cp - noise_sd * Z # l x n x dim #TODO broadcasting is potentially causing problems
       prob_1 = self.p.prob(input_1) # l x n
     grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
@@ -199,7 +200,7 @@ class ConvolvedKSD:
 
     with tf.GradientTape() as g:
       g.watch(Y_cp)
-      input_2 = noise_sd * tf.identity(Z) + Y_cp
+      input_2 = Y_cp - noise_sd * tf.identity(Z) # l x m x dim
       prob_2 = self.p.prob(input_2) # m x dim
     grad_2 = g.gradient(prob_2, Y_cp)
     grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
