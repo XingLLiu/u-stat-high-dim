@@ -130,13 +130,6 @@ if __name__ == '__main__':
         axs[1].set_xscale("log")
         axs[1].set_yscale("log")
         
-        # sns.lineplot(ax=axs[2], data=ksd_rbf_df, x="n", y="ksd", hue="type", style="type", markers=True)
-        # # _ = plt.ylim((0, None))
-        # axs[2].axis(ymin=1e-3)
-        # axs[2].set_title("RBF")
-        # axs[2].set_xscale("log")
-        # axs[2].set_yscale("log")
-
         sns.lineplot(ax=axs[2], data=ksd_imq_df.loc[ksd_imq_df.type == "target"], x="n", y="var_est", style="type", markers=True)
         axs[2].set_title("IMQ var estimates of noise")
         axs[2].set_xscale("log")
