@@ -244,5 +244,22 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
 
+  def optim(self, nsteps: int, log_noise_std: tf.Tensor, X: tf.Tensor, Y: tf.Tensor, 
+    conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, optimizer: tf.optimizers, output_dim: int=1):
+    """
+    Inputs:
+      log_noise_std: needs to be a tf.Variable
+    """
 
+    loss_fn = lambda: -self.eval(
+      log_noise_std=log_noise_std, 
+      X=X, 
+      Y=Y, 
+      conv_samples_full=conv_samples_full, 
+      conv_samples=conv_samples,
+      output_dim=output_dim
+    )
+
+    
+    _ = tfp.math.minimize(loss_fn, num_steps=nsteps, optimizer=optimizer)
 
