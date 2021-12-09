@@ -40,13 +40,13 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, kernel, num_est,
             # off-target sample
             proposal_off_sample = proposal_off.sample(n)
 
-            log_noise_std = tf.Variable(1.) #TODO start from 0 insteaddis
+            log_noise_std = tf.Variable(1.) #TODO start from 0 instead
             off_sample_train, off_sample_test = proposal_off_sample[:ntrain, :], proposal_off_sample[ntrain:, :]
             conv_sample_train, conv_sample_test = conv_sample[:ntrain, :], conv_sample[ntrain:, :]
             ksd.optim(noptim_steps, log_noise_std, off_sample_train, tf.identity(off_sample_train), conv_sample_full, conv_sample_train, optimizer)
 
             ksd_val = ksd.eval(log_noise_std=log_noise_std.numpy(), X=off_sample_test, Y=tf.identity(off_sample_test), conv_samples_full=conv_sample_full, conv_samples=conv_sample_test).numpy()
-            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(log_noise_std).numpy(), seed, "off-target"]
+            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(2*log_noise_std).numpy(), seed, "off-target"]
 
             # on-target sample
             proposal_on_sample = proposal_on.sample(n)
@@ -56,11 +56,11 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, kernel, num_est,
             ksd.optim(noptim_steps, log_noise_std_on, on_sample_train, tf.identity(on_sample_train), conv_sample_full, conv_sample_train, optimizer)
 
             ksd_val = ksd.eval(log_noise_std=log_noise_std_on.numpy(), X=on_sample_test, Y=tf.identity(on_sample_test), conv_samples_full=conv_sample_full, conv_samples=conv_sample_test).numpy()
-            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(log_noise_std_on).numpy(), seed, "target"]
+            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(2*log_noise_std_on).numpy(), seed, "target"]
     return ksd_df
 
 
-nrep = 10
+nrep = 20
 delta_list = [1., 2., 4., 6.]
 mean = 0.
 dim = 5
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         axs = subfig.subplots(4, 1)
         axs = axs.flat
 
-        var = tf.constant(ksd_imq_df.loc[ksd_imq_df.n == ksd_imq_df.n.max(), "var_est"].mean(), dtype=tf.float32)
+        var = tf.constant(ksd_imq_df.loc[(ksd_imq_df.n == ksd_imq_df.n.max()) & (ksd_imq_df.type == "off-target"), "var_est"].mean(), dtype=tf.float32)
         convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
         convolution_sample = convolution.sample(10000)
         axs[0].hist((proposal_off.sample(10000) + convolution_sample).numpy()[:, 0], label="off-target", alpha=0.2)
@@ -116,6 +116,9 @@ if __name__ == '__main__':
         axs[3].set_title("Var estimates for on-target samples")
         axs[3].set_xscale("log")
         axs[3].set_yscale("log")
+
+        # save res
+        ksd_imq_df.to_csv(f"res/compare_samplers/{delta}_optim.csv", index=False)
 
     # plt.tight_layout()
     fig.savefig(f"figs/mix_gaussian/dim{dim}_ratio{ratio}_optim.png")
