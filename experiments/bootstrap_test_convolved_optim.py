@@ -13,50 +13,63 @@ from src.ksd.ksd import ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 from experiments.compare_samplers import create_mixture_gaussian
-from experiments.compare_samplers_convolved_med import var_med_heuristic
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boot, num_est):
+def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boot, num_est, optim_steps):
     """compute KSD and repeat for nrep times"""
     ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None) #TODO conv_kernel is not used in class
     
     n = 500
-    ksd_df = pd.DataFrame(columns=["n", "p_value", "seed", "type"])
+    # num train samples for finding sigma
+    ntrain = int(n * 0.2)
+
+    # define noise distribution
+    convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
+
+    optimizer = tf.optimizers.Adam(learning_rate=0.1)
+
+    ksd_df = []
     iterator = trange(nrep)
-    bootstrap = Bootstrap(ksd, n)
+    bootstrap = Bootstrap(ksd, n-ntrain)
     multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
-    iterator.set_description(f"Running with sample size {n}")
+    print(f"Running with total sample size {n}")
     for seed in iterator:
         iterator.set_description(f"Repetition: {seed+1} of {nrep}")
-        # draw samples from two samplers
-        proposal_off_sample = proposal_off.sample(n)
-        proposal_on_sample = proposal_on.sample(n)
-
-        # define noise distribution
-        pair_diff = tf.expand_dims(proposal_on_sample, axis=0) - tf.expand_dims(proposal_on_sample, axis=1) # n x n x dim
-        pair_diff = tf.reshape(pair_diff, shape=(-1, dim))
-        convolution = tfd.Empirical(pair_diff, event_ndims=1)
-
         # convolution sample
         conv_sample_full = convolution.sample(num_est) # for p
 
         conv_ind = tf.experimental.numpy.random.randint(low=0, high=num_est, size=n)
         conv_sample = tf.gather(conv_sample_full, conv_ind, axis=0) # for q
 
-        ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None)
-        bootstrap = Bootstrap(ksd, n)
+        for dist, dist_name in zip([proposal_off, proposal_on], ["off-target", "target"]):
+            # draw off-target sample
+            proposal_sample = dist.sample(n)
 
-        # off-target sample
-        proposal_off_sample += conv_sample
-        _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_off_sample, multinom_samples=multinom_samples[seed, :], conv_samples=conv_sample_full)
-        ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "off-target"]
+            # estimate optimal variance
+            log_noise_std = tf.Variable(1.) #TODO start from 0 instead
+            sample_train, sample_test = proposal_sample[:ntrain, :], proposal_sample[ntrain:, :]
+            conv_sample_train, conv_sample_test = conv_sample[:ntrain, :], conv_sample[ntrain:, :]
+            ksd.optim(optim_steps, log_noise_std, sample_train, tf.identity(sample_train), conv_sample_full, conv_sample_train, optimizer)
 
-        # on-target sample
-        proposal_on_sample += conv_sample
-        _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_on_sample, multinom_samples=multinom_samples[seed, :], conv_samples=conv_sample_full)
-        ksd_df.loc[len(ksd_df)] = [n, p_val, seed, "target"]
-    return ksd_df, convolution
+            # initialize test
+            ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None)
+            bootstrap = Bootstrap(ksd, n)
+
+            # perform test
+            _, p_val = bootstrap.test_once(
+                alpha=alpha, 
+                num_boot=num_boot, 
+                X=sample_test, 
+                multinom_samples=multinom_samples[seed, :], 
+                conv_samples_full=conv_sample_full,
+                conv_samples=conv_sample_test,
+                log_noise_std=log_noise_std.numpy()
+            )
+            ksd_df.append([n, p_val, tf.exp(log_noise_std).numpy()**2, seed, dist_name])
+
+    ksd_df = pd.DataFrame(ksd_df, columns=["n", "p_value", "var_est", "seed", "type"])
+    return ksd_df
 
 parser = argparse.ArgumentParser()
 nrep = 1000
@@ -65,6 +78,7 @@ alpha = 0.05 # significant level
 delta_list = [1., 2., 4., 6.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
+optim_steps = 100 # num steps 
 parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
 args = parser.parse_args()
 
@@ -87,8 +101,7 @@ if __name__ == '__main__':
 
         if len(args.load) > 0 :
             try:
-                #TODO convolution also needs to be loaded
-                test_imq_df = pd.read_csv(args.load + f"/convolved_delta{delta}.csv")
+                test_imq_df = pd.read_csv(args.load + f"/optim_delta{delta}.csv")
                 print(f"Loaded pre-saved data for delta={delta}")
             except:
                 print(f"Pre-saved data for delta={delta} not found. Running from scratch now.")
@@ -96,14 +109,16 @@ if __name__ == '__main__':
         if test_imq_df is None:
             # with IMQ
             imq = IMQ(med_heuristic=True)
-            test_imq_df, convolution = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot, num_est)
+            test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot, num_est, optim_steps)
 
         # plot
         subfig = subfigs.flat[ind]
         subfig.suptitle(f"delta = {delta}")
-        axs = subfig.subplots(3, 1)
+        axs = subfig.subplots(4, 1)
         axs = axs.flat
 
+        var = tf.constant(test_imq_df.loc[test_imq_df.n == test_imq_df.n.max(), "var_est"].mean(), dtype=tf.float32)
+        convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
         convolution_sample = convolution.sample(10000)
         axs[0].hist((proposal_off.sample(10000) + convolution_sample).numpy()[:, 0], label="off-target", alpha=0.2)
         axs[0].hist((proposal_on.sample(10000) + convolution_sample).numpy()[:, 0], label="target", alpha=0.2)
@@ -121,8 +136,11 @@ if __name__ == '__main__':
         axs[2].set_title(f"On target (type I error = {err})")
         axs[2].set_xlabel("p-value")
 
-        # # save res
-        # test_imq_df.to_csv(f"res/bootstrap/convolved_delta{delta}.csv", index=False)
+        sns.histplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type == "target"], x="var_est", bins=20)
+        axs[3].set_title("IMQ var estimates of noise")
+
+        # save res
+        test_imq_df.to_csv(f"res/bootstrap/optim_delta{delta}.csv", index=False)
 
     # plt.tight_layout()
-    fig.savefig("figs/bootstrap/bootstrap_convolved_pairdiff.png")
+    fig.savefig("figs/bootstrap/bootstrap_convolved_optim.png")

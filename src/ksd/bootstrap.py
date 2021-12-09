@@ -29,12 +29,23 @@ class Bootstrap:
     w = self.multinom.sample(num_boot) # num_boot x n
     return w
 
-  def compute_test_statistic(self, X: tf.Tensor, **kwargs):
+  def compute_test_statistic_no_var(self, X: tf.Tensor, **kwargs):
     n = X.shape[0]
     # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
     u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
     u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
-    # u_p = tf.expand_dims(u_p, axis=0) # 1 x n x n
+
+    # compute test statistic
+    self.ksd_hat = tf.reduce_sum(u_p_nodiag).numpy() / (n*(n - 1))
+
+    return u_p
+
+
+  def compute_test_statistic(self, X: tf.Tensor, **kwargs):
+    n = X.shape[0]
+    # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
+    u_p = self.ksd.eval(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
+    u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
 
     # compute test statistic
     self.ksd_hat = tf.reduce_sum(u_p_nodiag).numpy() / (n*(n - 1))
@@ -97,7 +108,11 @@ class Bootstrap:
     Returns:
       reject: 1 if test is rejected; 0 otherwise
     """
-    u_p = self.compute_test_statistic(X, **kwargs)
+    if "log_noise_std" in kwargs:
+      u_p = self.compute_test_statistic(X, **kwargs)
+    else:
+      u_p = self.compute_test_statistic_no_var(X, **kwargs)
+    
     self.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_samples)
 
     reject, critical_val, p_val = self._test_once(alpha)
@@ -131,7 +146,10 @@ class Bootstrap:
     p_val = [-1] * num_test
     iterator = trange(num_test) if verbose else range(num_test)
     # compute u_p (only need to do so once)
-    u_p = self.compute_test_statistic(X, **kwargs)
+    if "log_noise_std" in kwargs:
+      u_p = self.compute_test_statistic(X, **kwargs)
+    else:
+      u_p = self.compute_test_statistic_no_var(X, **kwargs)
 
     for i in iterator:
       self.compute_bootstrap(num_boot=num_boot, u_p=u_p)

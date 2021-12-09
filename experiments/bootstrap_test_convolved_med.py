@@ -26,7 +26,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
     iterator = trange(nrep)
     bootstrap = Bootstrap(ksd, n)
     multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
-    iterator.set_description(f"Running with sample size {n}")
+    print(f"Running with sample size {n}")
     for seed in iterator:
         iterator.set_description(f"Repetition: {seed+1} of {nrep}")
         # draw samples from two samplers
