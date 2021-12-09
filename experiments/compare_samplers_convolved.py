@@ -94,7 +94,7 @@ parser = argparse.ArgumentParser()
 nrep = 10
 delta = 4.0
 mean = 0.
-var_list = [0.01, 1., 5., 10.]
+var_list = [0.01, 1., 3., 5., 7.5, 10., 15., 20., 50., 100.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
 parser.add_argument("--ratio", type=float, default="0.5", help="mixture ratio of the off-target")

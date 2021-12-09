@@ -5,7 +5,7 @@ import tensorflow_probability as tfp
 tfd = tfp.distributions
 import matplotlib.pyplot as plt
 import seaborn as sns
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 from src.ksd.ksd import ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
@@ -40,32 +40,33 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, kernel, num_est,
             # off-target sample
             proposal_off_sample = proposal_off.sample(n)
 
+            # estimate optimal variance
             log_noise_std = tf.Variable(1.) #TODO start from 0 instead
             off_sample_train, off_sample_test = proposal_off_sample[:ntrain, :], proposal_off_sample[ntrain:, :]
             conv_sample_train, conv_sample_test = conv_sample[:ntrain, :], conv_sample[ntrain:, :]
             ksd.optim(noptim_steps, log_noise_std, off_sample_train, tf.identity(off_sample_train), conv_sample_full, conv_sample_train, optimizer)
 
             ksd_val = ksd.eval(log_noise_std=log_noise_std.numpy(), X=off_sample_test, Y=tf.identity(off_sample_test), conv_samples_full=conv_sample_full, conv_samples=conv_sample_test).numpy()
-            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(2*log_noise_std).numpy(), seed, "off-target"]
+            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(log_noise_std).numpy()**2, seed, "off-target"]
 
             # on-target sample
             proposal_on_sample = proposal_on.sample(n)
 
-            log_noise_std_on = tf.Variable(1.) #TODO start from 0 instead
+            # log_noise_std_on = tf.Variable(1.) #TODO start from 0 instead
             on_sample_train, on_sample_test = proposal_on_sample[:ntrain, :], proposal_on_sample[ntrain:, :]
-            ksd.optim(noptim_steps, log_noise_std_on, on_sample_train, tf.identity(on_sample_train), conv_sample_full, conv_sample_train, optimizer)
+            # ksd.optim(noptim_steps, log_noise_std_on, on_sample_train, tf.identity(on_sample_train), conv_sample_full, conv_sample_train, optimizer)
 
-            ksd_val = ksd.eval(log_noise_std=log_noise_std_on.numpy(), X=on_sample_test, Y=tf.identity(on_sample_test), conv_samples_full=conv_sample_full, conv_samples=conv_sample_test).numpy()
-            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(2*log_noise_std_on).numpy(), seed, "target"]
+            ksd_val = ksd.eval(log_noise_std=log_noise_std.numpy(), X=on_sample_test, Y=tf.identity(on_sample_test), conv_samples_full=conv_sample_full, conv_samples=conv_sample_test).numpy()
+            ksd_df.loc[len(ksd_df)] = [n, ksd_val, tf.exp(log_noise_std).numpy()**2, seed, "target"]
     return ksd_df
 
 
-nrep = 20
-delta_list = [1., 2., 4., 6.]
+nrep = 10
+delta_list = [2., 4.] # [1., 2., 4., 6.]
 mean = 0.
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
-noptim_steps = 100
+noptim_steps = 50
 ratio = 0.5 #TODO make this an arg
 
 if __name__ == '__main__':
