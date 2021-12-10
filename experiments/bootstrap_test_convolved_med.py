@@ -48,6 +48,28 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
         ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None)
         bootstrap = Bootstrap(ksd, n)
 
+        # off-target sample without noise
+        _, p_val = bootstrap.test_once(
+            alpha=alpha, 
+            num_boot=num_boot, 
+            X=proposal_off_sample, 
+            multinom_samples=multinom_samples[seed, :], 
+            conv_samples_full=conv_sample_full,
+            conv_samples=conv_sample,
+            log_noise_std=-1e18)
+        ksd_df.loc[len(ksd_df)] = [n, p_val, 0, seed, "off-target noiseless"]
+
+        # on-target sample without noise
+        _, p_val = bootstrap.test_once(
+            alpha=alpha, 
+            num_boot=num_boot, 
+            X=proposal_on_sample, 
+            multinom_samples=multinom_samples[seed, :], 
+            conv_samples_full=conv_sample_full,
+            conv_samples=conv_sample,
+            log_noise_std=-1e18)
+        ksd_df.loc[len(ksd_df)] = [n, p_val, 0, seed, "target noiseless"]
+
         # off-target sample
         proposal_off_sample += conv_sample
         _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=proposal_off_sample, multinom_samples=multinom_samples[seed, :], conv_samples=conv_sample_full)
@@ -90,7 +112,7 @@ if __name__ == '__main__':
 
         if len(args.load) > 0 :
             try:
-                test_imq_df = pd.read_csv(args.load + f"/convolved_delta{delta}.csv")
+                test_imq_df = pd.read_csv(args.load + f"/med_delta{delta}.csv")
                 print(f"Loaded pre-saved data for delta={delta}")
             except:
                 print(f"Pre-saved data for delta={delta} not found. Running from scratch now.")
@@ -106,20 +128,25 @@ if __name__ == '__main__':
         axs = subfig.subplots(4, 1)
         axs = axs.flat
 
-        var = tf.constant(test_imq_df.loc[test_imq_df.n == test_imq_df.n.max(), "var_est"].mean(), dtype=tf.float32)
+        var = tf.constant(test_imq_df.loc[test_imq_df.n == test_imq_df.n.max(), "var_est"].median(), dtype=tf.float32)
         convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
         convolution_sample = convolution.sample(10000)
         axs[0].hist((proposal_off.sample(10000) + convolution_sample).numpy()[:, 0], label="off-target", alpha=0.2)
         axs[0].hist((proposal_on.sample(10000) + convolution_sample).numpy()[:, 0], label="target", alpha=0.2)
         axs[0].legend()
 
-        sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
-        axs[1].axis(xmin=-0.01, xmax=1.)
+        # sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
+        sns.ecdfplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type.isin(["off-target", "off-target noiseless"])], x="p_value", hue="type")
+        axs[1].plot([0, 1], [0, 1], transform=axs[1].transAxes, color="grey", linestyle="dashed")
+        axs[1].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
         err = (test_imq_df.loc[test_imq_df.type == "off-target", "p_value"] > alpha).mean()
         axs[1].set_title(f"off target (type II error = {err})")
         axs[1].set_xlabel("p-value")
         
-        sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
+        # sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
+        sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type.isin(["target", "target noiseless"])], x="p_value", hue="type")
+        axs[2].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
+        axs[2].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
         axs[2].axis(xmin=-0.01, xmax=1.)
         err = (test_imq_df.loc[test_imq_df.type == "target", "p_value"] <= alpha).mean()
         axs[2].set_title(f"On target (type I error = {err})")
@@ -129,7 +156,7 @@ if __name__ == '__main__':
         axs[3].set_title("IMQ var estimates of noise")
 
         # save res
-        test_imq_df.to_csv(f"res/bootstrap/convolved_delta{delta}.csv", index=False)
+        test_imq_df.to_csv(f"res/bootstrap/med_delta{delta}.csv", index=False)
 
     # plt.tight_layout()
     fig.savefig("figs/bootstrap/bootstrap_convolved_med.png")
