@@ -12,7 +12,7 @@ import pickle
 from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
-from experiments.compare_samplers import create_mixture_gaussian
+from src.ksd.models import create_mixture_gaussian
 
 tf.random.set_seed(0)
 

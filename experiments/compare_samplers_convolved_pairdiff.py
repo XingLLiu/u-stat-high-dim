@@ -10,7 +10,7 @@ import argparse
 
 from src.ksd.ksd import ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ, median_heuristic, l2norm
-from experiments.compare_samplers import create_mixture_gaussian
+from src.ksd.models import create_mixture_gaussian
 
 tf.random.set_seed(0)
 

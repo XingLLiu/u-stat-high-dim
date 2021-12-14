@@ -12,7 +12,7 @@ import argparse
 from src.ksd.ksd import ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
-from experiments.compare_samplers import create_mixture_gaussian
+from src.ksd.models import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
@@ -114,6 +114,9 @@ if __name__ == '__main__':
             imq = IMQ(med_heuristic=True)
             test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot, num_est, optim_steps)
 
+        # save res
+        test_imq_df.to_csv(f"res/bootstrap/optim_delta{delta}.csv", index=False)
+
         # plot
         subfig = subfigs.flat[ind]
         subfig.suptitle(f"delta = {delta}")
@@ -129,7 +132,7 @@ if __name__ == '__main__':
         axs[0].set_title("convolved with median var over repetitions ({:.3g})".format(var.numpy()))
 
         # sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
-        sns.ecdfplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type.type.isin(["off-target", "off-target noiseless"])], x="p_value", hue="type")
+        sns.ecdfplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type.isin(["off-target", "off-target noiseless"])], x="p_value", hue="type")
         axs[1].plot([0, 1], [0, 1], transform=axs[1].transAxes, color="grey", linestyle="dashed")
         axs[1].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
         err = (test_imq_df.loc[test_imq_df.type == "off-target", "p_value"] > alpha).mean()
@@ -137,7 +140,7 @@ if __name__ == '__main__':
         axs[1].set_xlabel("p-value")
         
         # sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
-        sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type.type.isin(["target", "target noiseless"])], x="p_value", hue="type")
+        sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type.isin(["target", "target noiseless"])], x="p_value", hue="type")
         axs[2].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
         axs[2].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
         err = (test_imq_df.loc[test_imq_df.type == "target", "p_value"] <= alpha).mean()
@@ -148,9 +151,6 @@ if __name__ == '__main__':
         sns.boxplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type == "target"], x="var_est")
         axs[3].set_xscale("log")
         axs[3].set_title("IMQ var estimates of noise")
-
-        # save res
-        test_imq_df.to_csv(f"res/bootstrap/optim_delta{delta}.csv", index=False)
 
     # plt.tight_layout()
     fig.savefig("figs/bootstrap/bootstrap_convolved_optim.png")

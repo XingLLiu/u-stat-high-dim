@@ -12,7 +12,7 @@ import argparse
 from src.ksd.ksd import ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
-from experiments.compare_samplers import create_mixture_gaussian
+from src.ksd.models import create_mixture_gaussian
 from experiments.compare_samplers_convolved_med import var_med_heuristic
 
 tf.random.set_seed(0)
@@ -122,6 +122,9 @@ if __name__ == '__main__':
             imq = IMQ(med_heuristic=True)
             test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot, num_est)
 
+        # save res
+        test_imq_df.to_csv(f"res/bootstrap/med_delta{delta}.csv", index=False)
+
         # plot
         subfig = subfigs.flat[ind]
         subfig.suptitle(f"delta = {delta}")
@@ -135,16 +138,16 @@ if __name__ == '__main__':
         axs[0].hist((proposal_on.sample(10000) + convolution_sample).numpy()[:, 0], label="target", alpha=0.2)
         axs[0].legend()
 
-        # sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
-        sns.ecdfplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type.isin(["off-target", "off-target noiseless"])], x="p_value", hue="type")
+        sns.ecdfplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type.isin(["off-target", "off-target noiseless"])], x="p_value", hue="type", 
+            hue_order=["off-target", "off-target noiseless"])
         axs[1].plot([0, 1], [0, 1], transform=axs[1].transAxes, color="grey", linestyle="dashed")
         axs[1].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
         err = (test_imq_df.loc[test_imq_df.type == "off-target", "p_value"] > alpha).mean()
         axs[1].set_title(f"off target (type II error = {err})")
         axs[1].set_xlabel("p-value")
         
-        # sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
-        sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type.isin(["target", "target noiseless"])], x="p_value", hue="type")
+        sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type.isin(["target", "target noiseless"])], x="p_value", hue="type",
+            hue_order=["target", "target noiseless"])
         axs[2].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
         axs[2].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
         axs[2].axis(xmin=-0.01, xmax=1.)
@@ -154,9 +157,6 @@ if __name__ == '__main__':
 
         sns.histplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type == "target"], x="var_est", bins=20)
         axs[3].set_title("IMQ var estimates of noise")
-
-        # save res
-        test_imq_df.to_csv(f"res/bootstrap/med_delta{delta}.csv", index=False)
 
     # plt.tight_layout()
     fig.savefig("figs/bootstrap/bootstrap_convolved_med.png")

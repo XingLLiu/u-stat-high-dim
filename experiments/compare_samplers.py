@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
+from src.ksd.models import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
@@ -30,16 +31,6 @@ def run_ksd_experiment(nrep, target, proposal_on, proposal_off, kernel):
             ksd_val = ksd(proposal_on_sample, tf.identity(proposal_on_sample)).numpy()
             ksd_df.loc[len(ksd_df)] = [n, ksd_val, seed, "target"]
     return ksd_df
-
-def create_mixture_gaussian(dim, delta, ratio=0.5):
-    e1 = tf.eye(dim)[:, 0]
-    mix_gauss = tfd.Mixture(
-      cat=tfd.Categorical(probs=[ratio, 1-ratio]),
-      components=[
-        tfd.MultivariateNormalDiag(-delta * e1),
-        tfd.MultivariateNormalDiag(delta * e1)
-    ])
-    return mix_gauss    
         
 
 nrep = 10
