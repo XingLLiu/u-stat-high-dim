@@ -16,20 +16,13 @@ from src.ksd.models import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boot, num_est, optim_steps):
+def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, alpha, num_boot, num_est, log_noise_std_list):
     """compute KSD and repeat for nrep times"""
     ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None) #TODO conv_kernel is not used in class
     
     n = 500
     # num train samples for finding sigma
     ntrain = int(n * 0.2)
-
-    # define noise distribution
-    convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
-
-    noise_std_list = [float(2**x) for x in range(-2, 7)]
-    print(noise_std_list)
-    log_noise_std_list = [tf.math.log(x) for x in noise_std_list]
 
     ksd_df = []
     iterator = trange(nrep)
@@ -102,7 +95,10 @@ alpha = 0.05 # significant level
 delta_list = [1., 2., 4., 6.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
-optim_steps = 100 # num steps
+# grid of noise vars
+noise_std_list = [float(2**x) for x in range(-2, 7)]
+log_noise_std_list = [tf.math.log(x) for x in noise_std_list]
+
 parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
 args = parser.parse_args()
 
@@ -112,6 +108,9 @@ if __name__ == '__main__':
     for ind, delta in enumerate(delta_list):
         print(f"Running with delta = {delta}")
         test_imq_df = None
+
+        # define noise distribution
+        convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
 
         # target distribution
         target = create_mixture_gaussian(dim=dim, delta=delta)
@@ -133,7 +132,7 @@ if __name__ == '__main__':
         if test_imq_df is None:
             # with IMQ
             imq = IMQ(med_heuristic=True)
-            test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot, num_est, optim_steps)
+            test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, imq, alpha, num_boot, num_est, log_noise_std_list)
 
         # save res
         test_imq_df.to_csv(f"res/bootstrap/multiple_delta{delta}.csv", index=False)
@@ -174,5 +173,4 @@ if __name__ == '__main__':
         axs[3].set_xscale("log")
         axs[3].set_title("Best var")
 
-    # plt.tight_layout()
     fig.savefig("figs/bootstrap/bootstrap_convolved_multiple.png")
