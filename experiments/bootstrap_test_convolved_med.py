@@ -155,7 +155,8 @@ if __name__ == '__main__':
         axs[2].set_title(f"On target (type I error = {err})")
         axs[2].set_xlabel("p-value")
 
-        sns.histplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type == "target"], x="var_est", bins=20)
+        sns.ecdfplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type == "target"], x="var_est", bins=20)
+        axs[3].set_xscale("log")
         axs[3].set_title("IMQ var estimates of noise")
 
     # plt.tight_layout()
