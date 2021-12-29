@@ -59,7 +59,7 @@ nrep = 1000
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta = 4.0
-t_list = [0, 10, 25, 50]
+t_list = [0, 100, 500, 1000]
 step_size = 1e-3 # step size for Langevin dynamic
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
@@ -120,11 +120,13 @@ if __name__ == '__main__':
         axs[0].hist(off_sample.numpy()[:, 0], label="off-target", alpha=0.2, bins=40)
         axs[0].legend()
 
-        # axs[1].hist(langevin_on.x[t, :, :].numpy()[:, 0], label="perturbed target", alpha=0.2, bins=40)
-        # axs[1].hist(on_sample.numpy()[:, 0], label="target", alpha=0.2, bins=40)
-        sns.ecdfplot(ax=axs[1], x=langevin_on.x[t, :, :].numpy()[:, 0], label="perturbed target")
-        sns.ecdfplot(ax=axs[1], x=on_sample.numpy()[:, 0], label="target")
-        axs[1].legend()
+        samples_df_target = pd.DataFrame({"x1": on_sample.numpy()[:, 0], "type": "target"})
+        samples_df_perturbed = pd.DataFrame({"x1": langevin_on.x[t, :, :].numpy()[:, 0], "type": "perturbed target"})
+        samples_df = pd.concat([samples_df_target, samples_df_perturbed], ignore_index=True)
+        # sns.ecdfplot(ax=axs[1], x=langevin_on.x[t, :, :].numpy()[:, 0], label="perturbed target")
+        # sns.ecdfplot(ax=axs[1], x=on_sample.numpy()[:, 0], label="target")
+        sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")
+        axs[1].set_ylabel("CDF")
 
         sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[(test_imq_df.type == "off-target") & (test_imq_df.t == t)], x="p_value", hue="type")
         axs[2].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")

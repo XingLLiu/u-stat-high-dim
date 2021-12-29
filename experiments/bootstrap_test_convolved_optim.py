@@ -123,7 +123,7 @@ if __name__ == '__main__':
         axs = subfig.subplots(4, 1)
         axs = axs.flat
 
-        var = tf.constant(test_imq_df.loc[test_imq_df.n == test_imq_df.n.max(), "var_est"].median(), dtype=tf.float32)
+        var = tf.constant(test_imq_df.loc[(test_imq_df.n == test_imq_df.n.max()) & (test_imq_df.type == "off-target"), "var_est"].median(), dtype=tf.float32)
         convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
         convolution_sample = convolution.sample(10000)
         axs[0].hist((proposal_off.sample(10000) + convolution_sample).numpy()[:, 0], label="off-target", alpha=0.2)
@@ -147,8 +147,7 @@ if __name__ == '__main__':
         axs[2].set_title(f"On target (type I error = {err})")
         axs[2].set_xlabel("p-value")
 
-        # sns.histplot(ax=axs[3], data=test_imq_df.loc[(test_imq_df.type == "target") & (test_imq_df.var_est <= 50)], x="var_est", bins=50)
-        sns.ecdfplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type == "target"], x="var_est")
+        sns.ecdfplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type.isin(["target", "off-target"])], x="var_est", hue="type")
         axs[3].set_xscale("log")
         axs[3].set_title("IMQ var estimates of noise")
 

@@ -52,9 +52,10 @@ nrep = 1000
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta = 4.0
-var_list = [1e-2, 1., 5., 10., 50.]
+var_list = [1e-2, 1., 5., 10., 15., 50.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
+ratio = 0.5
 parser.add_argument("--load", type=str, default="")
 args = parser.parse_args()
 
@@ -66,13 +67,13 @@ if __name__ == '__main__':
         test_imq_df = None
 
         # target distribution
-        target = create_mixture_gaussian(dim=dim, delta=delta)
+        target = create_mixture_gaussian(dim=dim, delta=delta, ratio=ratio)
 
         # convolution kernel
         convolution = tfd.MultivariateNormalDiag(0., tf.math.sqrt(var) * tf.ones(dim))
 
         # off-target proposal distribution
-        proposal_on = create_mixture_gaussian(dim=dim, delta=delta)
+        proposal_on = create_mixture_gaussian(dim=dim, delta=delta, ratio=ratio)
         
         # off-target proposal distribution
         proposal_mean = - delta * tf.eye(dim)[:, 0]

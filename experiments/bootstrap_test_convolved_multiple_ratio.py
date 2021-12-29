@@ -24,8 +24,7 @@ alpha = 0.05 # significant level
 delta_list = [1., 2., 4., 6.]
 dim = 10
 ratio_target = 0.3
-ratio_sample = 1.
-k = 5 # mean shift in the first k dims
+ratio_sample = 0.7
 num_est = 10000 # num samples used to estimate concolved target
 # grid of noise vars
 noise_std_list = [float(2**x) for x in range(-2, 11)]
@@ -92,8 +91,6 @@ if __name__ == '__main__':
         axs[0].set_title("Noiseless target and samples")
 
         sns.histplot(ax=axs[1], data=target_df, x="x1", hue="type", alpha=0.3)
-        # sns.kdeplot(ax=axs[0], data=target_df.loc[target_df.type.isin(["target noiseless", "off-target noiseless"])], x="x1", hue="type")
-        # sns.kdeplot(ax=axs[0], data=target_df, x="x1", hue="type")
         axs[1].set_title("convolved with median var over repetitions ({:.3g})".format(var.numpy()))
 
         sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type.isin(["off-target", "off-target noiseless"])], x="p_value", hue="type")
