@@ -114,8 +114,8 @@ if __name__ == '__main__':
 
         # off-target proposal distribution
         proposal_mean = - delta * tf.eye(dim)[:, 0]
-        # proposal_off = create_convolved_proposal(dim, proposal_mean, mean, var)
-        proposal_off = tfd.MultivariateNormalDiag(proposal_mean)
+        proposal_off = create_mixture_gaussian(dim=dim, delta=delta, ratio=1.)
+        # proposal_off = create_mixture_gaussian(dim=dim, delta=delta, ratio=1-args.ratio) #! delete
 
         # on-target proposal distribution
         # proposal_on = create_convolved_mixture_gaussian(dim, delta, mean, var)
