@@ -22,7 +22,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolutio
     
     n = 500
     # num train samples for finding sigma
-    ntrain = int(n * 0.2)
+    ntrain = int(n * 0.5)
 
     ksd_df = []
     iterator = trange(nrep)
@@ -53,8 +53,6 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolutio
             else:
                 best_log_noise_std = log_noise_std_list[0]
                 smalles_p_val = 1.
-
-                # best_log_noise_std = tf.math.log(7.5**0.5) #! delete
 
                 for log_noise_std in log_noise_std_list:
                     # compute p-value with train set
