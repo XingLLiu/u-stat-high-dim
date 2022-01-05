@@ -13,11 +13,11 @@ from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 from src.ksd.models import create_mixture_gaussian
-from src.ksd.langevin import Langevin
+from src.ksd.langevin import MALA
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, alpha, num_boot, t_list, step_size):
+def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, kernel, alpha, num_boot, t_list, step_size):
     """compute KSD and repeat for nrep times"""
     ksd = KSD(target=target, kernel=kernel)
     
@@ -33,36 +33,36 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
         iterator.set_description(f"Repetition: {seed+1} of {nrep}")
         # run stochastic process on off-target sample for T steps
         off_sample_init = proposal_off.sample(n)
-        langevin_off = Langevin(log_prob=proposal_on.log_prob)
-        langevin_off.run(steps=T, step_size=step_size, x_init=off_sample_init)
+        mala_off = MALA(log_prob=log_prob_fn)
+        mala_off.run(steps=T, step_size=step_size, x_init=off_sample_init)
 
         # run stochastic process on off-target sample for T steps
         on_sample_init = proposal_on.sample(n)
-        langevin_on = Langevin(log_prob=proposal_on.log_prob)
-        langevin_on.run(steps=T, step_size=step_size, x_init=on_sample_init)
+        mala_on = MALA(log_prob=log_prob_fn)
+        mala_on.run(steps=T, step_size=step_size, x_init=on_sample_init)
         
         for t in t_list:
             # off-target sample
-            off_sample = langevin_off.x[t, :, :]
+            off_sample = mala_off.x[t, :, :]
             _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=off_sample, multinom_samples=multinom_samples[seed, :])
             ksd_df.loc[len(ksd_df)] = [n, t, p_val, seed, "off-target"]
 
             # on-target sample
-            on_sample = langevin_on.x[t, :, :]
+            on_sample = mala_on.x[t, :, :]
             _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=on_sample, multinom_samples=multinom_samples[seed, :])
             ksd_df.loc[len(ksd_df)] = [n, t, p_val, seed, "target"]
 
     return ksd_df
 
+
 parser = argparse.ArgumentParser()
-nrep = 1000
+nrep = 500
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta = 4.0
-t_list = [0, 100, 500, 1000]
-step_size = 1e-3 # step size for Langevin dynamic
+t_list = [0, 1450]
+step_size = 0.5 # step size for MALA dynamic
 dim = 5
-num_est = 10000 # num samples used to estimate concolved target
 parser.add_argument("--load", type=str, default="")
 args = parser.parse_args()
 
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     test_imq_df = None
 
     # target distribution
-    target = create_mixture_gaussian(dim=dim, delta=delta)
+    target, log_prob_fn = create_mixture_gaussian(dim=dim, delta=delta, return_logprob=True)
 
     # off-target proposal distribution
     proposal_on = create_mixture_gaussian(dim=dim, delta=delta)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     if len(args.load) > 0 :
         try:
-            test_imq_df = pd.read_csv(args.load + f"/langevin_stepsize{step_size}.csv")
+            test_imq_df = pd.read_csv(args.load + f"/mala_stepsize{step_size}.csv")
             print(f"Loaded pre-saved data for step size = {step_size}")
         except:
             print(f"Pre-saved data for step size = {step_size} not found. Running from scratch now.")
@@ -93,20 +93,20 @@ if __name__ == '__main__':
     if test_imq_df is None:
         # with IMQ
         imq = IMQ(med_heuristic=True)
-        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, imq, alpha, num_boot, t_list, step_size)
+        test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, imq, alpha, num_boot, t_list, step_size)
 
         # save res
-        test_imq_df.to_csv(f"res/bootstrap/langevin_stepsize{step_size}.csv", index=False)
+        test_imq_df.to_csv(f"res/bootstrap/mala_stepsize{step_size}.csv", index=False)
 
 
-    # for plotting dist of Langevin-perturbed samples
-    off_sample = proposal_off.sample(10000)
-    on_sample = proposal_on.sample(10000)
-    langevin_off = Langevin(log_prob=proposal_on.log_prob)
-    langevin_off.run(steps=int(max(t_list))+1, step_size=step_size, x_init=off_sample)
+    # for plotting dist of mala-perturbed samples
+    off_sample = proposal_off.sample(1000)
+    on_sample = proposal_on.sample(1000)
+    mala_off = MALA(log_prob=log_prob_fn)
+    mala_off.run(steps=int(max(t_list))+1, step_size=step_size, x_init=off_sample)
 
-    langevin_on = Langevin(log_prob=proposal_on.log_prob)
-    langevin_on.run(steps=int(max(t_list))+1, step_size=step_size, x_init=on_sample)
+    mala_on = MALA(log_prob=log_prob_fn)
+    mala_on.run(steps=int(max(t_list))+1, step_size=step_size, x_init=on_sample)
 
     for ind, t in enumerate(t_list):
         # plot
@@ -114,16 +114,21 @@ if __name__ == '__main__':
         subfig.suptitle(f"step = {t}")
         axs = subfig.subplots(4, 1)
         axs = axs.flat
-
-        axs[0].hist(langevin_off.x[t, :, :].numpy()[:, 0], label="perturbed off-target", alpha=0.2, bins=40)
-        axs[0].hist(on_sample.numpy()[:, 0], label="on-target", alpha=0.2, bins=40)
-        axs[0].hist(off_sample.numpy()[:, 0], label="off-target", alpha=0.2, bins=40)
-        axs[0].legend()
+        samples_df_off_target = pd.DataFrame({"x1": off_sample.numpy()[:, 0], "type": "off-target"})
+        samples_df_off_perturbed = pd.DataFrame({"x1": mala_off.x[t, :, :].numpy()[:, 0], "type": "perturbed off-target"})
+        samples_df_off = pd.concat([samples_df_off_target, samples_df_off_perturbed], ignore_index=True)
+        print(samples_df_off.shape)
+        # axs[0].hist(mala_off.x[t, :, :].numpy()[:, 0], label="perturbed off-target", alpha=0.2, bins=40)
+        # axs[0].hist(on_sample.numpy()[:, 0], label="on-target", alpha=0.2, bins=40)
+        # axs[0].hist(off_sample.numpy()[:, 0], label="off-target", alpha=0.2, bins=40)
+        # axs[0].legend()
+        sns.ecdfplot(ax=axs[0], data=samples_df_off, x="x1", hue="type")
+        axs[0].set_ylabel("CDF")
 
         samples_df_target = pd.DataFrame({"x1": on_sample.numpy()[:, 0], "type": "target"})
-        samples_df_perturbed = pd.DataFrame({"x1": langevin_on.x[t, :, :].numpy()[:, 0], "type": "perturbed target"})
+        samples_df_perturbed = pd.DataFrame({"x1": mala_on.x[t, :, :].numpy()[:, 0], "type": "perturbed target"})
         samples_df = pd.concat([samples_df_target, samples_df_perturbed], ignore_index=True)
-        # sns.ecdfplot(ax=axs[1], x=langevin_on.x[t, :, :].numpy()[:, 0], label="perturbed target")
+        # sns.ecdfplot(ax=axs[1], x=mala_on.x[t, :, :].numpy()[:, 0], label="perturbed target")
         # sns.ecdfplot(ax=axs[1], x=on_sample.numpy()[:, 0], label="target")
         sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")
         axs[1].set_ylabel("CDF")
@@ -144,4 +149,4 @@ if __name__ == '__main__':
 
 
     # plt.tight_layout()
-    fig.savefig("figs/bootstrap/bootstrap_langevin.png")
+    fig.savefig("figs/bootstrap/bootstrap_mala.png")
