@@ -79,13 +79,15 @@ if __name__ == '__main__':
         axs[0].hist(proposal_on.sample(10000).numpy()[:, 0], label="target", alpha=0.2)
         axs[0].legend()
 
-        sns.histplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type", bins=20)
+        sns.ecdfplot(ax=axs[1], data=test_imq_df.loc[test_imq_df.type == "off-target"], x="p_value", hue="type")
+        axs[1].plot([0, 1], [0, 1], transform=axs[1].transAxes, color="grey", linestyle="dashed")
         axs[1].axis(xmin=-0.01, xmax=1.)
         err = (test_imq_df.loc[test_imq_df.type == "off-target", "p_value"] > alpha).mean()
         axs[1].set_title(f"off target (type II error = {err})")
         axs[1].set_xlabel("p-value")
         
-        sns.histplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type", bins=20)
+        sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type == "target"], x="p_value", hue="type")
+        axs[2].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
         axs[2].axis(xmin=-0.01, xmax=1.)
         err = (test_imq_df.loc[test_imq_df.type == "target", "p_value"] <= alpha).mean()
         axs[2].set_title(f"On target (type I error = {err})")
