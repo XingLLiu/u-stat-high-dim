@@ -5,11 +5,13 @@ tfd = tfp.distributions
 def create_mixture_gaussian(dim, delta, ratio=0.5, return_logprob=False):
     """Bimodal Gaussian mixture with mean shift only in the first dim"""
     e1 = tf.eye(dim)[:, 0]
+    mean1 = -delta * e1
+    mean2 = delta * e1
     mix_gauss = tfd.Mixture(
       cat=tfd.Categorical(probs=[ratio, 1-ratio]),
       components=[
-        tfd.MultivariateNormalDiag(-delta * e1),
-        tfd.MultivariateNormalDiag(delta * e1)
+        tfd.MultivariateNormalDiag(mean1),
+        tfd.MultivariateNormalDiag(mean2)
     ])
 
     if not return_logprob:
@@ -17,8 +19,8 @@ def create_mixture_gaussian(dim, delta, ratio=0.5, return_logprob=False):
     else:      
       def log_prob_fn(x):
         '''fast implementation of log_prob'''
-        exp1 = tf.reduce_sum((x - delta * e1)**2, axis=-1) # n
-        exp2 = tf.reduce_sum((x + delta * e1)**2, axis=-1) # n
+        exp1 = tf.reduce_sum((x - mean1)**2, axis=-1) # n
+        exp2 = tf.reduce_sum((x - mean2)**2, axis=-1) # n
         return tf.math.log(
             ratio * tf.math.exp(- 0.5 * exp1) + (1-ratio) * tf.math.exp(- 0.5 * exp2)
         )
