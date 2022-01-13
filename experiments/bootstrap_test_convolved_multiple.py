@@ -16,9 +16,9 @@ from src.ksd.models import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, alpha, num_boot, num_est, log_noise_std_list):
+def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, alpha, num_boot, num_est, log_noise_std_list, log_prob=None):
     """compute KSD and repeat for nrep times"""
-    ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None) #TODO conv_kernel is not used in class
+    ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None, target_log_prob=log_prob) #TODO conv_kernel is not used in class
     
     n = 500
     # num train samples for finding sigma
@@ -100,10 +100,10 @@ num_est = 10000 # num samples used to estimate concolved target
 noise_std_list = [float(2**x) for x in range(-2, 7)]
 log_noise_std_list = [tf.math.log(x) for x in noise_std_list]
 
-parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
-args = parser.parse_args()
-
 if __name__ == '__main__':
+    parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
+    args = parser.parse_args()
+
     fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 9))
     subfigs = fig.subfigures(1, len(delta_list))
     for ind, delta in enumerate(delta_list):

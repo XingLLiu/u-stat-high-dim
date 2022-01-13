@@ -22,12 +22,13 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
     
     n = 500
     # num train samples for finding sigma
-    ntrain = int(n * 0.2)
+    ntrain = int(n * 0.5)
 
     # define noise distribution
     convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
+    conv_sample_full_all = convolution.sample((nrep, num_est)) # nrep x num_est x dim
 
-    optimizer = tf.optimizers.Adam(learning_rate=0.1)
+    optimizer = tf.optimizers.Adam(learning_rate=0.001)
 
     ksd_df = []
     iterator = trange(nrep)
@@ -37,7 +38,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
     for seed in iterator:
         iterator.set_description(f"Repetition: {seed+1} of {nrep}")
         # convolution sample
-        conv_sample_full = convolution.sample(num_est) # for p
+        conv_sample_full = conv_sample_full_all[seed, :, :] # num_est x dim
 
         conv_ind = tf.experimental.numpy.random.randint(low=0, high=num_est, size=n)
         conv_sample = tf.gather(conv_sample_full, conv_ind, axis=0) # for q
@@ -52,7 +53,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
             if "noiseless" in dist_name:
                 log_noise_std = tf.Variable(-1e18)
             else:
-                log_noise_std = tf.Variable(1.) #TODO start from 0 instead
+                log_noise_std = tf.Variable(0.) #TODO start from 0 instead
                 ksd.optim(optim_steps, log_noise_std, sample_train, tf.identity(sample_train), conv_sample_full, conv_sample_train, optimizer)
 
             # initialize test
@@ -81,7 +82,7 @@ alpha = 0.05 # significant level
 delta_list = [1., 2., 4., 6.]
 dim = 5
 num_est = 10000 # num samples used to estimate concolved target
-optim_steps = 100 # num steps 
+optim_steps = 50 # num steps 
 parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
 args = parser.parse_args()
 

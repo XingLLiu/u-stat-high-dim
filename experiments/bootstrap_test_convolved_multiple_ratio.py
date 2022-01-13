@@ -23,15 +23,17 @@ num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta_list = [1., 2., 4., 6.]
 dim = 10
-ratio_target = 0.3
-ratio_sample = 0.7
 num_est = 10000 # num samples used to estimate concolved target
 # grid of noise vars
 noise_std_list = [float(2**x) for x in range(-2, 11)]
 log_noise_std_list = [tf.math.log(x) for x in noise_std_list]
 
 parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
+parser.add_argument("--ratio_t", type=float, default=0.5)
+parser.add_argument("--ratio_s", type=float, default=1.)
 args = parser.parse_args()
+ratio_target = args.ratio_t
+ratio_sample = args.ratio_s
 
 if __name__ == '__main__':
     fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 9))
