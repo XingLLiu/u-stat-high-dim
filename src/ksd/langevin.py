@@ -73,7 +73,7 @@ class Langevin:
     cond = tf.expand_dims(unif < accept_prob, axis=-1) # n x 1
     x_next = tf.where(cond, x_proposed, x_current) # n x dim
     assert x_next.shape == x_proposed.shape
-    assert tf.experimental.numpy.allclose(unif >= accept_prob, tf.experimental.numpy.all(x_next == x_current, axis=1))
+    assert tf.experimental.numpy.all(tf.where(cond, x_next == x_proposed, x_next == x_current))
     return x_next, tf.cast(cond, dtype=tf.int64)
 
 
@@ -164,6 +164,7 @@ class RandomWalkMH(Langevin):
     self.x[0, :, :].assign(x_init)
 
     self.noise = self.noise_dist.sample((steps, n, dim)) # nsteps x n x dim
+    # self.noise = tfd.Uniform(low=-1.).sample((steps, n, dim)) # nsteps x n x dim #!
 
     self.accept_prob = 0. # n x 1    
     iterator = trange(steps-1) if verbose else range(steps-1)
@@ -179,6 +180,15 @@ class RandomWalkMH(Langevin):
       
       # propose MH update
       xp_next = self.x[t, :, :] + std * self.noise[t, :, :] # n x dim
+
+      #!
+      # std_vec = tf.Variable(tf.ones(dim)) # dim
+      # std_vec[0].assign(std)
+      # xp_next = self.x[t, :, :] + std_vec * self.noise[t, :, :] # n x dim #!
+      #!
+      # std_vec = tf.Variable(tf.zeros(dim)) # dim
+      # std_vec[0].assign(std)
+      # xp_next = self.x[t, :, :] + std_vec * (tf.cast(self.noise[t, :, :] > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
 
       # calculate score of proposed samples
       with tf.GradientTape() as g:
@@ -215,7 +225,14 @@ class RandomWalkMH(Langevin):
     Output:
       log_kernel: n. k(x', x)
     '''
+    # #!
+    # std_val = std
+    # std = tf.Variable(tf.ones(xp.shape[-1])) # dim
+    # std[0].assign(std_val)
+    # # return tf.math.log(0.5**xp.shape[-1] * 1 / std_val) #!
+    # return tf.math.log(tf.ones(xp.shape[0]) * 0.5) #!
+
     mean = (xp - x) / std # n x dim
     l2_norm_sq = tf.reduce_sum(mean**2, axis=1) # n
-    log_kernel = tf.math.exp( - 0.5 * l2_norm_sq) # n
+    log_kernel = - 0.5 * l2_norm_sq # n
     return log_kernel
