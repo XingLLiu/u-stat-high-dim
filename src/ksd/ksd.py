@@ -8,7 +8,6 @@ class KSD:
     self,
     target: tfp.distributions.Distribution,
     kernel: tf.Module,
-    target_log_prob: callable=None,
   ):
     """
     Inputs:
@@ -16,7 +15,7 @@ class KSD:
         kernel (tf.nn.Module): [description]
         optimizer (tf.optim.Optimizer): [description]
     """
-    self.log_p = target.log_prob if not target_log_prob else target_log_prob
+    self.p = target
     self.k = kernel
 
   def __call__(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
@@ -32,11 +31,11 @@ class KSD:
     ## calculate scores using autodiff
     with tf.GradientTape() as g:
       g.watch(X_cp)
-      log_prob_X = self.log_p(X_cp)
+      log_prob_X = self.p.log_prob(X_cp)
     score_X = g.gradient(log_prob_X, X_cp) # n x dim
     with tf.GradientTape() as g:
       g.watch(Y_cp)
-      log_prob_Y = self.log_p(Y_cp) # m x dim
+      log_prob_Y = self.p.log_prob(Y_cp) # m x dim
     score_Y = g.gradient(log_prob_Y, Y_cp)
 
     # median heuristic #TODO using pre-specified bandwidth
@@ -85,7 +84,6 @@ class ConvolvedKSD:
     target: tfp.distributions.Distribution,
     kernel: tf.Module,
     conv_kernel: tfp.distributions.Distribution,
-    target_log_prob: callable=None,
   ):
     """
     Inputs:
@@ -93,7 +91,7 @@ class ConvolvedKSD:
         kernel (tf.nn.Module): [description]
         optimizer (tf.optim.Optimizer): [description]
     """
-    self.log_p = target.log_prob if not target_log_prob else target_log_prob
+    self.p = target
     self.k = kernel
     self.conv_kernel = conv_kernel
 
@@ -115,7 +113,7 @@ class ConvolvedKSD:
     with tf.GradientTape() as g:
       g.watch(X_cp)
       diff_1 = X_cp - Z # l x n x dim #TODO broadcasting is potentially causing problems
-      prob_1 = self.log_p(diff_1) # l x n
+      prob_1 = self.p.prob(diff_1) # l x n
     grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
     score_X = grad_1 / tf.expand_dims(
@@ -124,7 +122,7 @@ class ConvolvedKSD:
     with tf.GradientTape() as g:
       g.watch(Y_cp)
       diff_2 = Y_cp - tf.identity(Z)
-      prob_2 = self.log_p(diff_2) # m x dim
+      prob_2 = self.p.prob(diff_2) # m x dim
     grad_2 = g.gradient(prob_2, Y_cp)
     grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
     score_Y = grad_2 / tf.expand_dims(
@@ -194,7 +192,7 @@ class ConvolvedKSD:
     with tf.GradientTape() as g:
       g.watch(X_cp)
       input_1 = X_cp - noise_sd * Z # l x n x dim #TODO broadcasting is potentially causing problems
-      prob_1 = self.log_p(input_1) # l x n
+      prob_1 = self.p.prob(input_1) # l x n
     grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
     score_X = grad_1 / tf.expand_dims(
@@ -203,7 +201,7 @@ class ConvolvedKSD:
     with tf.GradientTape() as g:
       g.watch(Y_cp)
       input_2 = Y_cp - noise_sd * tf.identity(Z) # l x m x dim
-      prob_2 = self.log_p(input_2) # m x dim
+      prob_2 = self.p.prob(input_2) # m x dim
     grad_2 = g.gradient(prob_2, Y_cp)
     grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
     score_Y = grad_2 / tf.expand_dims(
@@ -264,4 +262,3 @@ class ConvolvedKSD:
 
     
     _ = tfp.math.minimize(loss_fn, num_steps=nsteps, optimizer=optimizer)
-
