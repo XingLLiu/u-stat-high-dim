@@ -20,7 +20,7 @@ def create_mixture_gaussian(dim, delta, ratio=0.5, return_logprob=False):
         exp1 = tf.reduce_sum((x - delta * e1)**2, axis=-1) # n
         exp2 = tf.reduce_sum((x + delta * e1)**2, axis=-1) # n
         return tf.math.log(
-            tf.math.exp(- 0.5 * exp1) + tf.math.exp(- 0.5 * exp2)
+            ratio * tf.math.exp(- 0.5 * exp1) + (1-ratio) * tf.math.exp(- 0.5 * exp2)
         )
       
       return mix_gauss, log_prob_fn
