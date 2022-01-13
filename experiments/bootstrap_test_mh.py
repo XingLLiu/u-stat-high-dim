@@ -60,8 +60,8 @@ nrep = 500
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta = 4.0
-t_list = [0, 800, 1000, 1200]
-std = 0.5 # std for random walk proposal
+t_list = [0, 5, 10, 15, 20]
+std = 5. # std for random walk proposal
 dim = 5
 parser.add_argument("--load", type=str, default="")
 args = parser.parse_args()
@@ -130,14 +130,14 @@ if __name__ == '__main__':
         sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[(test_imq_df.type == "off-target") & (test_imq_df.t == t)], x="p_value", hue="type")
         axs[2].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
         axs[2].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
-        err = (test_imq_df.loc[test_imq_df.type == "off-target", "p_value"] > alpha).mean()
+        err = (test_imq_df.loc[(test_imq_df.type == "off-target") & (test_imq_df.t == t), "p_value"] > alpha).mean()
         axs[2].set_title(f"off target (type II error = {err})")
         axs[2].set_xlabel("p-value")
         
         sns.ecdfplot(ax=axs[3], data=test_imq_df.loc[(test_imq_df.type == "target") & (test_imq_df.t == t)], x="p_value", hue="type")
         axs[3].plot([0, 1], [0, 1], transform=axs[3].transAxes, color="grey", linestyle="dashed")
         axs[3].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
-        err = (test_imq_df.loc[test_imq_df.type == "target", "p_value"] <= alpha).mean()
+        err = (test_imq_df.loc[(test_imq_df.type == "target") & (test_imq_df.t == t), "p_value"] <= alpha).mean()
         axs[3].set_title(f"On target (type I error = {err})")
         axs[3].set_xlabel("p-value")
 
