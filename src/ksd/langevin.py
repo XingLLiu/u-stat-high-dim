@@ -182,13 +182,15 @@ class RandomWalkMH(Langevin):
       xp_next = self.x[t, :, :] + std * self.noise[t, :, :] # n x dim
 
       #!
-      # std_vec = tf.Variable(tf.ones(dim)) # dim
-      # std_vec[0].assign(std)
+      # std_vec = tf.concat([tf.constant([std]), tf.ones(dim-1)], axis=0) # dim
       # xp_next = self.x[t, :, :] + std_vec * self.noise[t, :, :] # n x dim #!
       #!
-      # std_vec = tf.Variable(tf.zeros(dim)) # dim
-      # std_vec[0].assign(std)
+      # std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
       # xp_next = self.x[t, :, :] + std_vec * (tf.cast(self.noise[t, :, :] > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
+      #!
+      std_vec = tf.concat([tf.ones(2), tf.zeros(dim-2)], axis=0) # dim
+      std_vec = std * std_vec / tf.math.sqrt(tf.reduce_sum(std_vec**2))
+      xp_next = self.x[t, :, :] + std_vec * (tf.cast(self.noise[t, :, :] > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete diagnal jump
 
       # calculate score of proposed samples
       with tf.GradientTape() as g:
@@ -230,7 +232,7 @@ class RandomWalkMH(Langevin):
     # std = tf.Variable(tf.ones(xp.shape[-1])) # dim
     # std[0].assign(std_val)
     # # return tf.math.log(0.5**xp.shape[-1] * 1 / std_val) #!
-    # return tf.math.log(tf.ones(xp.shape[0]) * 0.5) #!
+    return tf.math.log(tf.ones(xp.shape[0]) * 0.5) #!
 
     mean = (xp - x) / std # n x dim
     l2_norm_sq = tf.reduce_sum(mean**2, axis=1) # n
