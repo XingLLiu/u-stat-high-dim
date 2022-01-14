@@ -16,9 +16,9 @@ from src.ksd.models import create_mixture_gaussian
 
 tf.random.set_seed(0)
 
-def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, alpha, num_boot, num_est, log_noise_std_list, log_prob=None):
+def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, kernel, alpha, num_boot, num_est, log_noise_std_list):
     """compute KSD and repeat for nrep times"""
-    ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None, target_log_prob=log_prob) #TODO conv_kernel is not used in class
+    ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None) #TODO conv_kernel is not used in class
     
     n = 500
     # num train samples for finding sigma

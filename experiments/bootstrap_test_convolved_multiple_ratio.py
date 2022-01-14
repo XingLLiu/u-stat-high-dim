@@ -17,7 +17,6 @@ from experiments.bootstrap_test_convolved_multiple import run_bootstrap_experime
 
 tf.random.set_seed(0)
 
-parser = argparse.ArgumentParser()
 nrep = 1000
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
@@ -28,6 +27,7 @@ num_est = 10000 # num samples used to estimate concolved target
 noise_std_list = [float(2**x) for x in range(-2, 11)]
 log_noise_std_list = [tf.math.log(x) for x in noise_std_list]
 
+parser = argparse.ArgumentParser()
 parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
 parser.add_argument("--ratio_t", type=float, default=0.5)
 parser.add_argument("--ratio_s", type=float, default=1.)

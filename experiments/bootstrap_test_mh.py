@@ -55,7 +55,6 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     return ksd_df
 
 
-parser = argparse.ArgumentParser()
 nrep = 500
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
@@ -63,14 +62,16 @@ delta = 4.0
 t_list = [0, 5, 10, 15, 20]
 std = 5. # std for random walk proposal
 dim = 5
-parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
-parser.add_argument("--ratio_t", type=float, default=0.5)
-parser.add_argument("--ratio_s", type=float, default=1.)
-args = parser.parse_args()
-ratio_target = args.ratio_t
-ratio_sample = args.ratio_s
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
+    parser.add_argument("--ratio_t", type=float, default=0.5)
+    parser.add_argument("--ratio_s", type=float, default=1.)
+    args = parser.parse_args()
+    ratio_target = args.ratio_t
+    ratio_sample = args.ratio_s
+
     fig = plt.figure(constrained_layout=True, figsize=(5*len(t_list), 9))
     subfigs = fig.subfigures(1, len(t_list))
     

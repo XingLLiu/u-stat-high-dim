@@ -17,22 +17,27 @@ from experiments.bootstrap_test_convolved_multiple import run_bootstrap_experime
 
 tf.random.set_seed(0)
 
-parser = argparse.ArgumentParser()
 nrep = 1000
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta_list = [1., 2., 4., 6.]
-dim = 10
-k = 5 # mean shift in the first k dims
+dim = 5
+k = 2 # mean shift in the first k dims
 num_est = 10000 # num samples used to estimate concolved target
 # grid of noise vars
 noise_std_list = [float(2**x) for x in range(-2, 11)]
 log_noise_std_list = [tf.math.log(x) for x in noise_std_list]
 
+parser = argparse.ArgumentParser()
 parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
+parser.add_argument("--ratio_t", type=float, default=0.5)
+parser.add_argument("--ratio_s", type=float, default=1.)
 args = parser.parse_args()
+ratio_target = args.ratio_t
+ratio_sample = args.ratio_s
 
 if __name__ == '__main__':
+
     fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 9))
     subfigs = fig.subfigures(1, len(delta_list))
     for ind, delta in enumerate(delta_list):
@@ -43,17 +48,17 @@ if __name__ == '__main__':
         convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
 
         # target distribution
-        target, _ = create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta)
+        target = create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, ratio=ratio_target)
 
         # off-target proposal distribution
-        proposal_on, _ = create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta)
+        proposal_on = create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, ratio=ratio_target)
         
         # off-target proposal distribution
-        _, proposal_off = create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta)
+        proposal_off = create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, ratio=ratio_sample)
 
         if len(args.load) > 0 :
             try:
-                test_imq_df = pd.read_csv(args.load + f"/multiple_delta{delta}_kdim{k}.csv")
+                test_imq_df = pd.read_csv(args.load + f"/multiple_delta{delta}_kdim{k}_ratio{ratio_target}_{ratio_sample}.csv")
                 print(f"Loaded pre-saved data for delta={delta}")
             except:
                 print(f"Pre-saved data for delta={delta} not found. Running from scratch now.")
@@ -64,7 +69,7 @@ if __name__ == '__main__':
             test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, convolution, imq, alpha, num_boot, num_est, log_noise_std_list)
 
         # save res
-        test_imq_df.to_csv(f"res/bootstrap/multiple_delta{delta}_kdim{k}.csv", index=False)
+        test_imq_df.to_csv(f"res/bootstrap/multiple_delta{delta}_kdim{k}_ratio{ratio_target}_{ratio_sample}.csv", index=False)
 
         # plot
         subfig = subfigs.flat[ind]
@@ -103,4 +108,4 @@ if __name__ == '__main__':
         axs[3].set_xscale("log")
         axs[3].set_title("Best var")
 
-    fig.savefig(f"figs/bootstrap/bootstrap_convolved_multiple_kdim{k}.png")
+    fig.savefig(f"figs/bootstrap/bootstrap_convolved_multiple_kdim{k}_ratio{ratio_target}_{ratio_sample}.png")
