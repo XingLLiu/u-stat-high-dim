@@ -153,10 +153,11 @@ class MALA(Langevin):
 
 
 class RandomWalkMH(Langevin):
-  def __init__(self, log_prob: callable) -> None:
+  def __init__(self, log_prob: callable, proposal: callable=None) -> None:
     self.log_prob = log_prob
     self.x = None
     self.noise_dist = tfd.Normal(0., 1.)
+    self.proposal = self._proposal if proposal is None else proposal
 
   def run(self, steps: int, std: float, x_init: tf.Tensor, verbose: bool=False):
     n, dim = x_init.shape
@@ -179,18 +180,7 @@ class RandomWalkMH(Langevin):
       assert score.shape == (n, dim)
       
       # propose MH update
-      xp_next = self.x[t, :, :] + std * self.noise[t, :, :] # n x dim
-
-      #!
-      # std_vec = tf.concat([tf.constant([std]), tf.ones(dim-1)], axis=0) # dim
-      # xp_next = self.x[t, :, :] + std_vec * self.noise[t, :, :] # n x dim #!
-      #!
-      # std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
-      # xp_next = self.x[t, :, :] + std_vec * (tf.cast(self.noise[t, :, :] > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
-      #!
-      std_vec = tf.concat([tf.ones(2), tf.zeros(dim-2)], axis=0) # dim
-      std_vec = std * std_vec / tf.math.sqrt(tf.reduce_sum(std_vec**2))
-      xp_next = self.x[t, :, :] + std_vec * (tf.cast(self.noise[t, :, :] > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete diagnal jump
+      xp_next = self.proposal(x_current=self.x[t, :, :], std=std, noise=self.noise[t, :, :]) # n x dim
 
       # calculate score of proposed samples
       with tf.GradientTape() as g:
@@ -238,3 +228,26 @@ class RandomWalkMH(Langevin):
     l2_norm_sq = tf.reduce_sum(mean**2, axis=1) # n
     log_kernel = - 0.5 * l2_norm_sq # n
     return log_kernel
+
+  def _proposal(self, x_current, **kwargs):
+    """Default proposal: x' = x + \sigma * Z, Z \sim N(0, 1)
+    x_current: n x dim
+    """
+    noise = kwargs["noise"] # n x dim
+    std = kwargs["std"]
+    dim = x_current.shape[1]
+
+    # xp_next = x_current + std * noise # n x dim
+
+    #!
+    # std_vec = tf.concat([tf.constant([std]), tf.ones(dim-1)], axis=0) # dim
+    # xp_next = x_current[t, :, :] + std_vec * noise[t, :, :] # n x dim #! gaussian with var in 1st dim
+    #!
+    std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
+    xp_next = x_current + std_vec * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
+    #!
+    # std_vec = tf.concat([tf.ones(2), tf.zeros(dim-2)], axis=0) # dim
+    # std_vec = std * std_vec / tf.math.sqrt(tf.reduce_sum(std_vec**2))
+    # xp_next = x_current[t, :, :] + std_vec * (tf.cast(noise[t, :, :] > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete diagnal jump
+    return xp_next
+
