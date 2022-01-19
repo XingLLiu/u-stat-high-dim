@@ -249,20 +249,19 @@ class ConvolvedKSD:
       X: n x dim
       Y: m x dim
       u: noise is of the form \sigma * u @ u^T Z, Z \sim N(0, I_d)
+      conv_samples: noise samples of shape (n, 1)
       output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
         the matrix [ u_p(xi, xj) ]_{ij} is returned
     """
     noise_sd = tf.exp(log_noise_std)
     if u is None:
-      noise_mat = noise_sd * tf.eye(X.shape[1])  
+      noise_mat = noise_sd * tf.eye(X.shape[1]) # dim x dim
     else:
-      u = u / tf.math.sqrt(tf.reduce_sum(u**2))
-      noise_mat = noise_sd * tf.reshape(u, (-1, 1)) @ tf.reshape(u, (1, -1))
+      noise_mat = noise_sd * tf.reshape(u, (1, -1)) # 1 x dim
 
-    assert conv_samples.shape == X.shape
     ## add noise to samples
-    X += conv_samples @ noise_mat
-    Y += conv_samples @ noise_mat
+    X += conv_samples * noise_mat
+    Y += conv_samples * noise_mat
     
     ## copy data for score computation
     X_cp = tf.expand_dims(tf.identity(X), axis=0) # 1 x n x dim
@@ -273,7 +272,7 @@ class ConvolvedKSD:
 
     with tf.GradientTape() as g:
       g.watch(X_cp)
-      input_1 = X_cp - Z @ noise_mat # l x n x dim #TODO broadcasting is potentially causing problems
+      input_1 = X_cp - Z * noise_mat # l x n x dim #TODO broadcasting is potentially causing problems
       prob_1 = self.p.prob(input_1) # l x n
     grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
@@ -282,7 +281,7 @@ class ConvolvedKSD:
 
     with tf.GradientTape() as g:
       g.watch(Y_cp)
-      input_2 = Y_cp - tf.identity(Z) @ noise_mat # l x m x dim
+      input_2 = Y_cp - tf.identity(Z) * noise_mat # l x m x dim
       prob_2 = self.p.prob(input_2) # m x dim
     grad_2 = g.gradient(prob_2, Y_cp)
     grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
