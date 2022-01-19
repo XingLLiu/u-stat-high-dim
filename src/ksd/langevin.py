@@ -159,7 +159,7 @@ class RandomWalkMH(Langevin):
     self.noise_dist = tfd.Normal(0., 1.)
     self.proposal = self._proposal if proposal is None else proposal
 
-  def run(self, steps: int, std: float, x_init: tf.Tensor, verbose: bool=False):
+  def run(self, steps: int, x_init: tf.Tensor, verbose: bool=False, **kwargs):
     n, dim = x_init.shape
     self.x = tf.Variable(-1 * tf.ones((steps, n, dim))) # nsteps x n x dim
     self.x[0, :, :].assign(x_init)
@@ -180,7 +180,7 @@ class RandomWalkMH(Langevin):
       assert score.shape == (n, dim)
       
       # propose MH update
-      xp_next = self.proposal(x_current=self.x[t, :, :], std=std, noise=self.noise[t, :, :]) # n x dim
+      xp_next = self.proposal(x_current=self.x[t, :, :], noise=self.noise[t, :, :], **kwargs) # n x dim
 
       # calculate score of proposed samples
       with tf.GradientTape() as g:
@@ -195,7 +195,7 @@ class RandomWalkMH(Langevin):
         x_current=self.x[t, :, :],
         score_proposed=score_xp,
         score_current=score,
-        std=std
+        **kwargs
       ) # n
 
       # move
@@ -243,8 +243,11 @@ class RandomWalkMH(Langevin):
     # std_vec = tf.concat([tf.constant([std]), tf.ones(dim-1)], axis=0) # dim
     # xp_next = x_current[t, :, :] + std_vec * noise[t, :, :] # n x dim #! gaussian with var in 1st dim
     #!
-    std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
-    xp_next = x_current + std_vec * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
+    # std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
+    # xp_next = x_current + std_vec * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
+    #!
+    dir_vec = kwargs["dir"] # dim
+    xp_next = x_current + std * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) * dir_vec # n x dim #! discrete jump with dir
     #!
     # std_vec = tf.concat([tf.ones(2), tf.zeros(dim-2)], axis=0) # dim
     # std_vec = std * std_vec / tf.math.sqrt(tf.reduce_sum(std_vec**2))
