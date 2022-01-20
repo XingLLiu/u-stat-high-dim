@@ -167,7 +167,8 @@ class RandomWalkMH(Langevin):
     self.noise = self.noise_dist.sample((steps, n, dim)) # nsteps x n x dim
     # self.noise = tfd.Uniform(low=-1.).sample((steps, n, dim)) # nsteps x n x dim #!
 
-    self.accept_prob = 0. # n x 1    
+    self.accept_prob = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n    
+
     iterator = trange(steps-1) if verbose else range(steps-1)
 
     for t in iterator:
@@ -200,12 +201,13 @@ class RandomWalkMH(Langevin):
 
       # move
       x_next, if_accept = self.metropolis(x_proposed=xp_next, x_current=self.x[t, :, :], accept_prob=accept_prob) # n x dim, n x 1
-      self.accept_prob += if_accept / steps # n x 1
+      # self.accept_prob += if_accept / steps # n x 1
+      self.accept_prob[t, :].assign(accept_prob)
 
       # store next samples
       self.x[t+1, :, :].assign(x_next)
 
-  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, score_x: tf.Tensor, std: float):
+  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, score_x: tf.Tensor, std: float, **kwargs):
     '''Compute log k(x'| x), where k is the transition kernel 
     k(x' | x) \propto N(x' | x, std**2)
     
@@ -246,7 +248,7 @@ class RandomWalkMH(Langevin):
     # std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
     # xp_next = x_current + std_vec * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
     #!
-    dir_vec = kwargs["dir"] # dim
+    dir_vec = kwargs["dir_vec"] # dim
     xp_next = x_current + std * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) * dir_vec # n x dim #! discrete jump with dir
     #!
     # std_vec = tf.concat([tf.ones(2), tf.zeros(dim-2)], axis=0) # dim
