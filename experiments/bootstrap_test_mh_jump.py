@@ -69,7 +69,6 @@ nrep = 500
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta_list = [1.0, 2.0, 4.0, 6.0]
-# t_list = [0, 5, 10, 15, 20]
 T = 10 # max num of steps
 std_list = np.linspace(0.02, 1., 25).tolist() # std for discrete jump proposal
 
@@ -157,7 +156,7 @@ if __name__ == '__main__':
         
         sns.ecdfplot(ax=axs[3], data=test_imq_df, x="best_std", hue="type")
         axs[3].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
-        axs[3].set_title(f"median of estimated best std = {best_std_off} (off), {best_std_on} (on)")
+        axs[3].set_title("median of estimated best std = {:.2f} (off), {:.2f} (on)".format(best_std_off, best_std_on))
         axs[3].set_xlabel("p-value")
 
 
