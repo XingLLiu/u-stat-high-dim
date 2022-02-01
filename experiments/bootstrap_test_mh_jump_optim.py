@@ -34,7 +34,7 @@ def log_trans_q(x, log_q_fn, log_p_fn, std, dir_vec):
     den = tf.math.log(term1 + term2) # n
     return den
 
-def score_trans_q(x, log_trans_q_fn):
+def score_den(x, log_trans_q_fn):
     """Compute gradient of log_trans_q_fn at x"""
     with tf.GradientTape() as g:
         g.watch(x)
@@ -56,13 +56,19 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     ksd_df = pd.DataFrame(columns=["n", "best_std", "p_value", "seed", "type"])
     iterator = trange(nrep)
     bootstrap = Bootstrap(ksd, n-ntrain)
-    multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
+    multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x ntest
+
+    bootstrap_nopert = Bootstrap(ksd, n)
+    multinom_samples_nopert = bootstrap_nopert.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
+
+    names = ["off-target", "target", "off-target no pert", "target no pert"]
+    proposals = [proposal_off, proposal_on, proposal_off, proposal_on]
 
     iterator.set_description(f"Running with sample size {n}")
     for seed in iterator:
         # generate points for finding modes
         unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
-        start_pts = delta * unif_dist.sample(kwargs["nstart_pts"])
+        start_pts = 5. * unif_dist.sample(kwargs["nstart_pts"])
 
         # merge modes
         mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
@@ -73,34 +79,45 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
         else:
             dir_vec = mode_list[0] - mode_list[1] # order does not matter as the proposal is symmetric
 
-        for name, proposal in zip(["off-target", "target"], [proposal_off, proposal_on]):
+        for name, proposal in zip(names, proposals):
             iterator.set_description(f"Repetition: {seed+1} of {nrep}")
             sample_init = proposal.sample(n)
-            sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
 
-            best_ksd = 0.
-            for i, std in enumerate(std_ls):
-                iterator.set_description(f"Jump dist after BFGS {i+1} of {len(std_ls)}")
+            if "no pert" not in name:
+                sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
 
-                # run dynamic for T steps
+                best_ksd = 0.
+                for i, std in enumerate(std_ls):
+                    iterator.set_description(f"Jump dist after BFGS {i+1} of {len(std_ls)}")
+
+                    # run dynamic for T steps
+                    mh = RandomWalkMH(log_prob=log_prob_fn)
+                    mh.run(steps=T, std=std, x_init=sample_init_train, dir_vec=dir_vec)
+                    
+                    # compute ksd
+                    x_t = mh.x[-1, :, :].numpy()
+                    ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
+
+                    if ksd_val > best_ksd:
+                        best_std = std
+                        best_ksd = ksd_val
+
+                # run dynamic for T steps with test data
                 mh = RandomWalkMH(log_prob=log_prob_fn)
-                mh.run(steps=T, std=std, x_init=sample_init_train, dir_vec=dir_vec)
-                
-                # compute ksd
+                mh.run(steps=T, std=best_std, x_init=sample_init_test, dir_vec=dir_vec)
+
+                # get perturbed samples
                 x_t = mh.x[-1, :, :].numpy()
-                ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
 
-                if ksd_val > best_ksd:
-                    best_std = std
-                    best_ksd = ksd_val
-
-            # run dynamic for T steps with test data
-            mh = RandomWalkMH(log_prob=log_prob_fn)
-            mh.run(steps=T, std=best_std, x_init=sample_init_test, dir_vec=dir_vec)
+                # get multinomial sample
+                multinom_one_sample = multinom_samples[seed, :] # nrep x num_boost x ntest
+            
+            else:
+                x_t = sample_init
+                multinom_one_sample = multinom_samples_nopert[seed, :] # nrep x num_boost x n
 
             # compute p-value
-            x_t = mh.x[-1, :, :].numpy()
-            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_samples[seed, :])
+            _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
             ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
 
     return ksd_df
@@ -114,7 +131,7 @@ delta_list = [1.0, 2.0, 4.0, 6.0]
 T = 2 # max num of steps
 mode_threshold = 1. # threshold for merging modes
 nstart_pts = 20 * dim # num of starting points for finding modes
-std_list = np.linspace(0.02, 1., 25).tolist() # std for discrete jump proposal
+sigma_list = np.linspace(0.5, 1.5, 26).tolist() # std for discrete jump proposal
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -125,7 +142,7 @@ if __name__ == '__main__':
     ratio_target = args.ratio_t
     ratio_sample = args.ratio_s
 
-    fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 12))
+    fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 15))
     subfigs = fig.subfigures(1, len(delta_list))
     
 
@@ -152,7 +169,7 @@ if __name__ == '__main__':
         if test_imq_df is None:
             # with IMQ
             imq = IMQ(med_heuristic=True)
-            test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, imq, alpha, num_boot, T, std_list,
+            test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, imq, alpha, num_boot, T, sigma_list,
                 threshold=mode_threshold, nstart_pts=nstart_pts)
 
             # save res
@@ -162,7 +179,7 @@ if __name__ == '__main__':
         # between-modes vector (only for plotting)
         dir_vec = tf.eye(dim)[:, 0] * delta * 2 
 
-        # for plotting dist of mh-perturbed samples
+        # for plotting dist of mh-perturbed samples`
         off_sample = proposal_off.sample(1000)
         best_std_off = test_imq_df.loc[(test_imq_df.type == "off-target"), "best_std"].median()
         mh_off = RandomWalkMH(log_prob=log_prob_fn)
@@ -173,72 +190,113 @@ if __name__ == '__main__':
         mh_on = RandomWalkMH(log_prob=log_prob_fn)
         mh_on.run(steps=T, std=best_std_on, x_init=on_sample, dir_vec=dir_vec)
 
-        # score functions of 1-step mh-perturbed densities
+        # log prob of 1-step mh-perturbed densities        
         xx = tf.concat(
-            [tf.reshape(tf.linspace(-3*delta, 3*delta, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
+            [tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
+            # [tf.reshape(tf.linspace(-1.4, -1.2, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
             axis=1) # 200 x dim
+        
         log_trans_q_off = lambda x: log_trans_q(x, log_prob_off_fn, log_prob_fn, best_std_off, dir_vec)
-        score_trans_off = score_trans_q(xx, log_trans_q_off).numpy()[:, 0] # n x dim
-        score_trans_off_df = pd.DataFrame({"y1": score_trans_off, "x1": xx[:, 0].numpy(), "type": "perturbed off-target"})
+        log_prob_trans_off = log_trans_q_off(xx).numpy()
+        log_prob_trans_off_df = pd.DataFrame({"y1": log_prob_trans_off, "x1": xx[:, 0].numpy(), "type": "pert. off-target"})
+
+        log_prob_off = log_prob_off_fn(xx).numpy()
+        log_prob_off_df = pd.DataFrame({"y1": log_prob_off, "x1": xx[:, 0].numpy(), "type": "off-target"})
 
         # log_trans_q_on = lambda x: log_trans_q(x, log_prob_on_fn, log_prob_fn, best_std_on, dir_vec)
         log_trans_q_on = log_prob_on_fn
-        score_trans_on = score_trans_q(xx, log_trans_q_on).numpy()[:, 0] # n x dim
-        score_trans_on_df = pd.DataFrame({"y1": score_trans_on, "x1": xx[:, 0].numpy(), "type": "target"})
-
-        score_trans_df = pd.concat([score_trans_off_df, score_trans_on_df], ignore_index=True)
-        print(score_trans_df.loc[score_trans_df.type == "perturbed off-target"])
-
-        # log prob of 1-step mh-perturbed densities        
-        log_prob_trans_off = log_trans_q_off(xx).numpy()
-        log_prob_trans_off_df = pd.DataFrame({"y1": log_prob_trans_off, "x1": xx[:, 0].numpy(), "type": "perturbed off-target"})
-
         log_prob_trans_on = log_trans_q_on(xx).numpy()
         log_prob_trans_on_df = pd.DataFrame({"y1": log_prob_trans_on, "x1": xx[:, 0].numpy(), "type": "target"})
         
-        log_prob_trans_diff_df = pd.DataFrame({"y1": log_prob_trans_off - log_prob_trans_on, "x1": xx[:, 0].numpy(), "type": "diff"})
-        log_prob_trans_df = pd.concat([log_prob_trans_off_df, log_prob_trans_on_df, log_prob_trans_diff_df], ignore_index=True)
+        log_prob_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(log_prob_trans_off - log_prob_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
+        log_prob_trans_df = pd.concat([log_prob_trans_off_df, log_prob_trans_on_df, log_prob_trans_diff_df, log_prob_off_df], ignore_index=True)
+
+        # score functions of 1-step mh-perturbed densities
+        score_trans_off = score_den(xx, log_trans_q_off).numpy()[:, 0] # n x dim
+        score_trans_off_df = pd.DataFrame({"y1": score_trans_off, "x1": xx[:, 0].numpy(), "type": "pert. off-target"})
+
+        score_off = score_den(xx, log_prob_off_fn).numpy()[:, 0] # n x dim
+        score_off_df = pd.DataFrame({"y1": score_off, "x1": xx[:, 0].numpy(), "type": "off-target"})
+
+        score_trans_on = score_den(xx, log_trans_q_on).numpy()[:, 0] # n x dim
+        score_trans_on_df = pd.DataFrame({"y1": score_trans_on, "x1": xx[:, 0].numpy(), "type": "target"})
+
+        score_trans_df = pd.concat([score_trans_off_df, score_trans_on_df, score_off_df], ignore_index=True)
+
+        score_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(score_trans_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff pert."})
+        score_diff_df = pd.DataFrame({"y1": np.exp(log_prob_off) * np.abs(score_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
+        # score_trans_diff_df = pd.DataFrame({"y1": np.abs(score_trans_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff pert."})
+        # score_diff_df = pd.DataFrame({"y1": np.abs(score_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
+        score_diff_df = pd.concat([score_trans_diff_df, score_diff_df], ignore_index=True)
+
 
         # plot
         subfig = subfigs.flat[ind]
         subfig.suptitle(f"delta = {delta}")
-        axs = subfig.subplots(6, 1)
+        axs = subfig.subplots(8, 1)
         axs = axs.flat
         samples_df_off_target = pd.DataFrame({"x1": off_sample.numpy()[:, 0], "type": "off-target"})
         samples_df_off_perturbed = pd.DataFrame({"x1": mh_off.x[-1, :, :].numpy()[:, 0], "type": "perturbed off-target"})
         samples_df_off = pd.concat([samples_df_off_target, samples_df_off_perturbed], ignore_index=True)
 
         sns.ecdfplot(ax=axs[0], data=samples_df_off, x="x1", hue="type")
+        # sns.histplot(ax=axs[0], data=samples_df_off, x="x1", hue="type", alpha=0.3)
         axs[0].axis(xmin=-3*delta, xmax=3*delta)
         axs[0].set_ylabel("CDF")
+        if ind != len(delta_list) - 1: axs[0].legend([],[], frameon=False)
 
         samples_df_target = pd.DataFrame({"x1": on_sample.numpy()[:, 0], "type": "target"})
         samples_df_perturbed = pd.DataFrame({"x1": mh_on.x[-1, :, :].numpy()[:, 0], "type": "perturbed target"})
         samples_df = pd.concat([samples_df_target, samples_df_perturbed], ignore_index=True)
         sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")
+        # sns.histplot(ax=axs[1], data=samples_df_off, x="x1", hue="type", alpha=0.3)
         axs[1].axis(xmin=-3*delta, xmax=3*delta)
         axs[1].set_ylabel("CDF")
+        if ind != len(delta_list) - 1: axs[1].legend([],[], frameon=False)
 
         err2 = (test_imq_df.loc[(test_imq_df.type == "off-target"), "p_value"] > alpha).mean()
-        err1 = (test_imq_df.loc[(test_imq_df.type == "target"), "p_value"] <= alpha).mean()
-        sns.ecdfplot(ax=axs[2], data=test_imq_df, x="p_value", hue="type")
+        err2_nopert = (test_imq_df.loc[(test_imq_df.type == "off-target no pert"), "p_value"] > alpha).mean()
+        sns.ecdfplot(ax=axs[2], data=test_imq_df.loc[test_imq_df.type.isin(["off-target", "off-target no pert"])], x="p_value", hue="type")
         axs[2].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
         axs[2].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
-        axs[2].set_title(f"type II error = {err2}, type I error = {err1}")
+        axs[2].set_title(f"type II error = {err2}, no pert. = {err2_nopert}")
         axs[2].set_xlabel("p-value")
-        
-        sns.ecdfplot(ax=axs[3], data=test_imq_df, x="best_std", hue="type")
+        if ind != len(delta_list) - 1: axs[2].legend([],[], frameon=False)
+
+        err1 = (test_imq_df.loc[(test_imq_df.type == "target"), "p_value"] <= alpha).mean()
+        err1_nopert = (test_imq_df.loc[(test_imq_df.type == "target no pert"), "p_value"] <= alpha).mean()
+        sns.ecdfplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type.isin(["target", "target no pert"])], x="p_value", hue="type")
+        axs[3].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
         axs[3].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
-        axs[3].set_title("median of estimated best std = {:.2f} (off), {:.2f} (on)".format(best_std_off, best_std_on))
+        axs[3].set_title(f"type I error = {err1}, no pert. = {err1_nopert}")
         axs[3].set_xlabel("p-value")
+        if ind != len(delta_list) - 1: axs[3].legend([],[], frameon=False)
+        
+        sns.ecdfplot(ax=axs[4], data=test_imq_df, x="best_std", hue="type")
+        axs[4].axis(xmin=0.4, xmax=1.6, ymin=0, ymax=1.01)
+        axs[4].set_title("median of estimated best std = {:.2f} (off), {:.2f} (on)".format(best_std_off, best_std_on))
+        axs[4].set_xlabel("p-value")
+        if ind != len(delta_list) - 1: axs[4].legend([],[], frameon=False)
 
-        sns.lineplot(ax=axs[4], data=log_prob_trans_df, x="x1", y="y1", hue="type", style="type")
-        axs[4].axis(xmin=-3*delta, xmax=3*delta)
-        axs[4].set_ylabel("log prob")
+        sns.lineplot(ax=axs[5], data=log_prob_trans_df, x="x1", y="y1", hue="type", style="type")
+        axs[5].axis(xmin=-3*delta, xmax=3*delta, ymin=-6, ymax=2)
+        # axs[5].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-1, ymax=1)
+        # axs[5].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
+        axs[5].set_ylabel("log prob")
+        if ind != len(delta_list) - 1: axs[5].legend([],[], frameon=False)
 
-        sns.lineplot(ax=axs[5], data=score_trans_df, x="x1", y="y1", hue="type", style="type")
-        axs[5].axis(xmin=-3*delta, xmax=3*delta)
-        axs[5].set_ylabel("score")
+        sns.lineplot(ax=axs[6], data=score_trans_df, x="x1", y="y1", hue="type", style="type")
+        axs[6].axis(xmin=-3*delta, xmax=3*delta)
+        # axs[6].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-6, ymax=2)
+        # axs[6].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
+        axs[6].set_ylabel("score")
+        if ind != len(delta_list) - 1: axs[6].legend([],[], frameon=False)
+
+        sns.lineplot(ax=axs[7], data=score_diff_df, x="x1", y="y1", hue="type", style="type")
+        axs[7].axis(xmin=-3*delta, xmax=3*delta)
+        # axs[7].axis(xmin=-10., xmax=10.)
+        axs[7].set_ylabel("score differences")
+        if ind != len(delta_list) - 1: axs[7].legend([],[], frameon=False)
 
 
     fig.savefig(f"figs/bootstrap/bootstrap_mh_discrete_optim_steps{T}_ratio{ratio_target}_{ratio_sample}.png")

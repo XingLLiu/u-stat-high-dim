@@ -243,6 +243,15 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
 
+  def h1_var(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
+    """Compute the variance of the asymtotic Gaussian distribution under H_1"""
+    u_mat = self.eval(log_noise_std=log_noise_std, X=X, Y=Y, conv_samples_full=conv_samples_full, conv_samples=conv_samples, output_dim=2) # n x n
+    n = X.shape[0]
+    mean = tf.reduce_sum(u_mat) / n**2
+    witness = tf.reduce_sum(u_mat, axis=1) / n # n
+    var = tf.reduce_sum((witness - mean)**2) / (n - 1)
+    return var
+
   def eval_mat(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1, u: tf.Tensor=None):
     """
     Inputs:
@@ -324,3 +333,32 @@ class ConvolvedKSD:
       assert term3_mat.shape == (X.shape[0], Y.shape[0])
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
+  
+  def optim(self, nsteps: int, log_noise_std: tf.Tensor, X: tf.Tensor, Y: tf.Tensor, 
+    conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, optimizer: tf.optimizers, output_dim: int=1):
+    """
+    Inputs:
+      log_noise_std: needs to be a tf.Variable
+    """
+
+    def loss_fn():
+      res = -self.eval(
+        log_noise_std=log_noise_std, 
+        X=X, 
+        Y=Y, 
+        conv_samples_full=conv_samples_full, 
+        conv_samples=conv_samples,
+        output_dim=output_dim
+      )
+      var = self.h1_var(
+        log_noise_std=log_noise_std, 
+        X=X, 
+        Y=Y, 
+        conv_samples_full=conv_samples_full, 
+        conv_samples=conv_samples,
+        output_dim=output_dim
+      )
+      res /= tf.sqrt(var)
+      return res
+    
+    _ = tfp.math.minimize(loss_fn, num_steps=nsteps, optimizer=optimizer)
