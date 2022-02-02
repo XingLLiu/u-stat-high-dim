@@ -28,7 +28,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
     convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
     conv_sample_full_all = convolution.sample((nrep, num_est)) # nrep x num_est x dim
 
-    optimizer = tf.optimizers.Adam(learning_rate=0.001)
+    optimizer = tf.optimizers.Adam(learning_rate=0.1)
 
     ksd_df = []
     iterator = trange(nrep)
@@ -76,7 +76,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
     return ksd_df
 
 parser = argparse.ArgumentParser()
-nrep = 1000
+nrep = 500
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 delta_list = [1., 2., 4., 6.]

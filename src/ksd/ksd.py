@@ -243,13 +243,17 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
 
-  def h1_var(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
+  def h1_var(self, allparams: bool=False, **kwargs):
     """Compute the variance of the asymtotic Gaussian distribution under H_1"""
-    u_mat = self.eval(log_noise_std=log_noise_std, X=X, Y=Y, conv_samples_full=conv_samples_full, conv_samples=conv_samples, output_dim=2) # n x n
-    n = X.shape[0]
+    if not allparams:
+      u_mat = self.eval(output_dim=2, **kwargs) # n x n
+    else:
+      u_mat = self.eval_mat(output_dim=2, **kwargs) # n x n
+    n = kwargs["X"].shape[0]
     mean = tf.reduce_sum(u_mat) / n**2
     witness = tf.reduce_sum(u_mat, axis=1) / n # n
     var = tf.reduce_sum((witness - mean)**2) / (n - 1)
+    var += 1e-8 # add jitter for numerical stability
     return var
 
   def eval_mat(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1, u: tf.Tensor=None):
@@ -267,6 +271,8 @@ class ConvolvedKSD:
       noise_mat = noise_sd * tf.eye(X.shape[1]) # dim x dim
     else:
       noise_mat = noise_sd * tf.reshape(u, (1, -1)) # 1 x dim
+      noise_mat = noise_sd * tf.reshape(u, (1, -1)) # 1 x dim
+      assert noise_mat.shape[1] == X.shape[1]
 
     ## add noise to samples
     X += conv_samples * noise_mat
@@ -334,31 +340,23 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
   
-  def optim(self, nsteps: int, log_noise_std: tf.Tensor, X: tf.Tensor, Y: tf.Tensor, 
-    conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, optimizer: tf.optimizers, output_dim: int=1):
+  def optim(self, nsteps: int, optimizer: tf.optimizers, param: tf.Tensor, allparams: bool=False, **kwargs):
     """
     Inputs:
-      log_noise_std: needs to be a tf.Variable
+      allparams: whether to optimise for the entire cov matrix
     """
+    if not allparams:
+      def loss_fn():
+        res = -self.eval(log_sigma=param, **kwargs)
+        var = self.h1_var(log_sigma=param, **kwargs)
+        res /= tf.sqrt(var)
+        return res
+    else:
+      def loss_fn():
+        param[1:].assign(param[1:] / tf.math.sqrt(tf.reduce_sum(param[1:]**2))) # normalise dir vec
+        res = -self.eval_mat(log_noise_std=param[0], u=param[1:], **kwargs)
+        var = self.h1_var(**kwargs)
+        res /= tf.sqrt(var)
+        return res
 
-    def loss_fn():
-      res = -self.eval(
-        log_noise_std=log_noise_std, 
-        X=X, 
-        Y=Y, 
-        conv_samples_full=conv_samples_full, 
-        conv_samples=conv_samples,
-        output_dim=output_dim
-      )
-      var = self.h1_var(
-        log_noise_std=log_noise_std, 
-        X=X, 
-        Y=Y, 
-        conv_samples_full=conv_samples_full, 
-        conv_samples=conv_samples,
-        output_dim=output_dim
-      )
-      res /= tf.sqrt(var)
-      return res
-    
     _ = tfp.math.minimize(loss_fn, num_steps=nsteps, optimizer=optimizer)
