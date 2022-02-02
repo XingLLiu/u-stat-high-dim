@@ -253,7 +253,6 @@ class ConvolvedKSD:
     mean = tf.reduce_sum(u_mat) / n**2
     witness = tf.reduce_sum(u_mat, axis=1) / n # n
     var = tf.reduce_sum((witness - mean)**2) / (n - 1)
-    var += 1e-8 # add jitter for numerical stability
     return var
 
   def eval_mat(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1, u: tf.Tensor=None):
@@ -349,14 +348,14 @@ class ConvolvedKSD:
       def loss_fn():
         res = -self.eval(log_sigma=param, **kwargs)
         var = self.h1_var(log_sigma=param, **kwargs)
-        res /= tf.sqrt(var)
+        res /= tf.sqrt(var) + 1e-8
         return res
     else:
       def loss_fn():
         param[1:].assign(param[1:] / tf.math.sqrt(tf.reduce_sum(param[1:]**2))) # normalise dir vec
         res = -self.eval_mat(log_noise_std=param[0], u=param[1:], **kwargs)
         var = self.h1_var(**kwargs)
-        res /= tf.sqrt(var)
+        res /= tf.sqrt(var) + 1e-8
         return res
 
     _ = tfp.math.minimize(loss_fn, num_steps=nsteps, optimizer=optimizer)
