@@ -77,6 +77,14 @@ class KSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0]), term4_mat.shape
       return term1_mat + term2_mat + term3_mat + term4_mat
 
+  def h1_var(self, **kwargs):
+    """Compute the variance of the asymtotic Gaussian distribution under H_1"""
+    u_mat = self.__call__(output_dim=2, **kwargs) # n x n
+    n = kwargs["X"].shape[0]
+    mean = tf.reduce_sum(u_mat) / n**2
+    witness = tf.reduce_sum(u_mat, axis=1) / n # n
+    var = tf.reduce_sum((witness - mean)**2) / (n - 1)
+    return var
 
 class ConvolvedKSD:
   def __init__(
@@ -164,7 +172,6 @@ class ConvolvedKSD:
       assert term3_mat.shape == (X.shape[0], Y.shape[0])
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
-
 
   def eval(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
     """
@@ -346,8 +353,8 @@ class ConvolvedKSD:
     """
     if not allparams:
       def loss_fn():
-        res = -self.eval(log_sigma=param, **kwargs)
-        var = self.h1_var(log_sigma=param, **kwargs)
+        res = -self.eval(log_noise_std=param, **kwargs)
+        var = self.h1_var(log_noise_std=param, **kwargs)
         res /= tf.sqrt(var) + 1e-8
         return res
     else:

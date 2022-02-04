@@ -53,8 +53,9 @@ def run_bootstrap_experiment(nrep, target, proposal_on, proposal_off, kernel, al
             if "noiseless" in dist_name:
                 log_noise_std = tf.Variable(-1e18)
             else:
-                log_noise_std = tf.Variable(0.) #TODO start from 0 instead
-                ksd.optim(optim_steps, log_noise_std, sample_train, tf.identity(sample_train), conv_sample_full, conv_sample_train, optimizer)
+                log_noise_std = tf.Variable(1.) #TODO start from 0 instead
+                ksd.optim(nsteps=optim_steps, param=log_noise_std, X=sample_train, Y=tf.identity(sample_train), 
+                    conv_samples_full=conv_sample_full, conv_samples=conv_sample_train, optimizer=optimizer)
 
             # initialize test
             ksd = ConvolvedKSD(target=target, kernel=kernel, conv_kernel=None)
