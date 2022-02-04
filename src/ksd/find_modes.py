@@ -83,3 +83,17 @@ def find_modes(start_pts, log_prob_fn, threshold, **kwargs):
     mode_list, inv_hess_list = merge_modes(inverse_hessian_estimate, end_pts, threshold, log_prob_fn)
 
     return mode_list, inv_hess_list
+
+def pairwise_directions(modes):
+    """Compute v_{ij} = \mu_i - \mu_j for all 1 \leq i < j \leq len(modes). 
+    Order does not matter for symmetric kernels
+    modes: list of mode vectors. Must have length >= 2
+    """
+    n = len(modes)
+    dir_list = []
+    for i in range(n-1):
+        for j in range(i+1, n):
+            dir = modes[i] - modes[j]
+            dir_list.append(dir)
+    
+    return dir_list

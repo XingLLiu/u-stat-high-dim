@@ -14,7 +14,7 @@ from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 from src.ksd.models import create_mixture_gaussian
 from src.ksd.langevin import RandomWalkMH
-from src.ksd.find_modes import find_modes
+from src.ksd.find_modes import find_modes, pairwise_directions
 
 tf.random.set_seed(0)
 
@@ -73,38 +73,46 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
         # merge modes
         mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
 
-        # find between-modes dir #TODO this assumes two modes are found
-        if len(mode_list) == 1:
-            dir_vec = mode_list[0]
-        else:
-            dir_vec = mode_list[0] - mode_list[1] # order does not matter as the proposal is symmetric
-
         for name, proposal in zip(names, proposals):
             iterator.set_description(f"Repetition: {seed+1} of {nrep}")
             sample_init = proposal.sample(n)
 
+            # find between-modes dir #TODO this assumes two modes are found
+            if len(mode_list) == 1:
+                dir_vec_list = [mode_list[0]]
+            else:
+                dir_vec_list = pairwise_directions(mode_list)
+                
             if "no pert" not in name:
                 sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
 
+                # find v_{i^*, j^*}, \sigma^*_{i^*, j^*}
                 best_ksd = 0.
-                for i, std in enumerate(std_ls):
-                    iterator.set_description(f"Jump dist after BFGS {i+1} of {len(std_ls)}")
-
-                    # run dynamic for T steps
-                    mh = RandomWalkMH(log_prob=log_prob_fn)
-                    mh.run(steps=T, std=std, x_init=sample_init_train, dir_vec=dir_vec)
+                best_dir_vec = dir_vec_list[0]
+                for j, dir_vec in enumerate(dir_vec_list):
+                    # loop through directional vecs
                     
-                    # compute ksd
-                    x_t = mh.x[-1, :, :].numpy()
-                    ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
+                    for i, std in enumerate(std_ls):
+                        # loop through jump scales
+                        iterator.set_description(f"Jump scale [{i+1} / {len(std_ls)}] of dir vector [{j+1} / {len(dir_vec_list)}]")
 
-                    if ksd_val > best_ksd:
-                        best_std = std
-                        best_ksd = ksd_val
+                        # run dynamic for T steps
+                        mh = RandomWalkMH(log_prob=log_prob_fn)
+                        mh.run(steps=T, std=std, x_init=sample_init_train, dir_vec=dir_vec)
+                        
+                        # compute ksd
+                        x_t = mh.x[-1, :, :].numpy()
+                        ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
 
-                # run dynamic for T steps with test data
+                        # update if ksd is larger
+                        if ksd_val > best_ksd:
+                            best_std = std
+                            best_dir_vec = dir_vec
+                            best_ksd = ksd_val
+
+                # run dynamic for T steps with test data and optimal params
                 mh = RandomWalkMH(log_prob=log_prob_fn)
-                mh.run(steps=T, std=best_std, x_init=sample_init_test, dir_vec=dir_vec)
+                mh.run(steps=T, x_init=sample_init_test, std=best_std, dir_vec=best_dir_vec)
 
                 # get perturbed samples
                 x_t = mh.x[-1, :, :].numpy()
@@ -192,39 +200,40 @@ if __name__ == '__main__':
 
         # log prob of 1-step mh-perturbed densities        
         xx = tf.concat(
-            [tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
-            # [tf.reshape(tf.linspace(-1.4, -1.2, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
+            # [tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
+            [tf.zeros((1000, 1)), tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-2))],
             axis=1) # 200 x dim
         
         log_trans_q_off = lambda x: log_trans_q(x, log_prob_off_fn, log_prob_fn, best_std_off, dir_vec)
         log_prob_trans_off = log_trans_q_off(xx).numpy()
-        log_prob_trans_off_df = pd.DataFrame({"y1": log_prob_trans_off, "x1": xx[:, 0].numpy(), "type": "pert. off-target"})
+        log_prob_trans_off_df = pd.DataFrame({"y1": log_prob_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
 
         log_prob_off = log_prob_off_fn(xx).numpy()
-        log_prob_off_df = pd.DataFrame({"y1": log_prob_off, "x1": xx[:, 0].numpy(), "type": "off-target"})
+        log_prob_off_df = pd.DataFrame({"y1": log_prob_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
 
         # log_trans_q_on = lambda x: log_trans_q(x, log_prob_on_fn, log_prob_fn, best_std_on, dir_vec)
         log_trans_q_on = log_prob_on_fn
         log_prob_trans_on = log_trans_q_on(xx).numpy()
-        log_prob_trans_on_df = pd.DataFrame({"y1": log_prob_trans_on, "x1": xx[:, 0].numpy(), "type": "target"})
+        log_prob_trans_on_df = pd.DataFrame({"y1": log_prob_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
         
-        log_prob_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(log_prob_trans_off - log_prob_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
+        log_prob_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(log_prob_trans_off - log_prob_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
         log_prob_trans_df = pd.concat([log_prob_trans_off_df, log_prob_trans_on_df, log_prob_trans_diff_df, log_prob_off_df], ignore_index=True)
 
         # score functions of 1-step mh-perturbed densities
-        score_trans_off = score_den(xx, log_trans_q_off).numpy()[:, 0] # n x dim
-        score_trans_off_df = pd.DataFrame({"y1": score_trans_off, "x1": xx[:, 0].numpy(), "type": "pert. off-target"})
+        score_trans_off = score_den(xx, log_trans_q_off).numpy()[:, 1] # n x dim
+        score_trans_off_df = pd.DataFrame({"y1": score_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
 
-        score_off = score_den(xx, log_prob_off_fn).numpy()[:, 0] # n x dim
-        score_off_df = pd.DataFrame({"y1": score_off, "x1": xx[:, 0].numpy(), "type": "off-target"})
+        score_off = score_den(xx, log_prob_off_fn).numpy()[:, 1] # n x dim
+        score_off_df = pd.DataFrame({"y1": score_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
 
-        score_trans_on = score_den(xx, log_trans_q_on).numpy()[:, 0] # n x dim
-        score_trans_on_df = pd.DataFrame({"y1": score_trans_on, "x1": xx[:, 0].numpy(), "type": "target"})
+        score_trans_on = score_den(xx, log_trans_q_on).numpy()[:, 1] # n x dim
+        score_trans_on_df = pd.DataFrame({"y1": score_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
 
         score_trans_df = pd.concat([score_trans_off_df, score_trans_on_df, score_off_df], ignore_index=True)
-
-        score_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(score_trans_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff pert."})
-        score_diff_df = pd.DataFrame({"y1": np.exp(log_prob_off) * np.abs(score_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
+        
+        # abs differences in score functions
+        score_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(score_trans_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff pert."})
+        score_diff_df = pd.DataFrame({"y1": np.exp(log_prob_off) * np.abs(score_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
         # score_trans_diff_df = pd.DataFrame({"y1": np.abs(score_trans_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff pert."})
         # score_diff_df = pd.DataFrame({"y1": np.abs(score_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
         score_diff_df = pd.concat([score_trans_diff_df, score_diff_df], ignore_index=True)
