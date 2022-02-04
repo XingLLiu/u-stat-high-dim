@@ -12,7 +12,7 @@ import argparse
 from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
-from src.ksd.models import create_mixture_gaussian
+import src.ksd.models as models
 from src.ksd.langevin import RandomWalkMH
 from src.ksd.find_modes import find_modes, pairwise_directions
 
@@ -74,7 +74,6 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
         mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
 
         for name, proposal in zip(names, proposals):
-            iterator.set_description(f"Repetition: {seed+1} of {nrep}")
             sample_init = proposal.sample(n)
 
             # find between-modes dir #TODO this assumes two modes are found
@@ -82,7 +81,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                 dir_vec_list = [mode_list[0]]
             else:
                 dir_vec_list = pairwise_directions(mode_list)
-                
+
             if "no pert" not in name:
                 sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
 
@@ -135,7 +134,7 @@ dim = 5
 nrep = 500
 num_boot = 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
-delta_list = [1.0, 2.0, 4.0, 6.0]
+delta_list = [4.0] #[1.0, 2.0, 4.0, 6.0]
 T = 2 # max num of steps
 mode_threshold = 1. # threshold for merging modes
 nstart_pts = 20 * dim # num of starting points for finding modes
@@ -144,32 +143,53 @@ sigma_list = np.linspace(0.5, 1.5, 26).tolist() # std for discrete jump proposal
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
+    parser.add_argument("--model", type=str, default="bimodal")
     parser.add_argument("--ratio_t", type=float, default=0.5)
     parser.add_argument("--ratio_s", type=float, default=1.)
+    parser.add_argument("--k", type=int, default=1)
+    parser.add_argument("--nmodes", type=int, default=10)
     args = parser.parse_args()
+    model = args.model
     ratio_target = args.ratio_t
     ratio_sample = args.ratio_s
+    k = args.k
 
     fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 15))
     subfigs = fig.subfigures(1, len(delta_list))
-    
 
     for ind, delta in tqdm(enumerate(delta_list)):
         print(f"Running with delta = {delta}")
         test_imq_df = None
+        
+        # set model
+        if model == "bimodal":
+            model_name = f"{model}_discrete_optim_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}"
+            create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_target)
+            create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
+
+        elif model == "t-banana":
+            nmodes = args.nmodes
+            model_name = f"{model}_discrete_optim_steps{T}_nmodes{nmodes}"
+            ratio_target = [1/nmodes] * nmodes
+            random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
+            ratio_sample = random_weights / tf.reduce_sum(random_weights)
+            loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*10, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
+                
+            create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=0.03, return_logprob=True)
+            create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=0.03, return_logprob=True)
 
         # target distribution
-        target, log_prob_fn = create_mixture_gaussian(dim=dim, delta=delta, return_logprob=True, ratio=ratio_target)
+        target, log_prob_fn = create_target_model
 
-        # off-target proposal distribution
-        proposal_on, log_prob_on_fn = create_mixture_gaussian(dim=dim, delta=delta, return_logprob=True, ratio=ratio_target)
+        # on-target proposal distribution
+        proposal_on, log_prob_on_fn = create_target_model
         
         # off-target proposal distribution
-        proposal_off, log_prob_off_fn = create_mixture_gaussian(dim=dim, delta=delta, return_logprob=True, ratio=ratio_sample)
+        proposal_off, log_prob_off_fn = create_sample_model
         
         if len(args.load) > 0 :
             try:
-                test_imq_df = pd.read_csv(args.load + f"/mh_discrete_optim_steps{T}_delta{delta}_ratio{ratio_target}_{ratio_sample}.csv")
+                test_imq_df = pd.read_csv(args.load + f"/{model_name}_delta{delta}.csv")
                 print(f"Loaded pre-saved data for steps = {T}")
             except:
                 print(f"Pre-saved data for steps = {T}, delta = {delta} not found. Running from scratch now.")
@@ -181,7 +201,7 @@ if __name__ == '__main__':
                 threshold=mode_threshold, nstart_pts=nstart_pts)
 
             # save res
-            test_imq_df.to_csv(f"res/bootstrap/mh_discrete_optim_steps{T}_delta{delta}_ratio{ratio_target}_{ratio_sample}.csv", index=False)
+            test_imq_df.to_csv(f"res/bootstrap/{model_name}_delta{delta}.csv", index=False)
 
 
         # between-modes vector (only for plotting)
@@ -308,4 +328,4 @@ if __name__ == '__main__':
         if ind != len(delta_list) - 1: axs[7].legend([],[], frameon=False)
 
 
-    fig.savefig(f"figs/bootstrap/bootstrap_mh_discrete_optim_steps{T}_ratio{ratio_target}_{ratio_sample}.png")
+    fig.savefig(f"figs/bootstrap/bootstrap_{model_name}.png")
