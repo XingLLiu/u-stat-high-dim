@@ -67,8 +67,8 @@ def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, **kwargs):
 
     if not if_converged:
         nstart_pts = start_pts.shape[0]
-        not_conv = nstart_pts - tf.reduce_sum(tf.cast(optim_results.converged, type=tf.int32))
-        Warning(f"{not_conv} of {nstart_pts} BFGS optim chains did not converge")
+        not_conv = nstart_pts - tf.reduce_sum(tf.cast(optim_results.converged, dtype=tf.int32))
+        print(Warning(f"{not_conv} of {nstart_pts} BFGS optim chains did not converge"))
 
     return optim_results
 
