@@ -81,9 +81,10 @@ class KSD:
     """Compute the variance of the asymtotic Gaussian distribution under H_1"""
     u_mat = self.__call__(output_dim=2, **kwargs) # n x n
     n = kwargs["X"].shape[0]
-    mean = tf.reduce_sum(u_mat) / n**2
-    witness = tf.reduce_sum(u_mat, axis=1) / n # n
-    var = tf.reduce_sum((witness - mean)**2) / (n - 1)
+    witness = tf.reduce_sum(u_mat, axis=1) # n
+    term1 = tf.reduce_sum(witness**2) * 4 / n**3
+    term2 = tf.reduce_sum(u_mat)**2 * 4 / n**4
+    var = term1 - term2 + 1e-12
     return var
 
 class ConvolvedKSD:
@@ -257,9 +258,11 @@ class ConvolvedKSD:
     else:
       u_mat = self.eval_mat(output_dim=2, **kwargs) # n x n
     n = kwargs["X"].shape[0]
-    mean = tf.reduce_sum(u_mat) / n**2
-    witness = tf.reduce_sum(u_mat, axis=1) / n # n
-    var = tf.reduce_sum((witness - mean)**2) / (n - 1)
+
+    witness = tf.reduce_sum(u_mat, axis=1) # n
+    term1 = tf.reduce_sum(witness**2) * 4 / n**3
+    term2 = tf.reduce_sum(u_mat)**2 * 4 / n**4
+    var = term1 - term2 + 1e-12
     return var
 
   def eval_mat(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1, u: tf.Tensor=None):
