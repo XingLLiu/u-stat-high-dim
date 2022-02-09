@@ -10,10 +10,14 @@ def pairwise_mahalanobis(inv_hessian, x):
     res = x_h @ inv_hessian @ tf.transpose(x_h) # 1,
     return res[0, 0]
 
-def merge_modes(inv_hessians: tf.Tensor, end_pts: tf.Tensor, threshold: float, log_prob: callable):
+def merge_modes(inv_hessians: tf.Tensor, end_pts: tf.Tensor, threshold: float, log_prob: callable,
+    threshold_ignore: float=1e-8):
     """Merge modes according to pairwise mahalanobis distance
-    end_pts: m x dim
-    inv_hessians: m x dim x dim
+    Args:
+        end_pts: m x dim
+        inv_hessians: m x dim x dim
+        threshold_ignore: if prob of new mode < threshold_ignore, then do not
+            keep it as a new mode.
     """
     M = end_pts.shape[0]
     mode_list = [end_pts[0, :]]
@@ -43,15 +47,20 @@ def merge_modes(inv_hessians: tf.Tensor, end_pts: tf.Tensor, threshold: float, l
                 # if current pt is better than local mode, swap
                 mode_list[argmin_i] = end_pt_i
                 inv_hessians_list[argmin_i] = inv_hess_i
-                
-        else:
+
+        elif log_prob(end_pt_i) > tf.math.log(threshold_ignore):
             # store current pt as a new mode
             mode_list.append(end_pt_i)
             inv_hessians_list.append(inv_hess_i)
     
+    # # remove first mode if its logprob is too low #TODO add back?
+    # if not (log_prob(mode_list[0]) > tf.math.log(threshold_ignore)):
+    #     mode_list.pop(0)
+    #     inv_hessians_list.pop(0)
+
     return mode_list, inv_hessians_list
 
-def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, **kwargs):
+def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, verbose: bool=False, **kwargs):
     """Run BFGS algorithm
     start_pts: M x dim
     """
@@ -65,7 +74,7 @@ def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, **kwargs):
 
     if_converged = tf.experimental.numpy.all(optim_results.converged).numpy() # should return true if all converged
 
-    if not if_converged:
+    if not if_converged and verbose:
         nstart_pts = start_pts.shape[0]
         not_conv = nstart_pts - tf.reduce_sum(tf.cast(optim_results.converged, dtype=tf.int32))
         print(Warning(f"{not_conv} of {nstart_pts} BFGS optim chains did not converge"))
@@ -84,16 +93,21 @@ def find_modes(start_pts, log_prob_fn, threshold, **kwargs):
 
     return mode_list, inv_hess_list
 
-def pairwise_directions(modes):
+def pairwise_directions(modes, return_index=False):
     """Compute v_{ij} = \mu_i - \mu_j for all 1 \leq i < j \leq len(modes). 
     Order does not matter for symmetric kernels
     modes: list of mode vectors. Must have length >= 2
     """
     n = len(modes)
     dir_list = []
+    index = []
     for i in range(n-1):
         for j in range(i+1, n):
             dir = modes[i] - modes[j]
             dir_list.append(dir)
+            index.append((i, j))
     
-    return dir_list
+    if not return_index:
+        return dir_list
+    else:
+        return dir_list, index
