@@ -51,7 +51,7 @@ def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, return_logprob=False)
         exp2 = tf.reduce_sum((x - mean2)**2, axis=-1) # n
         return tf.math.log(
             ratio * tf.math.exp(- 0.5 * exp1) + 
-            (1-ratio) * tf.math.exp(- 0.5 * exp2) + 1e-12 # jitter
+            (1-ratio) * tf.math.exp(- 0.5 * exp2)
         )
       
       return mix_gauss, log_prob_fn  
@@ -118,7 +118,7 @@ def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor, return_l
     return mixture_dist
   else:
     def log_prob(**kwargs):
-      return mixture_dist.log_prob(**kwargs) + 1e-12 # jitter
+      return mixture_dist.log_prob(**kwargs)
     return mixture_dist, mixture_dist.log_prob
 
 
@@ -149,6 +149,6 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
         diff_norm_sq = tf.reduce_sum(diff**2, axis=-1) # nmodes x n
         p_component = ratio_expand * tf.math.exp(- 0.5 * diff_norm_sq / (scale**2)) # nmodes x n
         sum_p = tf.reduce_sum(p_component, axis=0) # n
-        return tf.math.log(sum_p) + 1e-12 # jitter
+        return tf.math.log(sum_p)
       
       return mix_gauss, log_prob_fn  
