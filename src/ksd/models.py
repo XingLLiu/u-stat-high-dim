@@ -50,7 +50,8 @@ def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, return_logprob=False)
         exp1 = tf.reduce_sum((x - mean1)**2, axis=-1) # n
         exp2 = tf.reduce_sum((x - mean2)**2, axis=-1) # n
         return tf.math.log(
-            ratio * tf.math.exp(- 0.5 * exp1) + (1-ratio) * tf.math.exp(- 0.5 * exp2)
+            ratio * tf.math.exp(- 0.5 * exp1) + 
+            (1-ratio) * tf.math.exp(- 0.5 * exp2) + 1e-12 # jitter
         )
       
       return mix_gauss, log_prob_fn  
@@ -115,5 +116,39 @@ def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor, return_l
   
   if not return_logprob:
     return mixture_dist
-  else:      
-    return mixture_dist, mixture_dist.log_prob  
+  else:
+    def log_prob(**kwargs):
+      return mixture_dist.log_prob(**kwargs) + 1e-12 # jitter
+    return mixture_dist, mixture_dist.log_prob
+
+
+def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False):
+    """Mixture of 20 Gaussian
+    Args:
+      means: Must have shape nmodes x dim
+      ratio: Must either be a float or have shape (nmodes,)
+    """
+    nmodes = means.shape[0]
+    ratio = [0.5] * nmodes if isinstance(ratio, float) else ratio
+    components = [tfd.MultivariateNormalDiag(
+      loc=means[i, :], 
+      scale_identity_multiplier=scale) for i in range(means.shape[0])]
+    
+    mix_gauss = tfd.Mixture(
+      cat=tfd.Categorical(probs=ratio),
+      components=components)
+    
+    if not return_logprob:
+      return mix_gauss
+    else:
+      ratio_expand = tf.expand_dims(ratio, axis=1) # nmodes x 1
+      means_expand = tf.expand_dims(means, axis=1) # nmodes x 1 x dim
+      def log_prob_fn(x):
+        '''fast implementation of log_prob'''
+        diff = tf.expand_dims(x, axis=0) - means_expand # nmodes x n x dim
+        diff_norm_sq = tf.reduce_sum(diff**2, axis=-1) # nmodes x n
+        p_component = ratio_expand * tf.math.exp(- 0.5 * diff_norm_sq / (scale**2)) # nmodes x n
+        sum_p = tf.reduce_sum(p_component, axis=0) # n
+        return tf.math.log(sum_p) + 1e-12 # jitter
+      
+      return mix_gauss, log_prob_fn  
