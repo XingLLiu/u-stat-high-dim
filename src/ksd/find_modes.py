@@ -43,12 +43,14 @@ def merge_modes(inv_hessians: tf.Tensor, end_pts: tf.Tensor, threshold: float, l
             # classify into closest mode
             closest_mode = mode_list[argmin_i]
 
-            if log_prob(closest_mode) < log_prob(end_pt_i):
+            if log_prob(
+                    tf.reshape(closest_mode, (1, -1))
+                ) < log_prob(tf.reshape(end_pt_i, (1, -1))):
                 # if current pt is better than local mode, swap
                 mode_list[argmin_i] = end_pt_i
                 inv_hessians_list[argmin_i] = inv_hess_i
 
-        elif log_prob(end_pt_i) > tf.math.log(threshold_ignore):
+        elif log_prob(tf.reshape(end_pt_i, (1, -1))) > tf.math.log(threshold_ignore):
             # store current pt as a new mode
             mode_list.append(end_pt_i)
             inv_hessians_list.append(inv_hess_i)

@@ -67,7 +67,6 @@ class KSD:
     term4 = tf.reduce_sum(term4_mat)
 
     if output_dim == 1:
-      # print(term1.numpy(), term2.numpy(), term3.numpy(), term4.numpy())
       ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
       return ksd
     elif output_dim == 2:
