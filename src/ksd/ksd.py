@@ -77,15 +77,24 @@ class KSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0]), term4_mat.shape
       return term1_mat + term2_mat + term3_mat + term4_mat
 
-  def h1_var(self, **kwargs):
-    """Compute the variance of the asymtotic Gaussian distribution under H_1"""
+  def h1_var(self, return_scaled_ksd: bool=False, **kwargs):
+    """Compute the variance of the asymtotic Gaussian distribution under H_1
+    Args:
+      return_scaled_ksd: if True, return KSD / (\sigma_{H_1} + jitter), where 
+        \sigma_{H_1}^2 is the asymptotic variance of the KSD estimate under H1
+    """
     u_mat = self.__call__(output_dim=2, **kwargs) # n x n
     n = kwargs["X"].shape[0]
     witness = tf.reduce_sum(u_mat, axis=1) # n
     term1 = tf.reduce_sum(witness**2) * 4 / n**3
     term2 = tf.reduce_sum(u_mat)**2 * 4 / n**4
     var = term1 - term2 + 1e-12
-    return var
+    if not return_scaled_ksd:
+      return var
+    else:
+      ksd = tf.reduce_sum(u_mat) / n**2
+      ksd_scaled = ksd / tf.math.sqrt(var)
+      return var, ksd_scaled
 
 class ConvolvedKSD:
   def __init__(
@@ -251,8 +260,12 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
 
-  def h1_var(self, allparams: bool=False, **kwargs):
-    """Compute the variance of the asymtotic Gaussian distribution under H_1"""
+  def h1_var(self, allparams: bool=False, return_scaled_ksd: bool=False, **kwargs):
+    """Compute the variance of the asymtotic Gaussian distribution under H_1
+    Args:
+      return_scaled_ksd: if True, return KSD / (\sigma_{H_1} + jitter), where 
+        \sigma_{H_1}^2 is the asymptotic variance of the KSD estimate under H1
+    """
     if not allparams:
       u_mat = self.eval(output_dim=2, **kwargs) # n x n
     else:
@@ -263,7 +276,12 @@ class ConvolvedKSD:
     term1 = tf.reduce_sum(witness**2) * 4 / n**3
     term2 = tf.reduce_sum(u_mat)**2 * 4 / n**4
     var = term1 - term2 + 1e-12
-    return var
+    if not return_scaled_ksd:
+      return var
+    else:
+      ksd = tf.reduce_sum(u_mat) / n**2
+      ksd_scaled = ksd / tf.math.sqrt(var)
+      return var, ksd_scaled
 
   def eval_mat(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1, u: tf.Tensor=None):
     """
