@@ -89,7 +89,7 @@ class Bootstrap:
     # critical_val = tfp.stats.percentile(self.ksd_star, 100*(1-alpha)).numpy()
     critical_val = np.quantile(self.ksd_star.numpy(), 1-alpha)
     reject = True if self.ksd_hat > critical_val else False
-    p_val = np.count_nonzero(self.ksd_star.numpy() >= self.ksd_hat) / self.ksd_star.shape[0]
+    p_val = np.count_nonzero(self.ksd_star.numpy() > self.ksd_hat) / (self.ksd_star.shape[0] + 1)
     return reject, critical_val, p_val
 
   def test_once(
