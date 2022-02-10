@@ -2,6 +2,13 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 
+def chech_log_prob(dist, log_prob):
+  """Check if log_prob == dist.log_prob + const."""
+  x = dist.sample(10)
+  diff = dist.log_prob(x) - log_prob(x)
+  res = tf.experimental.numpy.allclose(diff, diff[0])
+  assert res, "log_prob function is not implemented correctly"
+
 def create_mixture_gaussian(dim, delta, ratio=0.5, return_logprob=False):
     """Bimodal Gaussian mixture with mean shift only in the first dim"""
     e1 = tf.eye(dim)[:, 0]
@@ -18,7 +25,7 @@ def create_mixture_gaussian(dim, delta, ratio=0.5, return_logprob=False):
       return mix_gauss
     else:      
       def log_prob_fn(x):
-        '''fast implementation of log_prob'''
+        """fast implementation of log_prob"""
         exp1 = tf.reduce_sum((x - mean1)**2, axis=-1) # n
         exp2 = tf.reduce_sum((x - mean2)**2, axis=-1) # n
         return tf.math.log(
@@ -46,7 +53,7 @@ def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, return_logprob=False)
       return mix_gauss
     else:      
       def log_prob_fn(x):
-        '''fast implementation of log_prob'''
+        """fast implementation of log_prob"""
         exp1 = tf.reduce_sum((x - mean1)**2, axis=-1) # n
         exp2 = tf.reduce_sum((x - mean2)**2, axis=-1) # n
         return tf.math.log(
@@ -90,25 +97,73 @@ def create_banana(dim: int, loc: tf.Tensor, **kwargs):
   banana = tfd.TransformedDistribution(distribution=t_dist, bijector=Banana(**kwargs))
   return banana
 
-def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor, return_logprob=False, **kwargs):
+def t_prob_fast(x, loc, sigma_inv, df=7):
+  """Fast implementation of log_prob for t-dist"""
+  dim = x.shape[1]
+  y = tf.matmul(x - loc, sigma_inv, transpose_b=True) # n x dim
+  y_norm_sq = tf.einsum(
+      "ij,ij->i",
+      y,
+      x - loc) # n
+  factor = -0.5 * (df + dim)
+  prob = (1 + y_norm_sq / df)**factor # n
+  return prob
+
+def banana_prob_fast(x, loc, b, sigma_inv):
+  """Fast implementation of log_prob for banana dist"""
+  y0 = x[:, 0:1]
+  y = tf.Variable(x)
+  y[:, 1:2].assign(x[..., 1:2] - b * y0**2 + 100 * b)
+  return t_prob_fast(y, loc, sigma_inv)
+
+def create_mixture_t_banana_fast(dim, locs, ratio, cov_mat_t, b=0.03, scale=10.):
+  """Fast implementation of log_prob for banana-t model"""
+  nmodes = len(ratio)
+  id_mat = tf.eye(dim)
+  scale_mat = tf.concat([id_mat[:, :1] * scale, id_mat[:, 1:]], axis=-1)
+  sigma_inv = tf.linalg.inv(tf.matmul(scale_mat, scale_mat, transpose_b=True))
+  
+  sigma_inv_t = tf.linalg.inv(tf.matmul(cov_mat_t, cov_mat_t, transpose_b=True))
+  
+  normalizer_ratio = tf.math.sqrt(
+      tf.linalg.det(sigma_inv_t) / tf.linalg.det(sigma_inv))
+
+  def log_prob_mix_fast(x):
+      prob_banana_mix = 0.
+      for i in range(5):
+          prob_banana_mix += ratio[i] * banana_prob_fast(
+            x, locs[i, :], b, sigma_inv)
+
+      prob_t_mix = 0.
+      for i in range(nmodes-5):
+          prob_t_mix += ratio[5+i] * t_prob_fast(x, locs[5+i], sigma_inv_t)
+
+      log_prob = tf.math.log(prob_banana_mix + prob_t_mix * normalizer_ratio)
+      return log_prob
+  
+  return log_prob_mix_fast
+
+def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor, 
+  return_logprob=False, nbanana: int=5, **kwargs):
   """Create a mixture of t and t-tailed banana distributions. The first 5 modes are
   banana distributions, and the rest are t distributions.
   
-  ratio: mixture proportions. Must have length >= 5
+  ratio: mixture proportions. Must have length >= nbanana
   loc: location vectors of shape (len(ratio), dim). The first 5 rows are the loc vectors for the
     banana distributions, and the rest are for the t-distributions
+  nbanana: number of banana distributions in the mixture
   """
   nmodes = len(ratio)
-  assert nmodes >= 5, "number of mixtures must be >= 5"
+  assert nmodes >= nbanana, f"number of mixtures must be >= {nbanana}"
 
-  banana_component = [create_banana(dim, loc=loc[i, :], **kwargs) for i in range(5)]
+  banana_component = [create_banana(dim, loc=loc[i, :], **kwargs) for i in range(nbanana)]
   cov_mat = tf.math.sqrt(0.01 * tf.math.sqrt(float(dim)) * tf.eye(dim))
   t_component = [
       tfd.MultivariateStudentTLinearOperator(
         df=7, 
-        loc=loc[5+i, :], 
+        loc=loc[nbanana+i, :], 
         scale=tf.linalg.LinearOperatorLowerTriangular(cov_mat)
-      ) for i in range(nmodes-5)
+      ) for i in range(nmodes-nbanana)
     ]
   mixture_dist = tfd.Mixture(
       cat=tfd.Categorical(probs=ratio),
@@ -117,9 +172,9 @@ def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor, return_l
   if not return_logprob:
     return mixture_dist
   else:
-    def log_prob(**kwargs):
-      return mixture_dist.log_prob(**kwargs)
-    return mixture_dist, mixture_dist.log_prob
+    log_prob = create_mixture_t_banana_fast(
+      dim, locs=loc, ratio=ratio, cov_mat_t=cov_mat, **kwargs)
+    return mixture_dist, log_prob
 
 
 def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False):
@@ -144,7 +199,7 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
       ratio_expand = tf.expand_dims(ratio, axis=1) # nmodes x 1
       means_expand = tf.expand_dims(means, axis=1) # nmodes x 1 x dim
       def log_prob_fn(x):
-        '''fast implementation of log_prob'''
+        """fast implementation of log_prob"""
         diff = tf.expand_dims(x, axis=0) - means_expand # nmodes x n x dim
         diff_norm_sq = tf.reduce_sum(diff**2, axis=-1) # nmodes x n
         p_component = ratio_expand * tf.math.exp(- 0.5 * diff_norm_sq / (scale**2)) # nmodes x n
