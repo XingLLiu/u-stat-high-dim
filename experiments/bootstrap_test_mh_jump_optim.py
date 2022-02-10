@@ -18,14 +18,14 @@ from src.ksd.find_modes import find_modes, pairwise_directions
 
 tf.random.set_seed(0)
 
-def log_trans_q(x, log_q_fn, log_p_fn, std, dir_vec):
+def log_trans_q(x, log_q_fn, log_p_fn, std, dir_vec, jitter=1e-12):
     """Density of q after 1 step of Markov transition"""
     term1, term2 = 0., 0.
-    p_x = tf.exp(log_p_fn(x)) # n
+    p_x = tf.exp(log_p_fn(x)) + jitter # n
     q_x = tf.exp(log_q_fn(x)) # n
 
     for xp in [x + std*dir_vec, x - std*dir_vec]:
-        p_xp = tf.exp(log_p_fn(xp))
+        p_xp = tf.exp(log_p_fn(xp)) + jitter
         q_xp = tf.exp(log_q_fn(xp))
 
         term1 += q_xp * tf.math.minimum(1, p_x / p_xp)
@@ -49,7 +49,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     """compute KSD and repeat for nrep times"""
     ksd = KSD(target=target, kernel=kernel)
     
-    n = 500
+    n = kwargs["n"]
     ntrain = int(n*0.5)
     dim = proposal_off.event_shape[0]
 
@@ -64,26 +64,37 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     names = ["off-target", "target", "off-target no pert", "target no pert"]
     proposals = [proposal_off, proposal_on, proposal_off, proposal_on]
 
+    # # generate points for finding modes #TODO
+    # unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
+    # start_pts_all = 20. * unif_dist.sample((nrep, kwargs["nstart_pts"])) # change range
+
     iterator.set_description(f"Running with sample size {n}")
     for seed in iterator:
-        # generate points for finding modes
-        unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
-        start_pts = 5. * unif_dist.sample(kwargs["nstart_pts"])
-
-        # merge modes
-        mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
+        # # get initial points for finding modes #TODO
+        # start_pts = start_pts_all[seed, :, :]
+        # # merge modes
+        # mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
+        # # find between-modes dir
+        # if len(mode_list) == 1:
+        #     dir_vec_list = [mode_list[0]]
+        # else:
+        #     dir_vec_list = pairwise_directions(mode_list)
 
         for name, proposal in zip(names, proposals):
             sample_init = proposal.sample(n)
 
-            # find between-modes dir #TODO this assumes two modes are found
-            if len(mode_list) == 1:
-                dir_vec_list = [mode_list[0]]
-            else:
-                dir_vec_list = pairwise_directions(mode_list)
-
             if "no pert" not in name:
                 sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
+                
+                #TODO start optim from samples
+                start_pts = sample_init_train
+                # merge modes
+                mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
+                # find between-modes dir
+                if len(mode_list) == 1:
+                    dir_vec_list = [mode_list[0]]
+                else:
+                    dir_vec_list = pairwise_directions(mode_list)
 
                 # find v_{i^*, j^*}, \sigma^*_{i^*, j^*}
                 best_ksd = 0.
@@ -102,6 +113,8 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                         # compute ksd
                         x_t = mh.x[-1, :, :].numpy()
                         ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
+                        # _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
+                        # ksd_val = ksd_val.numpy()
 
                         # update if ksd is larger
                         if ksd_val > best_ksd:
@@ -127,15 +140,14 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
             _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
             ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
 
-    return ksd_df
+    return ksd_df, best_dir_vec
 
 
 dim = 5
-nrep = 500
-num_boot = 1000 # number of bootstrap samples to compute critical val
+nrep = 20 #100 #TODO
+num_boot = 500 #TODO 1000 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
-delta_list = [4.0] #[1.0, 2.0, 4.0, 6.0]
-T = 2 # max num of steps
+delta_list = [4.0] # [1.0, 2.0, 4.0, 6.0]
 mode_threshold = 1. # threshold for merging modes
 nstart_pts = 20 * dim # num of starting points for finding modes
 sigma_list = np.linspace(0.5, 1.5, 26).tolist() # std for discrete jump proposal
@@ -144,12 +156,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
     parser.add_argument("--model", type=str, default="bimodal")
-    parser.add_argument("--ratio_t", type=float, default=0.5)
+    parser.add_argument("--T", type=int, default=50)
+    parser.add_argument("--n", type=int, default=500, help="sample size")
+    parser.add_argument("--ratio_t", type=float, default=0.5, help="max num of steps")
     parser.add_argument("--ratio_s", type=float, default=1.)
     parser.add_argument("--k", type=int, default=1)
     parser.add_argument("--nmodes", type=int, default=10)
+    parser.add_argument("--nbanana", type=int, default=2)
     args = parser.parse_args()
     model = args.model
+    T = args.T
+    n = args.n
     ratio_target = args.ratio_t
     ratio_sample = args.ratio_s
     k = args.k
@@ -169,14 +186,33 @@ if __name__ == '__main__':
 
         elif model == "t-banana":
             nmodes = args.nmodes
+            nbanana = args.nbanana
             model_name = f"{model}_discrete_optim_steps{T}_nmodes{nmodes}"
             ratio_target = [1/nmodes] * nmodes
             random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
             ratio_sample = random_weights / tf.reduce_sum(random_weights)
             loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*10, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
                 
-            create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=0.03, return_logprob=True)
-            create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=0.03, return_logprob=True)
+            create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=0.03,
+                nbanana=nbanana, return_logprob=True)
+            create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=0.03,
+                nbanana=nbanana, return_logprob=True)
+
+        elif model == "gaussianmix":
+            nmodes = args.nmodes
+            model_name = f"{model}{nmodes}_discrete_optim_steps{T}"
+            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*5, high=tf.ones((dim,))*5).sample(nmodes) # uniform in [-5, 5]^d
+
+            indicator = tf.cast(tfp.distributions.Bernoulli(probs=0.5).sample(nmodes-1), dtype=bool)
+            indicator = tf.concat([tf.constant([True]), indicator], axis=0)
+            random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
+            random_weights = tf.where(indicator, random_weights, 0.)
+            ratio_sample = random_weights / tf.reduce_sum(random_weights)
+
+            ratio_target = 0.5
+
+            create_target_model = models.create_mixture_20_gaussian(means, ratio=ratio_target, scale=delta, return_logprob=True)
+            create_sample_model = models.create_mixture_20_gaussian(means, ratio=ratio_sample, scale=delta, return_logprob=True)
 
         # target distribution
         target, log_prob_fn = create_target_model
@@ -187,6 +223,9 @@ if __name__ == '__main__':
         # off-target proposal distribution
         proposal_off, log_prob_off_fn = create_sample_model
         
+        # check if log_prob is correct
+        models.check_log_prob(target, log_prob_fn)
+
         if len(args.load) > 0 :
             try:
                 test_imq_df = pd.read_csv(args.load + f"/{model_name}_delta{delta}.csv")
@@ -197,15 +236,16 @@ if __name__ == '__main__':
         if test_imq_df is None:
             # with IMQ
             imq = IMQ(med_heuristic=True)
-            test_imq_df = run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, imq, alpha, num_boot, T, sigma_list,
-                threshold=mode_threshold, nstart_pts=nstart_pts)
+            test_imq_df, best_dir_vec = run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, imq, 
+                alpha, num_boot, T, sigma_list, threshold=mode_threshold, nstart_pts=nstart_pts, n=n)
 
             # save res
             test_imq_df.to_csv(f"res/bootstrap/{model_name}_delta{delta}.csv", index=False)
+            np.save(f"res/bootstrap/{model_name}_delta{delta}.npy", best_dir_vec.numpy())
 
 
         # between-modes vector (only for plotting)
-        dir_vec = tf.eye(dim)[:, 0] * delta * 2 
+        dir_vec = tf.constant(np.load(f"res/bootstrap/{model_name}_delta{delta}.npy"))
 
         # for plotting dist of mh-perturbed samples`
         off_sample = proposal_off.sample(1000)
@@ -218,68 +258,85 @@ if __name__ == '__main__':
         mh_on = RandomWalkMH(log_prob=log_prob_fn)
         mh_on.run(steps=T, std=best_std_on, x_init=on_sample, dir_vec=dir_vec)
 
-        # log prob of 1-step mh-perturbed densities        
-        xx = tf.concat(
-            # [tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
-            [tf.zeros((1000, 1)), tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-2))],
-            axis=1) # 200 x dim
+        # # log prob of 1-step mh-perturbed densities        
+        # xx = tf.concat(
+        #     # [tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
+        #     [tf.zeros((1000, 1)), tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-2))],
+        #     axis=1) # 200 x dim
         
-        log_trans_q_off = lambda x: log_trans_q(x, log_prob_off_fn, log_prob_fn, best_std_off, dir_vec)
-        log_prob_trans_off = log_trans_q_off(xx).numpy()
-        log_prob_trans_off_df = pd.DataFrame({"y1": log_prob_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
+        # log_trans_q_off = lambda x: log_trans_q(x, log_prob_off_fn, log_prob_fn, best_std_off, dir_vec)
+        # log_prob_trans_off = log_trans_q_off(xx).numpy()
+        # log_prob_trans_off_df = pd.DataFrame({"y1": log_prob_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
 
-        log_prob_off = log_prob_off_fn(xx).numpy()
-        log_prob_off_df = pd.DataFrame({"y1": log_prob_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
+        # log_prob_off = log_prob_off_fn(xx).numpy()
+        # log_prob_off_df = pd.DataFrame({"y1": log_prob_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
 
-        # log_trans_q_on = lambda x: log_trans_q(x, log_prob_on_fn, log_prob_fn, best_std_on, dir_vec)
-        log_trans_q_on = log_prob_on_fn
-        log_prob_trans_on = log_trans_q_on(xx).numpy()
-        log_prob_trans_on_df = pd.DataFrame({"y1": log_prob_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
+        # # log_trans_q_on = lambda x: log_trans_q(x, log_prob_on_fn, log_prob_fn, best_std_on, dir_vec)
+        # log_trans_q_on = log_prob_on_fn
+        # log_prob_trans_on = log_trans_q_on(xx).numpy()
+        # log_prob_trans_on_df = pd.DataFrame({"y1": log_prob_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
         
-        log_prob_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(log_prob_trans_off - log_prob_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
-        log_prob_trans_df = pd.concat([log_prob_trans_off_df, log_prob_trans_on_df, log_prob_trans_diff_df, log_prob_off_df], ignore_index=True)
+        # log_prob_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(log_prob_trans_off - log_prob_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
+        # log_prob_trans_df = pd.concat([log_prob_trans_off_df, log_prob_trans_on_df, log_prob_trans_diff_df, log_prob_off_df], ignore_index=True)
 
-        # score functions of 1-step mh-perturbed densities
-        score_trans_off = score_den(xx, log_trans_q_off).numpy()[:, 1] # n x dim
-        score_trans_off_df = pd.DataFrame({"y1": score_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
+        # # score functions of 1-step mh-perturbed densities
+        # score_trans_off = score_den(xx, log_trans_q_off).numpy()[:, 1] # n x dim
+        # score_trans_off_df = pd.DataFrame({"y1": score_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
 
-        score_off = score_den(xx, log_prob_off_fn).numpy()[:, 1] # n x dim
-        score_off_df = pd.DataFrame({"y1": score_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
+        # score_off = score_den(xx, log_prob_off_fn).numpy()[:, 1] # n x dim
+        # score_off_df = pd.DataFrame({"y1": score_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
 
-        score_trans_on = score_den(xx, log_trans_q_on).numpy()[:, 1] # n x dim
-        score_trans_on_df = pd.DataFrame({"y1": score_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
+        # score_trans_on = score_den(xx, log_trans_q_on).numpy()[:, 1] # n x dim
+        # score_trans_on_df = pd.DataFrame({"y1": score_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
 
-        score_trans_df = pd.concat([score_trans_off_df, score_trans_on_df, score_off_df], ignore_index=True)
+        # score_trans_df = pd.concat([score_trans_off_df, score_trans_on_df, score_off_df], ignore_index=True)
         
-        # abs differences in score functions
-        score_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(score_trans_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff pert."})
-        score_diff_df = pd.DataFrame({"y1": np.exp(log_prob_off) * np.abs(score_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
-        # score_trans_diff_df = pd.DataFrame({"y1": np.abs(score_trans_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff pert."})
-        # score_diff_df = pd.DataFrame({"y1": np.abs(score_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
-        score_diff_df = pd.concat([score_trans_diff_df, score_diff_df], ignore_index=True)
+        # # abs differences in score functions
+        # score_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(score_trans_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff pert."})
+        # score_diff_df = pd.DataFrame({"y1": np.exp(log_prob_off) * np.abs(score_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
+        # # score_trans_diff_df = pd.DataFrame({"y1": np.abs(score_trans_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff pert."})
+        # # score_diff_df = pd.DataFrame({"y1": np.abs(score_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
+        # score_diff_df = pd.concat([score_trans_diff_df, score_diff_df], ignore_index=True)
 
 
         # plot
-        subfig = subfigs.flat[ind]
+        subfig = subfigs.flat[ind] if len(delta_list) > 1 else subfigs
         subfig.suptitle(f"delta = {delta}")
-        axs = subfig.subplots(8, 1)
+        axs = subfig.subplots(5, 1) # (8, 1)
         axs = axs.flat
-        samples_df_off_target = pd.DataFrame({"x1": off_sample.numpy()[:, 0], "type": "off-target"})
-        samples_df_off_perturbed = pd.DataFrame({"x1": mh_off.x[-1, :, :].numpy()[:, 0], "type": "perturbed off-target"})
+        samples_df_off_target = pd.DataFrame({
+            "x1": off_sample.numpy()[:, 0], 
+            "x2": off_sample.numpy()[:, 1], 
+            "type": "off-target"})
+        samples_df_off_perturbed = pd.DataFrame({
+            "x1": mh_off.x[-1, :, :].numpy()[:, 0], 
+            "x2": mh_off.x[-1, :, :].numpy()[:, 1],
+            "type": "perturbed off-target"})
         samples_df_off = pd.concat([samples_df_off_target, samples_df_off_perturbed], ignore_index=True)
 
-        sns.ecdfplot(ax=axs[0], data=samples_df_off, x="x1", hue="type")
-        # sns.histplot(ax=axs[0], data=samples_df_off, x="x1", hue="type", alpha=0.3)
-        axs[0].axis(xmin=-3*delta, xmax=3*delta)
+        # sns.ecdfplot(ax=axs[0], data=samples_df_off, x="x1", hue="type")
+        # sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", hue="type", cumulative=True)
+        # axs[0].axis(xmin=-3*delta, xmax=3*delta)
+        sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
+        axs[0].axis(xmin=-8, xmax=8, ymin=-8, ymax=8)
         axs[0].set_ylabel("CDF")
         if ind != len(delta_list) - 1: axs[0].legend([],[], frameon=False)
 
-        samples_df_target = pd.DataFrame({"x1": on_sample.numpy()[:, 0], "type": "target"})
-        samples_df_perturbed = pd.DataFrame({"x1": mh_on.x[-1, :, :].numpy()[:, 0], "type": "perturbed target"})
+        samples_df_target = pd.DataFrame({
+            "x1": on_sample.numpy()[:, 0],
+            "x2": on_sample.numpy()[:, 1],
+            "type": "target"})
+        samples_df_perturbed = pd.DataFrame({
+            "x1": mh_on.x[-1, :, :].numpy()[:, 0],
+            "x2": mh_on.x[-1, :, :].numpy()[:, 1],
+            "type": "perturbed target"})
         samples_df = pd.concat([samples_df_target, samples_df_perturbed], ignore_index=True)
-        sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")
-        # sns.histplot(ax=axs[1], data=samples_df_off, x="x1", hue="type", alpha=0.3)
-        axs[1].axis(xmin=-3*delta, xmax=3*delta)
+        
+        # sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")
+        # sns.kdeplot(ax=axs[1], data=samples_df, x="x1", hue="type", cumulative=True)
+        # axs[1].axis(xmin=-3*delta, xmax=3*delta)
+        sns.kdeplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
+        axs[1].axis(xmin=-8, xmax=8, ymin=-8, ymax=8)
         axs[1].set_ylabel("CDF")
         if ind != len(delta_list) - 1: axs[1].legend([],[], frameon=False)
 
@@ -295,7 +352,7 @@ if __name__ == '__main__':
         err1 = (test_imq_df.loc[(test_imq_df.type == "target"), "p_value"] <= alpha).mean()
         err1_nopert = (test_imq_df.loc[(test_imq_df.type == "target no pert"), "p_value"] <= alpha).mean()
         sns.ecdfplot(ax=axs[3], data=test_imq_df.loc[test_imq_df.type.isin(["target", "target no pert"])], x="p_value", hue="type")
-        axs[3].plot([0, 1], [0, 1], transform=axs[2].transAxes, color="grey", linestyle="dashed")
+        axs[3].plot([0, 1], [0, 1], transform=axs[3].transAxes, color="grey", linestyle="dashed")
         axs[3].axis(xmin=-0.01, xmax=1., ymin=0, ymax=1.01)
         axs[3].set_title(f"type I error = {err1}, no pert. = {err1_nopert}")
         axs[3].set_xlabel("p-value")
@@ -307,25 +364,25 @@ if __name__ == '__main__':
         axs[4].set_xlabel("p-value")
         if ind != len(delta_list) - 1: axs[4].legend([],[], frameon=False)
 
-        sns.lineplot(ax=axs[5], data=log_prob_trans_df, x="x1", y="y1", hue="type", style="type")
-        axs[5].axis(xmin=-3*delta, xmax=3*delta, ymin=-6, ymax=2)
-        # axs[5].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-1, ymax=1)
-        # axs[5].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
-        axs[5].set_ylabel("log prob")
-        if ind != len(delta_list) - 1: axs[5].legend([],[], frameon=False)
+        # sns.lineplot(ax=axs[5], data=log_prob_trans_df, x="x1", y="y1", hue="type", style="type")
+        # axs[5].axis(xmin=-3*delta, xmax=3*delta, ymin=-6, ymax=2)
+        # # axs[5].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-1, ymax=1)
+        # # axs[5].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
+        # axs[5].set_ylabel("log prob")
+        # if ind != len(delta_list) - 1: axs[5].legend([],[], frameon=False)
 
-        sns.lineplot(ax=axs[6], data=score_trans_df, x="x1", y="y1", hue="type", style="type")
-        axs[6].axis(xmin=-3*delta, xmax=3*delta)
-        # axs[6].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-6, ymax=2)
-        # axs[6].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
-        axs[6].set_ylabel("score")
-        if ind != len(delta_list) - 1: axs[6].legend([],[], frameon=False)
+        # sns.lineplot(ax=axs[6], data=score_trans_df, x="x1", y="y1", hue="type", style="type")
+        # axs[6].axis(xmin=-3*delta, xmax=3*delta)
+        # # axs[6].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-6, ymax=2)
+        # # axs[6].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
+        # axs[6].set_ylabel("score")
+        # if ind != len(delta_list) - 1: axs[6].legend([],[], frameon=False)
 
-        sns.lineplot(ax=axs[7], data=score_diff_df, x="x1", y="y1", hue="type", style="type")
-        axs[7].axis(xmin=-3*delta, xmax=3*delta)
-        # axs[7].axis(xmin=-10., xmax=10.)
-        axs[7].set_ylabel("score differences")
-        if ind != len(delta_list) - 1: axs[7].legend([],[], frameon=False)
+        # sns.lineplot(ax=axs[7], data=score_diff_df, x="x1", y="y1", hue="type", style="type")
+        # axs[7].axis(xmin=-3*delta, xmax=3*delta)
+        # # axs[7].axis(xmin=-10., xmax=10.)
+        # axs[7].set_ylabel("score differences")
+        # if ind != len(delta_list) - 1: axs[7].legend([],[], frameon=False)
 
 
     fig.savefig(f"figs/bootstrap/bootstrap_{model_name}.png")
