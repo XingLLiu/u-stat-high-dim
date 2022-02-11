@@ -29,22 +29,17 @@ class Bootstrap:
     w = self.multinom.sample(num_boot) # num_boot x n
     return w
 
-  def compute_test_statistic_no_var(self, X: tf.Tensor, **kwargs):
-    n = X.shape[0]
-    # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
-    u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-    u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
-
-    # compute test statistic
-    self.ksd_hat = tf.reduce_sum(u_p_nodiag).numpy() / (n*(n - 1))
-
-    return u_p
-
-
   def compute_test_statistic(self, X: tf.Tensor, **kwargs):
     n = X.shape[0]
+
     # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
-    u_p = self.ksd.eval(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
+    if "log_noise_std" in kwargs and "u" not in kwargs:
+      u_p = self.ksd.eval(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
+    elif "log_noise_std" in kwargs and "u" in kwargs:
+      u_p = self.ksd.eval_mat(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
+    else:
+      u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
+    
     u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
 
     # compute test statistic
@@ -86,7 +81,6 @@ class Bootstrap:
 
   def _test_once(self, alpha):
     """Utility function that performs bootstrap test once"""
-    # critical_val = tfp.stats.percentile(self.ksd_star, 100*(1-alpha)).numpy()
     critical_val = np.quantile(self.ksd_star.numpy(), 1-alpha)
     reject = True if self.ksd_hat > critical_val else False
     p_val = np.count_nonzero(self.ksd_star.numpy() > self.ksd_hat) / (self.ksd_star.shape[0] + 1)
@@ -108,11 +102,8 @@ class Bootstrap:
     Returns:
       reject: 1 if test is rejected; 0 otherwise
     """
-    if "log_noise_std" in kwargs:
-      u_p = self.compute_test_statistic(X, **kwargs)
-    else:
-      u_p = self.compute_test_statistic_no_var(X, **kwargs)
-    
+    u_p = self.compute_test_statistic(X, **kwargs)
+
     self.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_samples)
 
     reject, critical_val, p_val = self._test_once(alpha)
