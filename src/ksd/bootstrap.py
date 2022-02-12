@@ -74,7 +74,7 @@ class Bootstrap:
     # compute outerproduct
     w_outer = tf.expand_dims(w, axis=2) * tf.expand_dims(w, axis=1) # num_boot x n x n
     # remove diagonal
-    w_outer = w_outer - tf.linalg.diag(tf.linalg.diag_part(w_outer)) # num_boot x n x n
+    w_outer = tf.linalg.set_diag(w_outer, tf.zeros(w_outer.shape[0:-1])) # num_boot x n x n
     # compute bootstrap samples
     self.ksd_star = tf.reduce_sum(w_outer * u_p, [1, 2]) # num_boot
     return w_outer * u_p
