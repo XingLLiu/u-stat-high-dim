@@ -31,7 +31,7 @@ class Langevin:
       x_next = self.x[t, :, :] + drive + scale * self.noise[t, :, :] # n x dim
       self.x[t+1, :, :].assign(x_next)
 
-  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, score_x: tf.Tensor, step_size: float):
+  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor):
     '''Compute log k(x'| x), where k is the transition kernel 
 
     Args:
@@ -46,15 +46,14 @@ class Langevin:
       "Sampler class '{:s}' does not provide a 'transition kernel'".format(self._get_class_name())
     )
 
-  def compute_accept_prob(self, x_proposed: tf.Tensor, x_current: tf.Tensor, 
-  score_proposed: tf.Tensor, score_current: tf.Tensor, **kwargs):
+  def compute_accept_prob(self, x_proposed: tf.Tensor, x_current: tf.Tensor, **kwargs):
     '''Compute log acceptance prob in the Metropolis step, log( k(x, x') * p(x') / (k(x', x) * p(x)) )
     '''
     log_numerator = self.log_prob(x_proposed) + self.log_transition_kernel(
-      xp=x_current, x=x_proposed, score_x=score_proposed, **kwargs
+      xp=x_current, x=x_proposed, **kwargs
     )
     log_denominator = self.log_prob(x_current) + self.log_transition_kernel(
-      xp=x_proposed, x=x_current, score_x=score_current, **kwargs
+      xp=x_proposed, x=x_current, **kwargs
     )
 
     log_prob = tf.math.minimum(0., log_numerator - log_denominator)
@@ -165,37 +164,19 @@ class RandomWalkMH(Langevin):
     self.x[0, :, :].assign(x_init)
 
     self.noise = self.noise_dist.sample((steps, n, dim)) # nsteps x n x dim
-    # self.noise = tfd.Uniform(low=-1.).sample((steps, n, dim)) # nsteps x n x dim #!
 
     self.accept_prob = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n    
 
     iterator = trange(steps-1) if verbose else range(steps-1)
 
-    for t in iterator:
-      x_t = tf.identity(self.x[t, :, :])
-      # calculate scores using autodiff
-      with tf.GradientTape() as g:
-        g.watch(x_t)
-        log_prob_x = self.log_prob(x_t) # n x dim
-      score = g.gradient(log_prob_x, x_t) # n x dim
-      assert score.shape == (n, dim)
-      
+    for t in iterator: 
       # propose MH update
       xp_next = self.proposal(x_current=self.x[t, :, :], noise=self.noise[t, :, :], **kwargs) # n x dim
-
-      # calculate score of proposed samples
-      with tf.GradientTape() as g:
-        g.watch(xp_next)
-        log_prob_xp = self.log_prob(xp_next) # n x dim
-      score_xp = g.gradient(log_prob_xp, xp_next) # n x dim
-      assert score_xp.shape == (n, dim)
 
       # compute acceptance prob
       accept_prob = self.compute_accept_prob(
         x_proposed=xp_next,
         x_current=self.x[t, :, :],
-        score_proposed=score_xp,
-        score_current=score,
         **kwargs
       ) # n
 
@@ -207,7 +188,7 @@ class RandomWalkMH(Langevin):
       # store next samples
       self.x[t+1, :, :].assign(x_next)
 
-  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, score_x: tf.Tensor, std: float, **kwargs):
+  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, std: float, **kwargs):
     '''Compute log k(x'| x), where k is the transition kernel 
     k(x' | x) \propto N(x' | x, std**2)
     
@@ -219,17 +200,8 @@ class RandomWalkMH(Langevin):
     Output:
       log_kernel: n. k(x', x)
     '''
-    # #!
-    # std_val = std
-    # std = tf.Variable(tf.ones(xp.shape[-1])) # dim
-    # std[0].assign(std_val)
-    # # return tf.math.log(0.5**xp.shape[-1] * 1 / std_val) #!
-    return tf.math.log(tf.ones(xp.shape[0]) * 0.5) #!
-
-    mean = (xp - x) / std # n x dim
-    l2_norm_sq = tf.reduce_sum(mean**2, axis=1) # n
-    log_kernel = - 0.5 * l2_norm_sq # n
-    return log_kernel
+    log_prob = tf.math.log(tf.ones(xp.shape[0]) * 0.5)
+    return log_prob
 
   def _proposal(self, x_current, **kwargs):
     """Default proposal: x' = x + \sigma * Z, Z \sim N(0, 1)
