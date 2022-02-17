@@ -89,9 +89,9 @@ class Banana(tfp.bijectors.Bijector):
   def _inverse_log_det_jacobian(self, y):
     return tf.zeros(shape=())
 
-def create_banana(dim: int, loc: tf.Tensor, **kwargs):
+def create_banana(dim: int, loc: tf.Tensor, scale: float=10., **kwargs):
   id_mat = tf.eye(dim)
-  scale_mat = tf.concat([id_mat[:, :1] * 10, id_mat[:, 1:]], axis=-1)
+  scale_mat = tf.concat([id_mat[:, :1] * scale, id_mat[:, 1:]], axis=-1)
   t_dist = tfd.MultivariateStudentTLinearOperator(
     df=7, loc=loc, scale=tf.linalg.LinearOperatorLowerTriangular(scale_mat))
   banana = tfd.TransformedDistribution(distribution=t_dist, bijector=Banana(**kwargs))
