@@ -165,7 +165,8 @@ class RandomWalkMH(Langevin):
 
     self.noise = self.noise_dist.sample((steps, n, dim)) # nsteps x n x dim
 
-    self.accept_prob = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n    
+    self.accept_prob = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n
+    self.accept_proportion = 0. # (steps-1)
 
     iterator = trange(steps-1) if verbose else range(steps-1)
 
@@ -182,7 +183,7 @@ class RandomWalkMH(Langevin):
 
       # move
       x_next, if_accept = self.metropolis(x_proposed=xp_next, x_current=self.x[t, :, :], accept_prob=accept_prob) # n x dim, n x 1
-      # self.accept_prob += if_accept / steps # n x 1
+      self.accept_proportion += if_accept / steps # n x 1
       self.accept_prob[t, :].assign(accept_prob)
 
       # store next samples
