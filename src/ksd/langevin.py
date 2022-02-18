@@ -221,8 +221,18 @@ class RandomWalkMH(Langevin):
     # std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
     # xp_next = x_current + std_vec * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
     #!
-    dir_vec = kwargs["dir_vec"] # dim
-    xp_next = x_current + std * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) * dir_vec # n x dim #! discrete jump with dir
+    if "dir_vec" in kwargs:
+      dir_vec = kwargs["dir_vec"] # dim
+      indicator = tf.cast(noise[:, :1] > 0, dtype=tf.float32)*2 - 1. # n x 1
+      xp_next = x_current + std * indicator * dir_vec # n x dim #! discrete jump with dir
+    elif "mode1" in kwargs:
+      mode1, mode2 = kwargs["mode1"], kwargs["mode2"] # dim
+      hess1_sqrt, hess1_inv_sqrt = kwargs["hess1_sqrt"], kwargs["hess1_inv_sqrt"] # dim x dim 
+      hess2_sqrt, hess2_inv_sqrt = kwargs["hess2_sqrt"], kwargs["hess2_inv_sqrt"] # dim x dim
+      
+      xp_next1 = (x_current - mode1) @ hess1_inv_sqrt @ hess2_sqrt + std * mode2 # n x dim
+      xp_next2 = (x_current - std * mode2) @ hess2_inv_sqrt @ hess1_sqrt + mode1 # n x dim
+      xp_next = tf.where(noise[:, :1] > 0, xp_next1, xp_next2) # n x dim
     #!
     # std_vec = tf.concat([tf.ones(2), tf.zeros(dim-2)], axis=0) # dim
     # std_vec = std * std_vec / tf.math.sqrt(tf.reduce_sum(std_vec**2))

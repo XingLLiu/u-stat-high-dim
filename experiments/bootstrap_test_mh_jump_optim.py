@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import trange, tqdm
 import argparse
+import pickle
 
 from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
@@ -89,42 +90,57 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                 #TODO start optim from samples
                 start_pts = sample_init_train
                 # merge modes
-                mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
+                mode_list, hess_list = find_modes(start_pts, log_prob_fn, **kwargs)
+                
                 # find between-modes dir
                 if len(mode_list) == 1:
-                    dir_vec_list = [mode_list[0]]
+                    dir_vec_list, ind_pair_list = [mode_list[0]], [(0, 0)]
                 else:
-                    dir_vec_list = pairwise_directions(mode_list)
+                    dir_vec_list, ind_pair_list = pairwise_directions(mode_list, return_index=True)
 
                 # find v_{i^*, j^*}, \sigma^*_{i^*, j^*}
                 best_ksd = 0.
                 best_dir_vec = dir_vec_list[0]
                 for j, dir_vec in enumerate(dir_vec_list):
                     # loop through directional vecs
-                    
+
+                    # find estimated hessians
+                    ind1, ind2 = ind_pair_list[j]
+                    mode1, mode2 = mode_list[ind1], mode_list[ind2]
+                    hess1, hess2 = hess_list[ind1], hess_list[ind2]
+                    hess1_sqrt = tf.linalg.sqrtm(hess1)
+                    hess2_sqrt = tf.linalg.sqrtm(hess2)
+                    hess1_inv_sqrt = tf.linalg.inv(hess1_sqrt)
+                    hess2_inv_sqrt = tf.linalg.inv(hess2_sqrt)
+                    hess_dict = {"mode1": mode1, "mode2": mode2, "hess1_sqrt": hess1_sqrt, "hess2_sqrt": hess2_sqrt,
+                        "hess1_inv_sqrt": hess1_inv_sqrt, "hess2_inv_sqrt": hess2_inv_sqrt}
+
                     for i, std in enumerate(std_ls):
                         # loop through jump scales
                         iterator.set_description(f"Jump scale [{i+1} / {len(std_ls)}] of dir vector [{j+1} / {len(dir_vec_list)}]")
 
                         # run dynamic for T steps
                         mh = RandomWalkMH(log_prob=log_prob_fn)
-                        mh.run(steps=T, std=std, x_init=sample_init_train, dir_vec=dir_vec)
-                        
+                        # mh.run(steps=T, std=std, x_init=sample_init_train, dir_vec=dir_vec)
+                        mh.run(steps=T, std=std, x_init=sample_init_train, **hess_dict)
+
                         # compute ksd
                         x_t = mh.x[-1, :, :].numpy()
-                        ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
-                        # _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
-                        # ksd_val = ksd_val.numpy()
-
+                        # ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
+                        _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
+                        ksd_val = ksd_val.numpy()
+                            
                         # update if ksd is larger
                         if ksd_val > best_ksd:
                             best_std = std
                             best_dir_vec = dir_vec
                             best_ksd = ksd_val
+                            best_hess_dict = hess_dict
 
                 # run dynamic for T steps with test data and optimal params
                 mh = RandomWalkMH(log_prob=log_prob_fn)
-                mh.run(steps=T, x_init=sample_init_test, std=best_std, dir_vec=best_dir_vec)
+                # mh.run(steps=T, x_init=sample_init_test, std=best_std, dir_vec=best_dir_vec)
+                mh.run(steps=T, x_init=sample_init_test, std=best_std, **best_hess_dict)
 
                 # get perturbed samples
                 x_t = mh.x[-1, :, :].numpy()
@@ -140,17 +156,15 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
             _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
             ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
 
-    return ksd_df, best_dir_vec
+    return ksd_df, best_dir_vec, best_hess_dict
 
 
 dim = 5
-nrep = 20 #100 #TODO
-num_boot = 500 #TODO 1000 # number of bootstrap samples to compute critical val
+num_boot = 800 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
-delta_list = [4.0] # [1.0, 2.0, 4.0, 6.0]
 mode_threshold = 1. # threshold for merging modes
 nstart_pts = 20 * dim # num of starting points for finding modes
-sigma_list = np.linspace(0.5, 1.5, 26).tolist() # std for discrete jump proposal
+sigma_list = np.linspace(0.5, 1.5, 21).tolist() # std for discrete jump proposal
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -158,6 +172,7 @@ if __name__ == '__main__':
     parser.add_argument("--model", type=str, default="bimodal")
     parser.add_argument("--T", type=int, default=50)
     parser.add_argument("--n", type=int, default=500, help="sample size")
+    parser.add_argument("--nrep", type=int, default=50)
     parser.add_argument("--ratio_t", type=float, default=0.5, help="max num of steps")
     parser.add_argument("--ratio_s", type=float, default=1.)
     parser.add_argument("--k", type=int, default=1)
@@ -167,9 +182,11 @@ if __name__ == '__main__':
     model = args.model
     T = args.T
     n = args.n
+    nrep = args.nrep
     ratio_target = args.ratio_t
     ratio_sample = args.ratio_s
     k = args.k
+    delta_list = [4.0] if args.model != "bimodal" else [1.0, 2.0, 4.0, 6.0]
 
     fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 15))
     subfigs = fig.subfigures(1, len(delta_list))
@@ -190,18 +207,34 @@ if __name__ == '__main__':
             model_name = f"{model}_discrete_optim_steps{T}_nmodes{nmodes}"
             ratio_target = [1/nmodes] * nmodes
             random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
-            ratio_sample = random_weights / tf.reduce_sum(random_weights)
+            # ratio_sample = random_weights / tf.reduce_sum(random_weights)
+            ratio_sample = [0.3, 0.7] #TODO
             loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*10, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
-                
-            create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=0.03,
+
+            # loc = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
+            #     [-4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
+            #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
+            #     [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
+            loc = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
+                [4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
+                [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
+                [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
+            # loc = tf.constant([[40.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
+            #     [-40.1144876, 6., 0.08298874, -1.2335253, 7.6566525],
+            #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
+            #     [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
+            loc = loc[:nmodes, :]
+
+            b = 0.003 # 0.03
+            create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=b,
                 nbanana=nbanana, return_logprob=True)
-            create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=0.03,
+            create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=b,
                 nbanana=nbanana, return_logprob=True)
 
         elif model == "gaussianmix":
             nmodes = args.nmodes
             model_name = f"{model}{nmodes}_discrete_optim_steps{T}"
-            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*5, high=tf.ones((dim,))*5).sample(nmodes) # uniform in [-5, 5]^d
+            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-5, 5]^d
 
             indicator = tf.cast(tfp.distributions.Bernoulli(probs=0.5).sample(nmodes-1), dtype=bool)
             indicator = tf.concat([tf.constant([True]), indicator], axis=0)
@@ -213,6 +246,11 @@ if __name__ == '__main__':
 
             create_target_model = models.create_mixture_20_gaussian(means, ratio=ratio_target, scale=delta, return_logprob=True)
             create_sample_model = models.create_mixture_20_gaussian(means, ratio=ratio_sample, scale=delta, return_logprob=True)
+
+        elif model == "gauss-scaled":
+            model_name = f"{model}_discrete_optim_steps{T}_with_hessian"
+            create_target_model = models.create_mixture_gaussian_scaled(ratio=ratio_target, return_logprob=True)
+            create_sample_model = models.create_mixture_gaussian_scaled(ratio=ratio_sample, return_logprob=True)
 
         # target distribution
         target, log_prob_fn = create_target_model
@@ -236,12 +274,14 @@ if __name__ == '__main__':
         if test_imq_df is None:
             # with IMQ
             imq = IMQ(med_heuristic=True)
-            test_imq_df, best_dir_vec = run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, imq, 
+            test_imq_df, best_dir_vec, best_hess_dict = run_bootstrap_experiment(
+                nrep, target, proposal_on, log_prob_fn, proposal_off, imq, 
                 alpha, num_boot, T, sigma_list, threshold=mode_threshold, nstart_pts=nstart_pts, n=n)
 
             # save res
             test_imq_df.to_csv(f"res/bootstrap/{model_name}_delta{delta}.csv", index=False)
             np.save(f"res/bootstrap/{model_name}_delta{delta}.npy", best_dir_vec.numpy())
+            pickle.dump(best_hess_dict, open(f"res/bootstrap/{model_name}_delta{delta}.pkl", "wb"))
 
 
         # between-modes vector (only for plotting)
@@ -304,6 +344,7 @@ if __name__ == '__main__':
         subfig.suptitle(f"delta = {delta}")
         axs = subfig.subplots(5, 1) # (8, 1)
         axs = axs.flat
+        xlim, ylim = 30, 20
         samples_df_off_target = pd.DataFrame({
             "x1": off_sample.numpy()[:, 0], 
             "x2": off_sample.numpy()[:, 1], 
@@ -317,8 +358,9 @@ if __name__ == '__main__':
         # sns.ecdfplot(ax=axs[0], data=samples_df_off, x="x1", hue="type")
         # sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", hue="type", cumulative=True)
         # axs[0].axis(xmin=-3*delta, xmax=3*delta)
-        sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
-        axs[0].axis(xmin=-8, xmax=8, ymin=-8, ymax=8)
+        # sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
+        sns.scatterplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
+        axs[0].axis(xmin=-xlim, xmax=xlim, ymin=-ylim, ymax=ylim)
         axs[0].set_ylabel("CDF")
         if ind != len(delta_list) - 1: axs[0].legend([],[], frameon=False)
 
@@ -335,8 +377,9 @@ if __name__ == '__main__':
         # sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")
         # sns.kdeplot(ax=axs[1], data=samples_df, x="x1", hue="type", cumulative=True)
         # axs[1].axis(xmin=-3*delta, xmax=3*delta)
-        sns.kdeplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
-        axs[1].axis(xmin=-8, xmax=8, ymin=-8, ymax=8)
+        # sns.kdeplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
+        sns.scatterplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
+        axs[1].axis(xmin=-xlim, xmax=xlim, ymin=-ylim, ymax=ylim)
         axs[1].set_ylabel("CDF")
         if ind != len(delta_list) - 1: axs[1].legend([],[], frameon=False)
 
