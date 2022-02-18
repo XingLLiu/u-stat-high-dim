@@ -298,47 +298,6 @@ if __name__ == '__main__':
         mh_on = RandomWalkMH(log_prob=log_prob_fn)
         mh_on.run(steps=T, std=best_std_on, x_init=on_sample, dir_vec=dir_vec)
 
-        # # log prob of 1-step mh-perturbed densities        
-        # xx = tf.concat(
-        #     # [tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-1))],
-        #     [tf.zeros((1000, 1)), tf.reshape(tf.linspace(-2*delta, 2*delta, 1000), (-1, 1)), tf.zeros((1000, dim-2))],
-        #     axis=1) # 200 x dim
-        
-        # log_trans_q_off = lambda x: log_trans_q(x, log_prob_off_fn, log_prob_fn, best_std_off, dir_vec)
-        # log_prob_trans_off = log_trans_q_off(xx).numpy()
-        # log_prob_trans_off_df = pd.DataFrame({"y1": log_prob_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
-
-        # log_prob_off = log_prob_off_fn(xx).numpy()
-        # log_prob_off_df = pd.DataFrame({"y1": log_prob_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
-
-        # # log_trans_q_on = lambda x: log_trans_q(x, log_prob_on_fn, log_prob_fn, best_std_on, dir_vec)
-        # log_trans_q_on = log_prob_on_fn
-        # log_prob_trans_on = log_trans_q_on(xx).numpy()
-        # log_prob_trans_on_df = pd.DataFrame({"y1": log_prob_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
-        
-        # log_prob_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(log_prob_trans_off - log_prob_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
-        # log_prob_trans_df = pd.concat([log_prob_trans_off_df, log_prob_trans_on_df, log_prob_trans_diff_df, log_prob_off_df], ignore_index=True)
-
-        # # score functions of 1-step mh-perturbed densities
-        # score_trans_off = score_den(xx, log_trans_q_off).numpy()[:, 1] # n x dim
-        # score_trans_off_df = pd.DataFrame({"y1": score_trans_off, "x1": xx[:, 1].numpy(), "type": "pert. off-target"})
-
-        # score_off = score_den(xx, log_prob_off_fn).numpy()[:, 1] # n x dim
-        # score_off_df = pd.DataFrame({"y1": score_off, "x1": xx[:, 1].numpy(), "type": "off-target"})
-
-        # score_trans_on = score_den(xx, log_trans_q_on).numpy()[:, 1] # n x dim
-        # score_trans_on_df = pd.DataFrame({"y1": score_trans_on, "x1": xx[:, 1].numpy(), "type": "target"})
-
-        # score_trans_df = pd.concat([score_trans_off_df, score_trans_on_df, score_off_df], ignore_index=True)
-        
-        # # abs differences in score functions
-        # score_trans_diff_df = pd.DataFrame({"y1": np.exp(log_prob_trans_off) * np.abs(score_trans_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff pert."})
-        # score_diff_df = pd.DataFrame({"y1": np.exp(log_prob_off) * np.abs(score_off - score_trans_on), "x1": xx[:, 1].numpy(), "type": "abs diff"})
-        # # score_trans_diff_df = pd.DataFrame({"y1": np.abs(score_trans_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff pert."})
-        # # score_diff_df = pd.DataFrame({"y1": np.abs(score_off - score_trans_on), "x1": xx[:, 0].numpy(), "type": "abs diff"})
-        # score_diff_df = pd.concat([score_trans_diff_df, score_diff_df], ignore_index=True)
-
-
         # plot
         subfig = subfigs.flat[ind] if len(delta_list) > 1 else subfigs
         subfig.suptitle(f"delta = {delta}")
@@ -355,9 +314,6 @@ if __name__ == '__main__':
             "type": "perturbed off-target"})
         samples_df_off = pd.concat([samples_df_off_target, samples_df_off_perturbed], ignore_index=True)
 
-        # sns.ecdfplot(ax=axs[0], data=samples_df_off, x="x1", hue="type")
-        # sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", hue="type", cumulative=True)
-        # axs[0].axis(xmin=-3*delta, xmax=3*delta)
         # sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
         sns.scatterplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
         axs[0].axis(xmin=-xlim, xmax=xlim, ymin=-ylim, ymax=ylim)
@@ -374,9 +330,6 @@ if __name__ == '__main__':
             "type": "perturbed target"})
         samples_df = pd.concat([samples_df_target, samples_df_perturbed], ignore_index=True)
         
-        # sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")
-        # sns.kdeplot(ax=axs[1], data=samples_df, x="x1", hue="type", cumulative=True)
-        # axs[1].axis(xmin=-3*delta, xmax=3*delta)
         # sns.kdeplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
         sns.scatterplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
         axs[1].axis(xmin=-xlim, xmax=xlim, ymin=-ylim, ymax=ylim)
@@ -406,26 +359,5 @@ if __name__ == '__main__':
         axs[4].set_title("median of estimated best std = {:.2f} (off), {:.2f} (on)".format(best_std_off, best_std_on))
         axs[4].set_xlabel("p-value")
         if ind != len(delta_list) - 1: axs[4].legend([],[], frameon=False)
-
-        # sns.lineplot(ax=axs[5], data=log_prob_trans_df, x="x1", y="y1", hue="type", style="type")
-        # axs[5].axis(xmin=-3*delta, xmax=3*delta, ymin=-6, ymax=2)
-        # # axs[5].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-1, ymax=1)
-        # # axs[5].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
-        # axs[5].set_ylabel("log prob")
-        # if ind != len(delta_list) - 1: axs[5].legend([],[], frameon=False)
-
-        # sns.lineplot(ax=axs[6], data=score_trans_df, x="x1", y="y1", hue="type", style="type")
-        # axs[6].axis(xmin=-3*delta, xmax=3*delta)
-        # # axs[6].axis(xmin=np.min(xx[:, 0]), xmax=np.max(xx[:, 0]), ymin=-6, ymax=2)
-        # # axs[6].axis(xmin=-10., xmax=10., ymin=-6, ymax=2)
-        # axs[6].set_ylabel("score")
-        # if ind != len(delta_list) - 1: axs[6].legend([],[], frameon=False)
-
-        # sns.lineplot(ax=axs[7], data=score_diff_df, x="x1", y="y1", hue="type", style="type")
-        # axs[7].axis(xmin=-3*delta, xmax=3*delta)
-        # # axs[7].axis(xmin=-10., xmax=10.)
-        # axs[7].set_ylabel("score differences")
-        # if ind != len(delta_list) - 1: axs[7].legend([],[], frameon=False)
-
 
     fig.savefig(f"figs/bootstrap/bootstrap_{model_name}.png")
