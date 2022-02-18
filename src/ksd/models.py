@@ -207,3 +207,37 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
         return tf.math.log(sum_p)
       
       return mix_gauss, log_prob_fn  
+
+def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
+    """Bimodal Gaussian mixture with mean shift of dist delta in the first k dims"""
+    mean1 = [4., 1.]
+    mean2 = [-4., -4.]
+
+    cov1 = tf.constant([[1., 0.8], [0.8, 1]])
+    cov2 = tf.constant([[1., -0.8], [-0.8, 1]])
+
+    scale1 = tf.linalg.cholesky(cov1)
+    scale2 = tf.linalg.cholesky(cov2)
+
+    dist1 = tfd.MultivariateNormalTriL(mean1, scale_tril=scale1)
+    dist2 = tfd.MultivariateNormalTriL(mean2, scale_tril=scale2)
+    
+    mix_gauss = tfd.Mixture(
+      cat=tfd.Categorical(probs=[ratio, 1-ratio]),
+      components=[dist1, dist2])
+    
+    if not return_logprob:
+      return mix_gauss
+    else:
+      cov1_inv = tf.linalg.inv(cov1) # dim x dim
+      cov2_inv = tf.linalg.inv(cov2) # dim x dim
+      def log_prob_fn(x):
+        """fast implementation of log_prob"""
+        exp1 = tf.einsum("ij, ij -> i", x-mean1, (x-mean1)@cov1_inv) # n
+        exp2 = tf.einsum("ij, ij -> i", x-mean2, (x-mean2)@cov2_inv) # n
+        return tf.math.log(
+            ratio * tf.math.exp(- 0.5 * exp1) + 
+            (1-ratio) * tf.math.exp(- 0.5 * exp2)
+        )
+      
+      return mix_gauss, log_prob_fn  
