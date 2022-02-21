@@ -184,10 +184,10 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
       ratio: Must either be a float or have shape (nmodes,)
     """
     nmodes = means.shape[0]
-    ratio = [0.5] * nmodes if isinstance(ratio, float) else ratio
+    ratio = [1/nmodes] * nmodes if isinstance(ratio, float) else ratio
     components = [tfd.MultivariateNormalDiag(
       loc=means[i, :], 
-      scale_identity_multiplier=scale) for i in range(means.shape[0])]
+      scale_identity_multiplier=scale) for i in range(nmodes)]
     
     mix_gauss = tfd.Mixture(
       cat=tfd.Categorical(probs=ratio),

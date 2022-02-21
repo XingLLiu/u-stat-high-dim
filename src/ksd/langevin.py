@@ -3,7 +3,7 @@ import tensorflow_probability as tfp
 tfd = tfp.distributions
 from tqdm import trange
 
-class Langevin:
+class MCMC:
   def __init__(self, log_prob: callable) -> None:
     self.log_prob = log_prob
     self.x = None
@@ -76,7 +76,7 @@ class Langevin:
     return x_next, tf.cast(cond, dtype=tf.int64)
 
 
-class MALA(Langevin):
+class MALA(MCMC):
   def __init__(self, log_prob: callable) -> None:
       super().__init__(log_prob)
       self.log_prob = log_prob
@@ -151,7 +151,7 @@ class MALA(Langevin):
     return log_kernel
 
 
-class RandomWalkMH(Langevin):
+class RandomWalkMH(MCMC):
   def __init__(self, log_prob: callable, proposal: callable=None) -> None:
     self.log_prob = log_prob
     self.x = None
@@ -212,19 +212,10 @@ class RandomWalkMH(Langevin):
     std = kwargs["std"]
     dim = x_current.shape[1]
 
-    # xp_next = x_current + std * noise # n x dim
-
-    #!
-    # std_vec = tf.concat([tf.constant([std]), tf.ones(dim-1)], axis=0) # dim
-    # xp_next = x_current[t, :, :] + std_vec * noise[t, :, :] # n x dim #! gaussian with var in 1st dim
-    #!
-    # std_vec = tf.concat([tf.constant([std]), tf.zeros(dim-1)], axis=0) # dim
-    # xp_next = x_current + std_vec * (tf.cast(noise > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete jump
-    #!
     if "dir_vec" in kwargs:
       dir_vec = kwargs["dir_vec"] # dim
       indicator = tf.cast(noise[:, :1] > 0, dtype=tf.float32)*2 - 1. # n x 1
-      xp_next = x_current + std * indicator * dir_vec # n x dim #! discrete jump with dir
+      xp_next = x_current + std * indicator * dir_vec # n x dim
     elif "mode1" in kwargs:
       mode1, mode2 = kwargs["mode1"], kwargs["mode2"] # dim
       hess1_sqrt, hess1_inv_sqrt = kwargs["hess1_sqrt"], kwargs["hess1_inv_sqrt"] # dim x dim 
@@ -233,9 +224,5 @@ class RandomWalkMH(Langevin):
       xp_next1 = (x_current - mode1) @ hess1_inv_sqrt @ hess2_sqrt + std * mode2 # n x dim
       xp_next2 = (x_current - std * mode2) @ hess2_inv_sqrt @ hess1_sqrt + mode1 # n x dim
       xp_next = tf.where(noise[:, :1] > 0, xp_next1, xp_next2) # n x dim
-    #!
-    # std_vec = tf.concat([tf.ones(2), tf.zeros(dim-2)], axis=0) # dim
-    # std_vec = std * std_vec / tf.math.sqrt(tf.reduce_sum(std_vec**2))
-    # xp_next = x_current[t, :, :] + std_vec * (tf.cast(noise[t, :, :] > 0, dtype=tf.float32)*2 - 1.) # n x dim #! discrete diagnal jump
     return xp_next
 
