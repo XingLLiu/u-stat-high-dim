@@ -202,7 +202,10 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
         """fast implementation of log_prob"""
         diff = tf.expand_dims(x, axis=0) - means_expand # nmodes x n x dim
         diff_norm_sq = tf.reduce_sum(diff**2, axis=-1) # nmodes x n
-        p_component = ratio_expand * tf.math.exp(- 0.5 * diff_norm_sq / (scale**2)) # nmodes x n
+        p_component = ratio_expand * (
+            # (scale**2 * tf.experimental.numpy.pi * 2)**(-0.5)
+            1/scale
+          ) * tf.math.exp(- 0.5 * diff_norm_sq / (scale**2)) # nmodes x n
         sum_p = tf.reduce_sum(p_component, axis=0) # n
         return tf.math.log(sum_p)
       
@@ -210,11 +213,15 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
 
 def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
     """Bimodal Gaussian mixture with mean shift of dist delta in the first k dims"""
-    mean1 = [4., 1.]
-    mean2 = [-4., -4.]
+    # mean1 = [4., 1.]
+    # mean2 = [-4., -4.]
+    mean1 = [10.]
+    mean2 = [-10.]
 
-    cov1 = tf.constant([[1., 0.8], [0.8, 1]])
-    cov2 = tf.constant([[1., -0.8], [-0.8, 1]])
+    # cov1 = tf.constant([[1., 0.8], [0.8, 1]])
+    # cov2 = tf.constant([[1., -0.8], [-0.8, 1.]]) * 3.
+    cov1 = tf.constant([[1.]])
+    cov2 = tf.constant([[4.]])
 
     scale1 = tf.linalg.cholesky(cov1)
     scale2 = tf.linalg.cholesky(cov2)
@@ -231,13 +238,15 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
     else:
       cov1_inv = tf.linalg.inv(cov1) # dim x dim
       cov2_inv = tf.linalg.inv(cov2) # dim x dim
+      det1 = tf.linalg.det(cov1)
+      det2 = tf.linalg.det(cov2)
       def log_prob_fn(x):
         """fast implementation of log_prob"""
         exp1 = tf.einsum("ij, ij -> i", x-mean1, (x-mean1)@cov1_inv) # n
         exp2 = tf.einsum("ij, ij -> i", x-mean2, (x-mean2)@cov2_inv) # n
         return tf.math.log(
-            ratio * tf.math.exp(- 0.5 * exp1) + 
-            (1-ratio) * tf.math.exp(- 0.5 * exp2)
+            ratio * (1/tf.math.sqrt(det1)) * tf.math.exp(- 0.5 * exp1) + 
+            (1-ratio) * (1/tf.math.sqrt(det2)) * tf.math.exp(- 0.5 * exp2)
         )
       
       return mix_gauss, log_prob_fn  
