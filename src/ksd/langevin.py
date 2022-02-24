@@ -24,16 +24,17 @@ class MCMC:
       "Sampler class '{:s}' does not provide a 'transition kernel'".format(self._get_class_name())
     )
 
-  def compute_accept_prob(self, x_proposed: tf.Tensor, x_current: tf.Tensor, **kwargs):
+  def compute_accept_prob(self, x_proposed: tf.Tensor, x_current: tf.Tensor,
+    log_det_jacobian: tf.Tensor, **kwargs):
     '''Compute log acceptance prob in the Metropolis step,
     log( \min(1, k(x, x') * p(x') / (k(x', x) * p(x))) )
     '''
     log_numerator = self.log_prob(x_proposed) + self.log_transition_kernel(
       xp=x_current, x=x_proposed, **kwargs
-    )
+    ) + log_det_jacobian # n
     log_denominator = self.log_prob(x_current) + self.log_transition_kernel(
       xp=x_proposed, x=x_current, **kwargs
-    )
+    ) # n
 
     log_prob = tf.math.minimum(0., log_numerator - log_denominator)
     return tf.math.exp(log_prob)
@@ -154,19 +155,19 @@ class RandomWalkMH(MCMC):
     for t in iterator: 
       # propose MH update
       x_current = self.x[t, :, :]
-      xp_next = self.proposal(x_current=x_current, noise=self.directions[t, :], **kwargs) # n x dim #! delete
+      xp_next, log_det_jacobian = self.proposal(x_current=x_current, noise=self.directions[t, :], **kwargs) # n x dim #! delete
 
       # compute acceptance prob
       accept_prob = self.compute_accept_prob(
         x_proposed=xp_next,
         x_current=x_current,
+        log_det_jacobian=log_det_jacobian,
         **kwargs
       ) # n
       self.accept_prob[t, :].assign(accept_prob)
       
       # move
       x_next, _ = self.metropolis(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # n x dim, n x 1
-      # x_next = xp_next #! delete
 
       # store next samples
       self.x[t+1, :, :].assign(x_next)
@@ -183,7 +184,7 @@ class RandomWalkMH(MCMC):
     Output:
       log_kernel: n. k(x', x)
     '''
-    log_prob = tf.math.log(0.5) * tf.ones(xp.shape[0]) #! delete
+    log_prob = tf.math.log(0.5) * tf.ones(xp.shape[0])
 
     return log_prob
 
@@ -203,27 +204,38 @@ class RandomWalkMH(MCMC):
       mode1, mode2 = kwargs["mode1"], kwargs["mode2"] # dim
       root_cov_1, inv_root_cov_1 = kwargs["hess1_sqrt"], kwargs["hess1_inv_sqrt"] # dim x dim 
       root_cov_2, inv_root_cov_2 = kwargs["hess2_sqrt"], kwargs["hess2_inv_sqrt"] # dim x dim
+      root_cov_1_det, inv_root_cov_1_det = kwargs["hess1_sqrt_det"], kwargs["hess1_inv_sqrt_det"]
+      root_cov_2_det, inv_root_cov_2_det = kwargs["hess2_sqrt_det"], kwargs["hess2_inv_sqrt_det"]
 
       xp_next1 = (x_current - mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
       xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + mode1 # n x dim 
 
-      xp_next = tf.where(noise == 1, xp_next1, xp_next2) # n x dim #! delete
+      which_next = noise == 1
+      xp_next = tf.where(which_next, xp_next1, xp_next2) # n x dim
       
-      # scale_next = tf.where(noise == 1, scale, 1/scale) # n
-    return xp_next
+      n = xp_next.shape[0]
+      det_next1 = tf.ones(n) * (inv_root_cov_1_det * root_cov_2_det) # n
+      det_next2 = tf.ones(n) * (inv_root_cov_2_det * root_cov_1_det) # n
+      det_jacobian = tf.math.abs(
+        tf.where(tf.reshape(which_next, (n,)), det_next1, det_next2)
+      ) # n
+      log_det_jacobian = tf.math.log(det_jacobian) # n
+
+    return xp_next, log_det_jacobian
 
 class RandomWalkBarker(RandomWalkMH):
   def __init__(self, log_prob: callable) -> None:
     super().__init__(log_prob)
 
-  def compute_accept_prob(self, x_proposed: tf.Tensor, x_current: tf.Tensor, **kwargs):
+  def compute_accept_prob(self, x_proposed: tf.Tensor, x_current: tf.Tensor,
+    log_det_jacobian: tf.Tensor, **kwargs):
     '''Compute log acceptance prob using the Barker's rule, 
     log( k(x, x') * p(x') / (k(x', x) * p(x) + k(x, x') * p(x')) )
     '''
     term_xp = tf.exp(
       self.log_prob(x_proposed) + self.log_transition_kernel(
         xp=x_current, x=x_proposed, **kwargs
-      )
+      ) + log_det_jacobian
     ) # n
     term_x = tf.exp(
       self.log_prob(x_current) + self.log_transition_kernel(

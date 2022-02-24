@@ -213,15 +213,15 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
 
 def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
     """Bimodal Gaussian mixture with mean shift of dist delta in the first k dims"""
-    # mean1 = [4., 1.]
-    # mean2 = [-4., -4.]
-    mean1 = [10.]
-    mean2 = [-10.]
+    mean1 = [4., 1.]
+    mean2 = [-4., -4.]
+    # mean1 = [10.]
+    # mean2 = [-10.]
 
-    # cov1 = tf.constant([[1., 0.8], [0.8, 1]])
-    # cov2 = tf.constant([[1., -0.8], [-0.8, 1.]]) * 3.
-    cov1 = tf.constant([[1.]])
-    cov2 = tf.constant([[4.]])
+    cov1 = tf.constant([[1., 0.8], [0.8, 1]])
+    cov2 = tf.constant([[1., -0.8], [-0.8, 1.]]) * 3.
+    # cov1 = tf.constant([[1.]])
+    # cov2 = tf.constant([[4.]])
 
     scale1 = tf.linalg.cholesky(cov1)
     scale2 = tf.linalg.cholesky(cov2)
