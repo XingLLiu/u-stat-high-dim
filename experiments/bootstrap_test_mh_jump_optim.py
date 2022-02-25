@@ -14,7 +14,7 @@ from src.ksd.ksd import KSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 import src.ksd.models as models
-from src.ksd.langevin import RandomWalkMH, RandomWalkBarker
+import src.ksd.langevin as mcmc
 from src.ksd.find_modes import find_modes, pairwise_directions
 
 def log_trans_q(x, log_q_fn, log_p_fn, std, dir_vec, jitter=1e-12):
@@ -44,7 +44,8 @@ def score_den(x, log_trans_q_fn):
 
     return score
 
-def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, kernel, alpha, num_boot, T, std_ls, **kwargs):
+def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, kernel, alpha, num_boot, T, 
+    std_ls, random_start_pts=False, **kwargs):
     """compute KSD and repeat for nrep times"""
     ksd = KSD(target=target, kernel=kernel)
     MCMCKernel = kwargs["mcmckernel"]
@@ -64,21 +65,13 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     names = ["off-target", "target", "off-target no pert", "target no pert"]
     proposals = [proposal_off, proposal_on, proposal_off, proposal_on]
 
-    # # generate points for finding modes #TODO
-    # unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
-    # start_pts_all = 20. * unif_dist.sample((nrep, kwargs["nstart_pts"])) # change range
+    if random_start_pts:
+        # generate points for finding modes
+        unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
+        start_pts_all = 20. * unif_dist.sample((nrep, kwargs["nstart_pts"])) # change range
 
     iterator.set_description(f"Running with sample size {n}")
     for seed in iterator:
-        # # get initial points for finding modes #TODO
-        # start_pts = start_pts_all[seed, :, :]
-        # # merge modes
-        # mode_list, _ = find_modes(start_pts, log_prob_fn, **kwargs)
-        # # find between-modes dir
-        # if len(mode_list) == 1:
-        #     dir_vec_list = [mode_list[0]]
-        # else:
-        #     dir_vec_list = pairwise_directions(mode_list)
 
         for name, proposal in zip(names, proposals):
             sample_init = proposal.sample(n)
@@ -86,74 +79,55 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
             if "no pert" not in name:
                 sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
                 
-                #TODO start optim from samples
-                start_pts = sample_init_train
+                # start optim from either randomly initialised points or training samples
+                start_pts = start_pts_all[seed, :, :] if random_start_pts else sample_init_train
                 # merge modes
-                mode_list, hess_list = find_modes(start_pts, log_prob_fn, **kwargs)
+                mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, **kwargs)
                 
                 # find between-modes dir
                 if len(mode_list) == 1:
-                    dir_vec_list, ind_pair_list = [mode_list[0]], [(0, 0)]
+                    _, ind_pair_list = [mode_list[0]], [(0, 0)]
                 else:
-                    dir_vec_list, ind_pair_list = pairwise_directions(mode_list, return_index=True)
+                    _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
 
                 # find v_{i^*, j^*}, \sigma^*_{i^*, j^*}
                 best_ksd = 0.
-                best_dir_vec = dir_vec_list[0]
-                for j, dir_vec in enumerate(dir_vec_list):
-                    # loop through directional vecs
+                for j in range(len(ind_pair_list)):
+                    # loop through mode pairs
 
                     # find estimated hessians
                     ind1, ind2 = ind_pair_list[j]
                     mode1, mode2 = mode_list[ind1], mode_list[ind2]
-                    hess1, hess2 = hess_list[ind1], hess_list[ind2]
+                    hess1_inv, hess2_inv = inv_hess_list[ind1], inv_hess_list[ind2]
                     # hess1, hess2 = tf.eye(dim), tf.eye(dim) #! delete
                     # mode1, mode2 = tf.constant([10.]), tf.constant([-10.])
                     # hess1, hess2 = tf.eye(dim), 4. * tf.eye(dim) #! delete
 
-                    hess1_sqrt = tf.linalg.sqrtm(hess1)
-                    hess2_sqrt = tf.linalg.sqrtm(hess2)
-                    hess1_inv_sqrt = tf.linalg.inv(hess1_sqrt)
-                    hess2_inv_sqrt = tf.linalg.inv(hess2_sqrt)
-                    hess1_sqrt_det = tf.linalg.det(hess1_sqrt)
-                    hess1_inv_sqrt_det = tf.linalg.det(hess1_inv_sqrt)
-                    hess2_sqrt_det = tf.linalg.det(hess2_sqrt)
-                    hess2_inv_sqrt_det = tf.linalg.det(hess2_inv_sqrt)
-                    hess_dict = {
-                        "mode1": mode1, "hess1": hess1,
-                        "hess1_sqrt": hess1_sqrt, "hess1_inv_sqrt": hess1_inv_sqrt,
-                        "hess1_sqrt_det": hess1_sqrt_det, "hess1_inv_sqrt_det": hess1_inv_sqrt_det,
-                        "mode2": mode2, "hess2": hess2,
-                        "hess2_sqrt": hess2_sqrt, "hess2_inv_sqrt": hess2_inv_sqrt,
-                        "hess2_sqrt_det": hess2_sqrt_det, "hess2_inv_sqrt_det": hess2_inv_sqrt_det,
-                    }
+                    proposal_dict = mcmc.prepare_proposal_input(
+                        mode1=mode1, mode2=mode2, hess1_inv=hess1_inv, hess2_inv=hess2_inv)
 
                     for i, std in enumerate(std_ls):
                         # loop through jump scales
-                        iterator.set_description(f"Jump scale [{i+1} / {len(std_ls)}] of dir vector [{j+1} / {len(dir_vec_list)}]")
+                        iterator.set_description(f"Jump scale [{i+1} / {len(std_ls)}] of dir vector [{j+1} / {len(ind_pair_list)}]")
 
                         # run dynamic for T steps
                         mh = MCMCKernel(log_prob=log_prob_fn)
-                        # mh.run(steps=T, std=std, x_init=sample_init_train, dir_vec=dir_vec)
-                        mh.run(steps=T, std=std, x_init=sample_init_train, **hess_dict)
+                        mh.run(steps=T, std=std, x_init=sample_init_train, **proposal_dict)
 
                         # compute ksd
                         x_t = mh.x[-1, :, :].numpy()
-                        # ksd_val = ksd(x_t, tf.identity(x_t)).numpy()
                         _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
                         ksd_val = ksd_val.numpy()
                             
                         # update if ksd is larger
                         if ksd_val > best_ksd:
                             best_std = std
-                            best_dir_vec = dir_vec
                             best_ksd = ksd_val
-                            best_hess_dict = hess_dict
+                            best_proposal_dict = proposal_dict
 
                 # run dynamic for T steps with test data and optimal params
                 mh = MCMCKernel(log_prob=log_prob_fn)
-                # mh.run(steps=T, x_init=sample_init_test, std=best_std, dir_vec=best_dir_vec)
-                mh.run(steps=T, x_init=sample_init_test, std=best_std, **best_hess_dict)
+                mh.run(steps=T, x_init=sample_init_test, std=best_std, **best_proposal_dict)
 
                 # get perturbed samples
                 x_t = mh.x[-1, :, :].numpy()
@@ -169,7 +143,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
             _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
             ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
 
-    return ksd_df, best_dir_vec, best_hess_dict
+    return ksd_df, best_proposal_dict
 
 
 num_boot = 800 # number of bootstrap samples to compute critical val
@@ -206,10 +180,10 @@ if __name__ == '__main__':
     delta_list = [4.0] if args.model != "bimodal" else [1.0, 2.0, 4.0, 6.0]
     
     if args.mcmckernel == "mh":
-        MCMCKernel = RandomWalkMH
+        MCMCKernel = mcmc.RandomWalkMH
         mcmc_name = "mh_"
     elif args.mcmckernel == "barker":
-        MCMCKernel = RandomWalkBarker
+        MCMCKernel = mcmc.RandomWalkBarker
         mcmc_name = "barker_"
 
     tf.random.set_seed(seed)
@@ -259,7 +233,7 @@ if __name__ == '__main__':
 
         elif model == "gaussianmix":
             nmodes = args.nmodes
-            model_name = f"{mcmc_name}{model}{nmodes}_steps{T}_seed{seed}_delta2.0_newproposal_flipped"
+            model_name = f"{mcmc_name}{model}{nmodes}_steps{T}_seed{seed}"
             means = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-5, 5]^d
             # means = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
             #     [-4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
@@ -281,7 +255,7 @@ if __name__ == '__main__':
             ratio_sample = ratio_sample[:nmodes] #! delete
 
             ratio_target = 0.5
-            delta = 2.
+            delta = 4. #! delete
 
             create_target_model = models.create_mixture_20_gaussian(means, ratio=ratio_target, scale=delta, return_logprob=True)
             create_sample_model = models.create_mixture_20_gaussian(means, ratio=ratio_sample, scale=delta, return_logprob=True)

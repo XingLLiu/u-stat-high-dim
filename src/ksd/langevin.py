@@ -3,6 +3,32 @@ import tensorflow_probability as tfp
 tfd = tfp.distributions
 from tqdm import trange
 
+def prepare_proposal_input(mode1: tf.Tensor, mode2: tf.Tensor, hess1_inv: tf.Tensor, hess2_inv: tf.Tensor):
+    """Given two modes and the local inverse Hessians, compute the
+    quantities needed to construct the proposals.
+    
+    Args:
+        mode1, mode2: 1 x dim
+        hess1_inv, hess2_inv: dim x dim, inverse Hessians at the modes
+    """
+    hess1_inv_sqrt = tf.linalg.sqrtm(hess1_inv)
+    hess2_inv_sqrt = tf.linalg.sqrtm(hess2_inv)
+    hess1_sqrt = tf.linalg.inv(hess1_inv_sqrt)
+    hess2_sqrt = tf.linalg.inv(hess2_inv_sqrt)
+    hess1_sqrt_det = tf.linalg.det(hess1_sqrt)
+    hess1_inv_sqrt_det = tf.linalg.det(hess1_inv_sqrt)
+    hess2_sqrt_det = tf.linalg.det(hess2_sqrt)
+    hess2_inv_sqrt_det = tf.linalg.det(hess2_inv_sqrt)
+    hess_dict = {
+        "mode1": mode1,
+        "hess1_sqrt": hess1_sqrt, "hess1_inv_sqrt": hess1_inv_sqrt,
+        "hess1_sqrt_det": hess1_sqrt_det, "hess1_inv_sqrt_det": hess1_inv_sqrt_det,
+        "mode2": mode2,
+        "hess2_sqrt": hess2_sqrt, "hess2_inv_sqrt": hess2_inv_sqrt,
+        "hess2_sqrt_det": hess2_sqrt_det, "hess2_inv_sqrt_det": hess2_inv_sqrt_det,
+    }
+    return hess_dict
+
 class MCMC:
   def __init__(self, log_prob: callable) -> None:
     self.log_prob = log_prob
@@ -202,10 +228,10 @@ class RandomWalkMH(MCMC):
       xp_next = x_current + std * indicator * dir_vec # n x dim
     elif "mode1" in kwargs:
       mode1, mode2 = kwargs["mode1"], kwargs["mode2"] # dim
-      root_cov_1, inv_root_cov_1 = kwargs["hess1_sqrt"], kwargs["hess1_inv_sqrt"] # dim x dim 
-      root_cov_2, inv_root_cov_2 = kwargs["hess2_sqrt"], kwargs["hess2_inv_sqrt"] # dim x dim
-      root_cov_1_det, inv_root_cov_1_det = kwargs["hess1_sqrt_det"], kwargs["hess1_inv_sqrt_det"]
-      root_cov_2_det, inv_root_cov_2_det = kwargs["hess2_sqrt_det"], kwargs["hess2_inv_sqrt_det"]
+      root_cov_1, inv_root_cov_1 = kwargs["hess1_inv_sqrt"], kwargs["hess1_sqrt"] # dim x dim 
+      root_cov_2, inv_root_cov_2 = kwargs["hess2_inv_sqrt"], kwargs["hess2_sqrt"] # dim x dim
+      root_cov_1_det, inv_root_cov_1_det = kwargs["hess1_inv_sqrt_det"], kwargs["hess1_sqrt_det"]
+      root_cov_2_det, inv_root_cov_2_det = kwargs["hess2_inv_sqrt_det"], kwargs["hess2_sqrt_det"]
 
       xp_next1 = (x_current - mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
       xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + mode1 # n x dim 
