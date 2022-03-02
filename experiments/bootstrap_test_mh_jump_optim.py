@@ -54,6 +54,8 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     ntrain = int(n*0.5)
     dim = proposal_off.event_shape[0]
 
+    grad_log = None if not hasattr(target, "grad_log") else target.grad_log
+
     ksd_df = pd.DataFrame(columns=["n", "best_std", "p_value", "seed", "type"])
     iterator = trange(nrep)
     bootstrap = Bootstrap(ksd, n-ntrain)
@@ -82,7 +84,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                 # start optim from either randomly initialised points or training samples
                 start_pts = start_pts_all[seed, :, :] if random_start_pts else sample_init_train
                 # merge modes
-                mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, **kwargs)
+                mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
                 
                 # find between-modes dir
                 if len(mode_list) == 1:
@@ -166,6 +168,8 @@ if __name__ == '__main__':
     parser.add_argument("--k", type=int, default=1)
     parser.add_argument("--nmodes", type=int, default=10)
     parser.add_argument("--nbanana", type=int, default=2)
+    parser.add_argument("--shift", type=float, default=0.)
+    parser.add_argument("--dh", type=int, default=10, help="dim of h for RBM")
     args = parser.parse_args()
     model = args.model
     seed = args.seed
@@ -200,6 +204,12 @@ if __name__ == '__main__':
             model_name = f"{mcmc_name}{model}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_seed{seed}"
             create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_target)
             create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
+        
+        elif model == "bimodal_shift":
+            shift = args.shift
+            model_name = f"{mcmc_name}{model}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_shift{shift}_seed{seed}"
+            create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, shift=shift, return_logprob=True, ratio=ratio_target)
+            create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
 
         elif model == "t-banana":
             nmodes = args.nmodes
@@ -207,14 +217,15 @@ if __name__ == '__main__':
             model_name = f"{mcmc_name}{model}_steps{T}_nmodes{nmodes}_diag_seed{seed}"
             ratio_target = [1/nmodes] * nmodes
             random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
-            # ratio_sample = random_weights / tf.reduce_sum(random_weights)
-            ratio_sample = [0.3, 0.7] #TODO
+            ratio_sample = random_weights / tf.reduce_sum(random_weights)
+            # ratio_sample = [0.3, 0.7] #TODO
+            print("ratio sample:", ratio_sample.numpy())
             loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*10, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
 
-            loc = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
-                [-4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
-                [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
-                [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
+            # loc = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
+            #     [-4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
+            #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
+            #     [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
             # loc = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
             #     [4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
             #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
@@ -255,15 +266,22 @@ if __name__ == '__main__':
             ratio_sample = ratio_sample[:nmodes] #! delete
 
             ratio_target = 0.5
-            delta = 4. #! delete
+            delta = 1. #! delete
 
             create_target_model = models.create_mixture_20_gaussian(means, ratio=ratio_target, scale=delta, return_logprob=True)
             create_sample_model = models.create_mixture_20_gaussian(means, ratio=ratio_sample, scale=delta, return_logprob=True)
 
         elif model == "gauss-scaled":
-            model_name = f"{mcmc_name}{model}_1d_steps{T}_with_hessian_seed{seed}_hessfix"
+            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}_hessfix"
             create_target_model = models.create_mixture_gaussian_scaled(ratio=ratio_target, return_logprob=True)
             create_sample_model = models.create_mixture_gaussian_scaled(ratio=ratio_sample, return_logprob=True)
+
+        elif model == "rbm":
+            c_shift = args.shift
+            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}_shift{c_shift}"
+            create_target_model = models.create_rbm(seed=seed, c_loc=c_shift, dx=dim, dh=2, return_logprob=True)
+            create_sample_model = models.create_rbm(seed=seed, c_loc=0., dx=dim, dh=2, return_logprob=True)
+
 
         # target distribution
         target, log_prob_fn = create_target_model
@@ -288,19 +306,17 @@ if __name__ == '__main__':
         if test_imq_df is None:
             # with IMQ
             imq = IMQ(med_heuristic=True)
-            test_imq_df, best_dir_vec, best_hess_dict = run_bootstrap_experiment(
+            test_imq_df, best_hess_dict = run_bootstrap_experiment(
                 nrep, target, proposal_on, log_prob_fn, proposal_off, imq,
                 alpha, num_boot, T, sigma_list, threshold=mode_threshold, nstart_pts=nstart_pts, n=n,
                 mcmckernel=MCMCKernel)
 
             # save res
             test_imq_df.to_csv(f"res/bootstrap/{model_name}_delta{delta}.csv", index=False)
-            np.save(f"res/bootstrap/{model_name}_delta{delta}.npy", best_dir_vec.numpy())
             pickle.dump(best_hess_dict, open(f"res/bootstrap/{model_name}_delta{delta}.pkl", "wb"))
 
 
         # between-modes vector (only for plotting)
-        dir_vec = tf.constant(np.load(f"res/bootstrap/{model_name}_delta{delta}.npy"))
         best_hess_dict = pickle.load(open(f"res/bootstrap/{model_name}_delta{delta}.pkl", "rb"))
 
         # for plotting dist of mh-perturbed samples`
@@ -346,7 +362,7 @@ if __name__ == '__main__':
 
         if on_sample.shape[-1] > 1:
             # sns.kdeplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
-            sns.scatterplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.8)
+            sns.scatterplot(ax=axs[0], data=samples_df_off, x="x1", y="x2", hue="type", alpha=0.5)
             axs[0].axis(xmin=-xlim, xmax=xlim, ymin=-ylim, ymax=ylim)
         else:
             sns.ecdfplot(ax=axs[0], data=samples_df_off, x="x1", hue="type")
@@ -355,7 +371,7 @@ if __name__ == '__main__':
 
         if on_sample.shape[-1] > 1:
             # sns.kdeplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
-            sns.scatterplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.8)
+            sns.scatterplot(ax=axs[1], data=samples_df, x="x1", y="x2", hue="type", alpha=0.5)
             axs[1].axis(xmin=-xlim, xmax=xlim, ymin=-ylim, ymax=ylim)
         else:
             sns.ecdfplot(ax=axs[1], data=samples_df, x="x1", hue="type")

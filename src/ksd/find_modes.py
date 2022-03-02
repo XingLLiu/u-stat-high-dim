@@ -62,15 +62,22 @@ def merge_modes(inv_hessians: tf.Tensor, end_pts: tf.Tensor, threshold: float, l
 
     return mode_list, inv_hessians_list
 
-def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, verbose: bool=False, **kwargs):
+def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, verbose: bool=False, grad_log: callable=None, **kwargs):
     """Run BFGS algorithm
     start_pts: M x dim
     """
     # define objective
-    def nll_and_grad(x):
-        return tfp.math.value_and_gradient(
-            lambda x: -log_prob_fn(x), # minus as we want to minimise
-            x)
+    if not grad_log:
+        def nll_and_grad(x):
+            return tfp.math.value_and_gradient(
+                lambda x: -log_prob_fn(x), # minus as we want to minimise
+                x)
+    else:
+        def nll_and_grad(x):
+            return (
+                lambda x: -log_prob_fn(x), # minus as we want to minimise
+                lambda x: -grad_log(x)
+                )
 
     optim_results = tfp.optimizer.bfgs_minimize(nll_and_grad, initial_position=start_pts, **kwargs)
 
@@ -83,10 +90,10 @@ def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, verbose: bool=False, *
 
     return optim_results
 
-def find_modes(start_pts, log_prob_fn, threshold, **kwargs):
+def find_modes(start_pts, log_prob_fn, threshold, grad_log, **kwargs):
     """Run run_bfgs and merge_modes"""
     # run BFGS to find modes
-    bfgs = run_bfgs(start_pts, log_prob_fn)
+    bfgs = run_bfgs(start_pts, log_prob_fn, grad_log)
     end_pts = bfgs.position
     inverse_hessian_estimate = bfgs.inverse_hessian_estimate
 

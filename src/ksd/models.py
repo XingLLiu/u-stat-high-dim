@@ -1,6 +1,8 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
+import kgof.density as density
+import numpy as np
 
 def check_log_prob(dist, log_prob):
   """Check if log_prob == dist.log_prob + const."""
@@ -35,13 +37,13 @@ def create_mixture_gaussian(dim, delta, ratio=0.5, return_logprob=False):
       return mix_gauss, log_prob_fn
 
 
-def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, return_logprob=False):
+def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, shift=0., return_logprob=False):
     """Bimodal Gaussian mixture with mean shift of dist delta in the first k dims"""
     a = [1. if x < k else 0. for x in range(dim)]
     a = tf.constant(a)
     multiplier = delta/tf.math.sqrt(float(k))
-    mean1 = -multiplier * a
-    mean2 = multiplier * a
+    mean1 = -multiplier * a + shift
+    mean2 = multiplier * a + shift
     mix_gauss = tfd.Mixture(
       cat=tfd.Categorical(probs=[ratio, 1-ratio]),
       components=[
@@ -154,7 +156,7 @@ def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor,
   nbanana: number of banana distributions in the mixture
   """
   nmodes = len(ratio)
-  assert nmodes >= nbanana, f"number of mixtures must be >= {nbanana}"
+  assert nmodes >= nbanana, f"number of mixtures {nmodes} must be >= {nbanana}"
 
   banana_component = [create_banana(dim, loc=loc[i, :], **kwargs) for i in range(nbanana)]
   cov_mat = tf.math.sqrt(0.01 * tf.math.sqrt(float(dim)) * tf.eye(dim))
@@ -250,3 +252,44 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
         )
       
       return mix_gauss, log_prob_fn  
+
+def create_rbm(
+  seed,
+  c_loc,
+  dx=50,
+  dh=40,
+  burnin_number=2000,
+  return_logprob=False):
+  """
+  Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
+  The entries of the matrix B are perturbed.
+  This experiment was first proposed by Liu et al., 2016 (Section 6)
+  inputs: seed: non-negative integer
+          m: number of samples
+          sigma: standard deviation of Gaussian noise
+          dx: dimension of observed output variable
+          dh: dimension of binary latent variable
+          burnin_number: number of burn-in iterations for Gibbs sampler
+  outputs: 2-tuple consisting of
+          (m,dx) array of samples generated using the perturbed RBM
+          (m,dx) array of scores computed using the non-perturbed RBM (model)
+  """
+  # the perturbed model is fixed, randomness comes from sampling
+  tf.random.set_seed(seed)
+
+  # Model p
+  B = tf.cast(tf.experimental.numpy.random.randint(0, 2, (dx, dh)), dtype=tf.float32) * 6. - 3.
+  b = tf.cast(tf.experimental.numpy.random.randn(dx), dtype=tf.float32)
+  c = tf.cast(tf.experimental.numpy.random.randn(dh), dtype=tf.float32) + c_loc
+  dist = density.GaussBernRBM(B, b, c)
+  dist.event_shape = [dx]
+  dist.log_prob = dist.log_den
+
+  ds = dist.get_datasource()
+  ds.burnin = burnin_number
+  dist.sample = lambda shape: tf.cast(ds.sample(shape).data(), dtype=tf.float32) #TODO not setting seed!
+
+  if not return_logprob:
+    return dist
+  else:
+    return dist, dist.log_prob 

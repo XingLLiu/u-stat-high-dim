@@ -29,14 +29,19 @@ class KSD:
     Y_cp = tf.identity(Y)
 
     ## calculate scores using autodiff
-    with tf.GradientTape() as g:
-      g.watch(X_cp)
-      log_prob_X = self.p.log_prob(X_cp)
-    score_X = g.gradient(log_prob_X, X_cp) # n x dim
-    with tf.GradientTape() as g:
-      g.watch(Y_cp)
-      log_prob_Y = self.p.log_prob(Y_cp) # m x dim
-    score_Y = g.gradient(log_prob_Y, Y_cp)
+    if not hasattr(self.p, "grad_log"):
+      with tf.GradientTape() as g:
+        g.watch(X_cp)
+        log_prob_X = self.p.log_prob(X_cp)
+      score_X = g.gradient(log_prob_X, X_cp) # n x dim
+      with tf.GradientTape() as g:
+        g.watch(Y_cp)
+        log_prob_Y = self.p.log_prob(Y_cp) # m x dim
+      score_Y = g.gradient(log_prob_Y, Y_cp)
+    else:
+      score_X = self.p.grad_log(X_cp) # n x dim
+      score_Y = self.p.grad_log(Y_cp) # m x dim
+      assert score_X.shape == X_cp.shape
 
     # median heuristic #TODO using pre-specified bandwidth
     if self.k.med_heuristic:
