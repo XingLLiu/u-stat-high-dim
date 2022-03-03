@@ -122,7 +122,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                         ksd_val = ksd_val.numpy()
                             
                         # update if ksd is larger
-                        if ksd_val > best_ksd:
+                        if (ksd_val > best_ksd) or (i == 0):
                             best_std = std
                             best_ksd = ksd_val
                             best_proposal_dict = proposal_dict
@@ -278,9 +278,10 @@ if __name__ == '__main__':
 
         elif model == "rbm":
             c_shift = args.shift
-            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}_shift{c_shift}"
-            create_target_model = models.create_rbm(seed=seed, c_loc=c_shift, dx=dim, dh=2, return_logprob=True)
-            create_sample_model = models.create_rbm(seed=seed, c_loc=0., dx=dim, dh=2, return_logprob=True)
+            dh = args.dh
+            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}"
+            create_target_model = models.create_rbm(seed=seed, c_loc=c_shift, dx=dim, dh=dh, return_logprob=True)
+            create_sample_model = models.create_rbm(seed=seed, c_loc=0., dx=dim, dh=dh, return_logprob=True)
 
 
         # target distribution
