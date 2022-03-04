@@ -285,7 +285,7 @@ class ConvolvedKSD:
     else:
       ksd = tf.reduce_sum(u_mat) / n**2
       ksd_scaled = ksd / tf.math.sqrt(var)
-      return var, ksd_scaled
+      return ksd_scaled
 
   def eval_mat(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1, u: tf.Tensor=None):
     """
@@ -299,15 +299,16 @@ class ConvolvedKSD:
     """
     noise_sd = tf.exp(log_noise_std)
     if u is None:
-      noise_mat = noise_sd * tf.eye(X.shape[1]) # dim x dim
+      Lmat = noise_sd * tf.eye(X.shape[1]) # dim x dim
     else:
-      noise_mat = noise_sd * tf.reshape(u, (1, -1)) # 1 x dim
-      noise_mat = noise_sd * tf.reshape(u, (1, -1)) # 1 x dim
-      assert noise_mat.shape[1] == X.shape[1]
+      u = tf.reshape(u, (1, -1)) # 1 x dim
+      Lmat = noise_sd * u # 1 x dim
+      assert Lmat.shape[1] == X.shape[1]
+      assert (conv_samples * Lmat).shape == X.shape
 
     ## add noise to samples
-    X += conv_samples * noise_mat
-    Y += conv_samples * noise_mat
+    X += conv_samples @ Lmat # n x dim
+    Y += conv_samples @ Lmat # m x dim
     
     ## copy data for score computation
     X_cp = tf.expand_dims(tf.identity(X), axis=0) # 1 x n x dim
@@ -318,7 +319,7 @@ class ConvolvedKSD:
 
     with tf.GradientTape() as g:
       g.watch(X_cp)
-      input_1 = X_cp - Z * noise_mat # l x n x dim #TODO broadcasting is potentially causing problems
+      input_1 = X_cp - Z @ Lmat # l x n x dim
       prob_1 = self.p.prob(input_1) # l x n
     grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
@@ -327,9 +328,9 @@ class ConvolvedKSD:
 
     with tf.GradientTape() as g:
       g.watch(Y_cp)
-      input_2 = Y_cp - tf.identity(Z) * noise_mat # l x m x dim
-      prob_2 = self.p.prob(input_2) # m x dim
-    grad_2 = g.gradient(prob_2, Y_cp)
+      input_2 = Y_cp - tf.identity(Z) @ Lmat # l x m x dim
+      prob_2 = self.p.prob(input_2) # l x m
+    grad_2 = g.gradient(prob_2, Y_cp) # 1 x n x dim
     grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
     score_Y = grad_2 / tf.expand_dims(
       tf.math.reduce_sum(prob_2, axis=0), axis=1) # m x dim
