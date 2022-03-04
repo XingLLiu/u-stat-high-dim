@@ -264,16 +264,13 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
 
-  def h1_var(self, allparams: bool=False, return_scaled_ksd: bool=False, **kwargs):
+  def h1_var(self, return_scaled_ksd: bool=False, **kwargs):
     """Compute the variance of the asymtotic Gaussian distribution under H_1
     Args:
       return_scaled_ksd: if True, return KSD / (\sigma_{H_1} + jitter), where 
         \sigma_{H_1}^2 is the asymptotic variance of the KSD estimate under H1
     """
-    if not allparams:
-      u_mat = self.eval(output_dim=2, **kwargs) # n x n
-    else:
-      u_mat = self.eval_mat(output_dim=2, **kwargs) # n x n
+    u_mat = self.eval_mat(output_dim=2, **kwargs) # n x n
     n = kwargs["X"].shape[0]
 
     witness = tf.reduce_sum(u_mat, axis=1) # n
@@ -287,25 +284,22 @@ class ConvolvedKSD:
       ksd_scaled = ksd / tf.math.sqrt(var)
       return ksd_scaled
 
-  def eval_mat(self, log_noise_std: float, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1, u: tf.Tensor=None):
+  def eval_mat(self, log_noise_std: float, u: tf.Tensor, X: tf.Tensor, Y: tf.Tensor, conv_samples_full: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
     """
     Inputs:
       X: n x dim
       Y: m x dim
-      u: noise is of the form \sigma * u @ u^T Z, Z \sim N(0, I_d)
+      u: unit vector of the direction for noise
       conv_samples: noise samples of shape (n, 1)
       output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
         the matrix [ u_p(xi, xj) ]_{ij} is returned
     """
     noise_sd = tf.exp(log_noise_std)
-    if u is None:
-      Lmat = noise_sd * tf.eye(X.shape[1]) # dim x dim
-    else:
-      u = tf.reshape(u, (1, -1)) # 1 x dim
-      Lmat = noise_sd * u # 1 x dim
-      assert Lmat.shape[1] == X.shape[1]
-      assert (conv_samples * Lmat).shape == X.shape
-
+    u = tf.reshape(u, (1, -1)) # 1 x dim
+    u /= tf.math.sqrt(tf.reduce_sum(u**2)) # 1 x dim
+    Lmat = noise_sd * u # 1 x dim
+    assert Lmat.shape[1] == X.shape[1]
+    
     ## add noise to samples
     X += conv_samples @ Lmat # n x dim
     Y += conv_samples @ Lmat # m x dim
@@ -372,23 +366,43 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
   
-  def optim(self, nsteps: int, optimizer: tf.optimizers, param: tf.Tensor, allparams: bool=False, **kwargs):
+  def optim(self, nsteps: int, optimizer: tf.optimizers, param: tf.Tensor, verbose: bool=False, **kwargs):
     """
     Inputs:
       allparams: whether to optimise for the entire cov matrix
     """
-    if not allparams:
-      def loss_fn():
-        res = -self.eval(log_noise_std=param, **kwargs)
-        var = self.h1_var(log_noise_std=param, **kwargs)
-        res /= tf.sqrt(var) + 1e-8
-        return res
-    else:
-      def loss_fn():
-        param[1:].assign(param[1:] / tf.math.sqrt(tf.reduce_sum(param[1:]**2))) # normalise dir vec
-        res = -self.eval_mat(log_noise_std=param[0], u=param[1:], **kwargs)
-        var = self.h1_var(**kwargs)
-        res /= tf.sqrt(var) + 1e-8
-        return res
+    self.losses = []
+    self.params = []
+    
+    iterator = trange(nsteps) if verbose else range(nsteps)
 
-    _ = tfp.math.minimize(loss_fn, num_steps=nsteps, optimizer=optimizer)
+    # define loss function (-ksd)
+    def loss_fn(param):
+      res = self.h1_var(
+          return_scaled_ksd=True,
+          log_noise_std=param[0],
+          X=kwargs["X"],
+          Y=tf.identity(kwargs["Y"]),
+          conv_samples_full=kwargs["conv_samples_full"],
+          conv_samples=kwargs["conv_samples"],
+          u=param[1:])
+      return -res
+    
+    # minimise
+    for _ in iterator:
+        # open a GradientTape
+        with tf.GradientTape() as tape:
+            # Forward pass.
+            loss_value = loss_fn(param)
+
+        # get gradients of loss wrt noise params
+        gradients = tape.gradient(loss_value, param)
+        
+        # store results
+        self.losses.append(loss_value)
+        self.params.append(tf.constant(param))
+
+        # update noise params
+        optimizer.apply_gradients(zip([gradients], [param]))
+
+    
