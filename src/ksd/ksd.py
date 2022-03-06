@@ -105,7 +105,6 @@ class ConvolvedKSD:
     self,
     target: tfp.distributions.Distribution,
     kernel: tf.Module,
-    conv_kernel: tfp.distributions.Distribution,
   ):
     """
     Inputs:
@@ -115,7 +114,6 @@ class ConvolvedKSD:
     """
     self.p = target
     self.k = kernel
-    self.conv_kernel = conv_kernel
 
   def __call__(self, X: tf.Tensor, Y: tf.Tensor, conv_samples: tf.Tensor, output_dim: int=1):
     """
@@ -289,14 +287,14 @@ class ConvolvedKSD:
     Inputs:
       X: n x dim
       Y: m x dim
-      u: unit vector of the direction for noise
+      u: (1, dim) unit vector of the direction for noise
       conv_samples: noise samples of shape (n, 1)
       output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
         the matrix [ u_p(xi, xj) ]_{ij} is returned
     """
     noise_sd = tf.exp(log_noise_std)
-    u = tf.reshape(u, (1, -1)) # 1 x dim
-    u /= tf.math.sqrt(tf.reduce_sum(u**2)) # 1 x dim
+    assert u.shape == (1, X.shape[1]), u.shape
+    
     Lmat = noise_sd * u # 1 x dim
     assert Lmat.shape[1] == X.shape[1]
     
@@ -366,13 +364,15 @@ class ConvolvedKSD:
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
   
-  def optim(self, nsteps: int, optimizer: tf.optimizers, param: tf.Tensor, verbose: bool=False, **kwargs):
+  def optim(self, nsteps: int, optimizer: tf.optimizers, param: tf.Tensor, verbose: bool=False, 
+    desc=None, **kwargs):
     """
     Inputs:
       allparams: whether to optimise for the entire cov matrix
     """
     self.losses = []
     self.params = []
+    assert param.shape == (kwargs["X"].shape[1])
     
     iterator = trange(nsteps) if verbose else range(nsteps)
 
@@ -380,29 +380,34 @@ class ConvolvedKSD:
     def loss_fn(param):
       res = self.h1_var(
           return_scaled_ksd=True,
-          log_noise_std=param[0],
+          log_noise_std=param[0, 0],
           X=kwargs["X"],
           Y=tf.identity(kwargs["Y"]),
           conv_samples_full=kwargs["conv_samples_full"],
           conv_samples=kwargs["conv_samples"],
-          u=param[1:])
+          u=param[:1, 1:])
       return -res
     
     # minimise
-    for _ in iterator:
-        # open a GradientTape
-        with tf.GradientTape() as tape:
-            # Forward pass.
-            loss_value = loss_fn(param)
+    for i in iterator:
+      if desc:
+        desc.set_description(f"Gradient step [{i+1} / {nsteps}]")
+      # open a GradientTape
+      with tf.GradientTape() as tape:
+          # forward pass.
+          u_n = param[1:] / (tf.math.sqrt(tf.reduce_sum(param[1:]**2, axis=0)) + 1e-12)
+          param_n = tf.concat([param[:1], u_n], axis=0) # dim+1
+          param_n = tf.reshape(param_n, (1, -1)) # 1 x (dim+1)
+          loss_value = loss_fn(param_n)
 
-        # get gradients of loss wrt noise params
-        gradients = tape.gradient(loss_value, param)
-        
-        # store results
-        self.losses.append(loss_value)
-        self.params.append(tf.constant(param))
+      # get gradients of loss wrt noise params
+      gradients = tape.gradient(loss_value, param)
+      
+      # store results
+      self.losses.append(loss_value)
+      self.params.append(tf.constant(param))
 
-        # update noise params
-        optimizer.apply_gradients(zip([gradients], [param]))
+      # update noise params
+      optimizer.apply_gradients(zip([gradients], [param]))
 
     
