@@ -75,12 +75,9 @@ class MCMC:
       x_next: n x dim. new particles
     '''
     unif = tf.random.uniform(shape=accept_prob.shape) # n
-    # print("x_curr", x_current[:6, ])
-    # print("x_prop", x_proposed[:6, ])
-    # print("accept_prob", accept_prob[:6, ])
     cond = tf.expand_dims(unif < accept_prob, axis=-1) # n x 1
     x_next = tf.where(cond, x_proposed, x_current) # n x dim
-    # print("x_next", x_next[:6, ])
+
     assert x_next.shape == x_proposed.shape
     assert tf.experimental.numpy.all(tf.where(cond, x_next == x_proposed, x_next == x_current))
     return x_next, tf.cast(cond, dtype=tf.int64)

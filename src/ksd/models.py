@@ -2,7 +2,6 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import kgof.density as density
-import numpy as np
 
 def check_log_prob(dist, log_prob):
   """Check if log_prob == dist.log_prob + const."""
@@ -254,37 +253,33 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
       return mix_gauss, log_prob_fn  
 
 def create_rbm(
-  seed,
-  c_loc,
-  dx=50,
-  dh=40,
-  burnin_number=2000,
-  return_logprob=False):
+  c: tf.Tensor=0.,
+  dx: int=50,
+  dh: int=40,
+  burnin_number: int=2000,
+  return_logprob: bool=False):
   """
   Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
   The entries of the matrix B are perturbed.
   This experiment was first proposed by Liu et al., 2016 (Section 6)
-  inputs: seed: non-negative integer
-          m: number of samples
-          sigma: standard deviation of Gaussian noise
-          dx: dimension of observed output variable
-          dh: dimension of binary latent variable
-          burnin_number: number of burn-in iterations for Gibbs sampler
-  outputs: 2-tuple consisting of
-          (m,dx) array of samples generated using the perturbed RBM
-          (m,dx) array of scores computed using the non-perturbed RBM (model)
+  Args:
+    m: number of samples
+    c: (dh,) either tf.Tensor or set to tf.zeros((dh,)) by default
+    sigma: standard deviation of Gaussian noise
+    dx: dimension of observed output variable
+    dh: dimension of binary latent variable
+    burnin_number: number of burn-in iterations for Gibbs sampler
   """
-  # the perturbed model is fixed, randomness comes from sampling
-  tf.random.set_seed(seed)
-
   # Model p
-  B = tf.cast(tf.experimental.numpy.random.randint(0, 2, (dx, dh)), dtype=tf.float32) * 6. - 3.
-  b = tf.cast(tf.experimental.numpy.random.randn(dx), dtype=tf.float32)
-  c = tf.cast(tf.experimental.numpy.random.randn(dh), dtype=tf.float32) + c_loc
+  B = tf.eye(tf.reduce_max((dx, dh)))[:dx, :dh] * 10.
+  b = tf.zeros(dx)
+  c = c if isinstance(c, tf.Tensor) else tf.zeros(dh)
+
   dist = density.GaussBernRBM(B, b, c)
   dist.event_shape = [dx]
   dist.log_prob = dist.log_den
 
+  # sample function
   ds = dist.get_datasource()
   ds.burnin = burnin_number
   dist.sample = lambda shape: tf.cast(ds.sample(shape).data(), dtype=tf.float32) #TODO not setting seed!
