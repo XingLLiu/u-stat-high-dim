@@ -28,10 +28,10 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     if method == "mcmc":
         ksd = KSD(target=target, kernel=kernel)
         MCMCKernel = kwargs["mcmckernel"]
-    elif method == "conv":
+    elif method == "conv" or method == "convvar":
         ksd = ConvolvedKSD(target=target, kernel=kernel)
 
-    grad_log = None if not hasattr(target, "grad_log") else target.grad_log
+    grad_log = None # if not hasattr(target, "grad_log") else target.grad_log
 
     ksd_df = pd.DataFrame(columns=["n", "best_std", "p_value", "seed", "type"])
     iterator = trange(nrep)
@@ -49,9 +49,9 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
         unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
         start_pts_all = 20. * unif_dist.sample((nrep, kwargs["nstart_pts"])) # change range
 
-    if method == "conv":
+    if method == "conv" or method == "convvar":
         # initialise optimiser
-        num_steps = 200
+        num_steps = 200 if method == "conv" else 50
         optimizer = tf.keras.optimizers.Adam(learning_rate=1e-1)
 
         # initialise noise samples
@@ -191,6 +191,83 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                 best_std = tf.exp(best_proposal_dict["log_noise_std"]).numpy()
                 ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
 
+            # use convolution and only optimise for var
+            elif method == "convvar":
+                if "no pert" not in name:
+                    sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
+
+                    # get noise samples for p and Q
+                    conv_samples_full = conv_samples_full_all[seed, :] # l x 1
+                    conv_samples = tf.gather(conv_samples_full, conv_ind_all[seed, :], axis=0) # n x 1
+
+                    # start optim from either randomly initialised points or training samples
+                    start_pts = start_pts_all[seed, :, :] if random_start_pts else sample_init_train
+                    # merge modes
+                    mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
+
+                    # find between-modes dir
+                    if len(mode_list) == 1:
+                        _, ind_pair_list = [mode_list[0]], [(0, 0)]
+                    else:
+                        _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
+                    
+                    best_ksd = 0.
+                    best_proposal_dict = {"log_noise_std": 0., "u": tf.zeros((1, dim))}
+                    ind_pair_list_len = len(ind_pair_list)
+                    for j in range(ind_pair_list_len):
+                        # loop through mode pairs
+                        iterator.set_description(f"Mode pair [{j+1} / {ind_pair_list_len}]")
+
+                        # find estimated hessians
+                        ind1, ind2 = ind_pair_list[j]
+                        mode1, mode2 = mode_list[ind1], mode_list[ind2]
+                        u_vec = tf.reshape(mode1 - mode2, (1, -1)) # 1 x dim
+                        u_vec_n = u_vec / tf.sqrt(tf.reduce_sum(u_vec**2)) # 1 x dim
+
+                        # initialise log std for noise
+                        param = tf.Variable([1.])
+
+                        # optimise
+                        ksd.optim_var(
+                            nsteps=num_steps,
+                            optimizer=optimizer,
+                            param=param,
+                            u_vec=u_vec_n,
+                            X=sample_init_train,
+                            Y=tf.identity(sample_init_train),
+                            conv_samples_full=conv_samples_full,
+                            conv_samples=conv_samples,
+                        )
+                        if -ksd.losses[-1] > best_ksd: # -loss = ksd
+                            best_proposal_dict["log_noise_std"] = ksd.params[-1][0]
+                            best_proposal_dict["u"] = u_vec_n
+                    
+                    # get samples to compute p-value
+                    x_t = sample_init_test
+
+                    # get multinomial sample
+                    multinom_one_sample = multinom_samples[seed, :] # nrep x num_boost x ntest
+
+                else:
+                    # get noise samples for p and Q
+                    conv_samples_full = conv_samples_full_all[seed, :] # l x 1
+                    conv_samples = tf.gather(conv_samples_full, conv_ind_all_notrain[seed, :], axis=0) # n x 1
+
+                    x_t = sample_init
+                    multinom_one_sample = multinom_samples_notrain[seed, :] # nrep x num_boost x n
+
+                _, p_val = bootstrap.test_once(
+                    alpha=0.05, 
+                    num_boot=num_boot, 
+                    X=x_t, 
+                    multinom_samples=multinom_one_sample, 
+                    conv_samples_full=conv_samples_full,
+                    conv_samples=conv_samples,
+                    **best_proposal_dict
+                )
+                best_std = tf.exp(best_proposal_dict["log_noise_std"]).numpy()
+                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
+
     return ksd_df, best_proposal_dict
 
 num_boot = 800 # number of bootstrap samples to compute critical val
@@ -238,6 +315,8 @@ if __name__ == '__main__':
         mcmc_name = "barker_"
     if args.method == "conv":
         mcmc_name = "conv_"
+    elif args.method == "convvar":
+        mcmc_name = "convvar_"
 
     tf.random.set_seed(seed)
 
@@ -263,7 +342,7 @@ if __name__ == '__main__':
         elif model == "t-banana":
             nmodes = args.nmodes
             nbanana = args.nbanana
-            model_name = f"{mcmc_name}{model}_steps{T}_nmodes{nmodes}_diag_seed{seed}"
+            model_name = f"{mcmc_name}{model}_steps{T}_nmodes{nmodes}_seed{seed}"
             ratio_target = [1/nmodes] * nmodes
             random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
             ratio_sample = random_weights / tf.reduce_sum(random_weights)
@@ -321,16 +400,18 @@ if __name__ == '__main__':
             create_sample_model = models.create_mixture_20_gaussian(means, ratio=ratio_sample, scale=delta, return_logprob=True)
 
         elif model == "gauss-scaled":
-            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}_hessfix"
+            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}"
             create_target_model = models.create_mixture_gaussian_scaled(ratio=ratio_target, return_logprob=True)
             create_sample_model = models.create_mixture_gaussian_scaled(ratio=ratio_sample, return_logprob=True)
 
         elif model == "rbm":
-            c_shift = args.shift
             dh = args.dh
+            c_shift = args.shift
+            c_off = tf.constant([c_shift, c_shift] + [0.] * (dh - 2))
+
             model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}"
-            create_target_model = models.create_rbm(seed=seed, c_loc=c_shift, dx=dim, dh=dh, return_logprob=True)
-            create_sample_model = models.create_rbm(seed=seed, c_loc=0., dx=dim, dh=dh, return_logprob=True)
+            create_target_model = models.create_rbm(c=0., dx=dim, dh=dh, return_logprob=True)
+            create_sample_model = models.create_rbm(c=c_off, dx=dim, dh=dh, return_logprob=True)
 
 
         # target distribution
@@ -384,7 +465,7 @@ if __name__ == '__main__':
             on_sample_init = on_sample.numpy()
             on_sample_pert = mh_on.x[-1, :, :].numpy()
 
-        elif method == "conv":
+        elif method == "conv" or method == "convvar":
             u_vec = tf.reshape(best_hess_dict["u"], (1, -1)) # 1 x dim
             convolution = tfd.MultivariateNormalDiag(0., tf.ones(dim))
             convolution_sample = convolution.sample(1000)[:, :1] # n x 1
@@ -393,13 +474,13 @@ if __name__ == '__main__':
             best_std_off = test_imq_df.loc[(test_imq_df.type == "off-target"), "best_std"].median()
             convolution_sample_off = convolution_sample @ u_vec * best_std_off
             off_sample_init = off_sample.numpy()
-            off_sample_pert = (off_sample + convolution_sample).numpy()
+            off_sample_pert = (off_sample + convolution_sample_off).numpy()
 
             on_sample = proposal_on.sample(1000)
             best_std_on = test_imq_df.loc[(test_imq_df.type == "target"), "best_std"].median()
             convolution_sample_on = convolution_sample @ u_vec * best_std_on
             on_sample_init = on_sample.numpy()
-            on_sample_pert = (on_sample + convolution_sample).numpy()
+            on_sample_pert = (on_sample + convolution_sample_on).numpy()
 
         # plot
         subfig = subfigs.flat[ind] if len(delta_list) > 1 else subfigs
@@ -470,9 +551,9 @@ if __name__ == '__main__':
         sns.ecdfplot(ax=axs[4], data=test_imq_df, x="best_std", hue="type")
         if method == "mcmc":
             axs[4].axis(xmin=0.4, xmax=1.6, ymin=0, ymax=1.01)
-        elif method == "conv":
+        elif method == "conv" or method == "convvar":
             axs[4].axis(ymin=0, ymax=1.01)
-        axs[4].set_title("median of estimated best std = {:.2f} (off), {:.2f} (on)".format(best_std_off, best_std_on))
+        axs[4].set_title("median of estimated best std = {:.2f} (off),z {:.2f} (on)".format(best_std_off, best_std_on))
         axs[4].set_xlabel("std")
         if ind != len(delta_list) - 1: axs[4].legend([],[], frameon=False)
 

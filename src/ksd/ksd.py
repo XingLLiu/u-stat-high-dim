@@ -372,7 +372,7 @@ class ConvolvedKSD:
     """
     self.losses = []
     self.params = []
-    assert param.shape == (kwargs["X"].shape[1])
+    assert param.shape == (1, kwargs["X"].shape[1]+1)
     
     iterator = trange(nsteps) if verbose else range(nsteps)
 
@@ -395,10 +395,53 @@ class ConvolvedKSD:
       # open a GradientTape
       with tf.GradientTape() as tape:
           # forward pass.
-          u_n = param[1:] / (tf.math.sqrt(tf.reduce_sum(param[1:]**2, axis=0)) + 1e-12)
-          param_n = tf.concat([param[:1], u_n], axis=0) # dim+1
-          param_n = tf.reshape(param_n, (1, -1)) # 1 x (dim+1)
-          loss_value = loss_fn(param_n)
+          # u_n = param[:1, 1:] / (tf.math.sqrt(tf.reduce_sum(param[:1, 1:]**2, axis=1)) + 1e-12) # 1 x dim
+          # param_n = tf.concat([param[:1, :1], u_n], axis=1) # 1 x (dim+1)
+          # loss_value = loss_fn(param_n)
+          loss_value = loss_fn(param)
+
+      # get gradients of loss wrt noise params
+      gradients = tape.gradient(loss_value, param)
+      
+      # store results
+      # u_n = param[:1, 1:] / (tf.math.sqrt(tf.reduce_sum(param[:1, 1:]**2, axis=1)) + 1e-12) # 1 x dim
+      # param_n = tf.concat([param[:1, :1], u_n], axis=1) # 1 x (dim+1)
+      self.losses.append(loss_value)
+      self.params.append(tf.constant(param))
+
+      # update noise params
+      optimizer.apply_gradients(zip([gradients], [param]))
+
+  def optim_var(self, nsteps: int, optimizer: tf.optimizers, param: tf.Tensor, u_vec: tf.Tensor,
+    verbose: bool=False, **kwargs):
+    """Optimise for log std of noise only
+    Inputs:
+      allparams: whether to optimise for the entire cov matrix
+    """
+    self.losses = []
+    self.params = []
+    assert u_vec.shape == (1, kwargs["X"].shape[1])
+    
+    iterator = trange(nsteps) if verbose else range(nsteps)
+
+    # define loss function (-ksd)
+    def loss_fn(param):
+      res = self.h1_var(
+          return_scaled_ksd=True,
+          log_noise_std=param,
+          X=kwargs["X"],
+          Y=tf.identity(kwargs["Y"]),
+          conv_samples_full=kwargs["conv_samples_full"],
+          conv_samples=kwargs["conv_samples"],
+          u=u_vec)
+      return -res
+    
+    # minimise
+    for i in iterator:
+      # open a GradientTape
+      with tf.GradientTape() as tape:
+          # forward pass.
+          loss_value = loss_fn(param)
 
       # get gradients of loss wrt noise params
       gradients = tape.gradient(loss_value, param)
@@ -410,4 +453,3 @@ class ConvolvedKSD:
       # update noise params
       optimizer.apply_gradients(zip([gradients], [param]))
 
-    
