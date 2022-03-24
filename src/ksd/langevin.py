@@ -11,10 +11,17 @@ def prepare_proposal_input(mode1: tf.Tensor, mode2: tf.Tensor, hess1_inv: tf.Ten
         mode1, mode2: 1 x dim
         hess1_inv, hess2_inv: dim x dim, inverse Hessians at the modes
     """
+    # if Hessian estimates were not stable, set to I_d
+    if tf.linalg.det(hess1_inv) <= 0:
+      hess1_inv = tf.eye(hess1_inv.shape[0])
+    if tf.linalg.det(hess2_inv) <= 0:
+      hess2_inv = tf.eye(hess2_inv.shape[0])
+
     hess1_inv_sqrt = tf.linalg.sqrtm(hess1_inv)
     hess2_inv_sqrt = tf.linalg.sqrtm(hess2_inv)
     hess1_sqrt = tf.linalg.inv(hess1_inv_sqrt)
     hess2_sqrt = tf.linalg.inv(hess2_inv_sqrt)
+
     hess1_sqrt_det = tf.linalg.det(hess1_sqrt)
     hess1_inv_sqrt_det = tf.linalg.det(hess1_inv_sqrt)
     hess2_sqrt_det = tf.linalg.det(hess2_sqrt)
@@ -191,6 +198,7 @@ class RandomWalkMH(MCMC):
       
       # move
       x_next, _ = self.metropolis(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # n x dim, n x 1
+      # x_next = xp_next #! delete
 
       # store next samples
       self.x[t+1, :, :].assign(x_next)
@@ -230,8 +238,19 @@ class RandomWalkMH(MCMC):
       root_cov_1_det, inv_root_cov_1_det = kwargs["hess1_inv_sqrt_det"], kwargs["hess1_sqrt_det"]
       root_cov_2_det, inv_root_cov_2_det = kwargs["hess2_inv_sqrt_det"], kwargs["hess2_sqrt_det"]
 
+      #TODO asymmetric discrete jump
       xp_next1 = (x_current - mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
-      xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + mode1 # n x dim 
+      xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + mode1 # n x dim
+
+      #TODO symmetric discrete jump
+      # xp_next1 = (x_current - std * mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
+      # xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + std * mode1 # n x dim
+
+      #TODO interpolation proposals; jacobian is different from that for the above!
+      # xp_next1 = (1 - std) * x_current + std * ((x_current - mode1) @ inv_root_cov_1 @ root_cov_2 + mode2) # n x dim
+      # xp_next2 = ((x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + std * mode1) @ tf.linalg.inv(
+      #   (1 - std) * inv_root_cov_2 @ root_cov_1 + std * tf.eye(x_current.shape[1])
+      # ) # n x dim
 
       which_next = noise == 1
       xp_next = tf.where(which_next, xp_next1, xp_next2) # n x dim

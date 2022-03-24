@@ -218,11 +218,15 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
     mean2 = [-4., -4.]
     # mean1 = [10.]
     # mean2 = [-10.]
+    # mean1 = [-4., 4.]
+    # mean2 = [-4., -4.]
 
     cov1 = tf.constant([[1., 0.8], [0.8, 1]])
     cov2 = tf.constant([[1., -0.8], [-0.8, 1.]]) * 3.
     # cov1 = tf.constant([[1.]])
     # cov2 = tf.constant([[4.]])
+    # cov1 = tf.constant([[1., 0.], [0., 1]])
+    # cov2 = tf.constant([[1., -0.], [-0., 1.]]) * 3.
 
     scale1 = tf.linalg.cholesky(cov1)
     scale2 = tf.linalg.cholesky(cov2)
