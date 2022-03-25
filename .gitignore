@@ -13,6 +13,7 @@ __pycache__/*
 
 # figs
 /figs/*
+/figs_code/*
 
 # egg-info
 *.egg-info/*
