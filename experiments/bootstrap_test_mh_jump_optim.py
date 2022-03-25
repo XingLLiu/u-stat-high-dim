@@ -1,4 +1,3 @@
-from operator import index
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -273,9 +272,9 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
 num_boot = 800 # number of bootstrap samples to compute critical val
 alpha = 0.05 # significant level
 mode_threshold = 1. # threshold for merging modes
-sigma_list = np.linspace(0.5, 1.5, 21).tolist() # std for discrete jump proposal
+sigma_list = np.linspace(0.8, 1.2, 11).tolist() # std for discrete jump proposal
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
     parser.add_argument("--model", type=str, default="bimodal")
@@ -305,7 +304,7 @@ if __name__ == '__main__':
     ratio_target = args.ratio_t
     ratio_sample = args.ratio_s
     k = args.k
-    delta_list = [4.0] if args.model != "bimodal" else [1.0, 2.0, 4.0, 6.0]
+    delta_list = [4.0] if args.model != "bimodal" else [8.] # [1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.]
     
     if args.mcmckernel == "mh":
         MCMCKernel = mcmc.RandomWalkMH
@@ -318,8 +317,16 @@ if __name__ == '__main__':
     elif args.method == "convvar":
         mcmc_name = "convvar_"
 
+    # create folder for experiment
+    res_root = f"res/{model}"
+    fig_root = f"figs/{model}"
+    tf.io.gfile.makedirs(res_root)
+    tf.io.gfile.makedirs(fig_root)
+
+    # set random seed for all
     tf.random.set_seed(seed)
 
+    # create figure
     fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 15))
     subfigs = fig.subfigures(1, len(delta_list))
 
@@ -329,40 +336,27 @@ if __name__ == '__main__':
         
         # set model
         if model == "bimodal":
-            model_name = f"{mcmc_name}{model}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_dim{dim}_seed{seed}"
             create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_target)
             create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
-        
+
         elif model == "bimodal_shift":
             shift = args.shift
-            model_name = f"{mcmc_name}{model}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_shift{shift}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_shift{shift}_seed{seed}"
             create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, shift=shift, return_logprob=True, ratio=ratio_target)
             create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
 
         elif model == "t-banana":
             nmodes = args.nmodes
             nbanana = args.nbanana
-            model_name = f"{mcmc_name}{model}_steps{T}_nmodes{nmodes}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_nmodes{nmodes}_seed{seed}"
             ratio_target = [1/nmodes] * nmodes
             random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
             ratio_sample = random_weights / tf.reduce_sum(random_weights)
-            # ratio_sample = [0.3, 0.7] #TODO
             print("ratio sample:", ratio_sample.numpy())
-            loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*10, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
 
-            # loc = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
-            #     [-4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
-            #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
-            #     [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
-            # loc = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
-            #     [4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
-            #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
-            #     [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
-            # loc = tf.constant([[40.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
-            #     [-40.1144876, 6., 0.08298874, -1.2335253, 7.6566525],
-            #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
-            #     [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
-            loc = loc[:nmodes, :]
+            loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*10, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
+            print("means", loc)
 
             b = 0.003 # 0.03
             create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=b,
@@ -372,35 +366,26 @@ if __name__ == '__main__':
 
         elif model == "gaussianmix":
             nmodes = args.nmodes
-            model_name = f"{mcmc_name}{model}{nmodes}_steps{T}_seed{seed}"
-            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-5, 5]^d
-            # means = tf.constant([[4.1144876, 6.538103, 4.1443825, 4.311162, -9.23945],
-            #     [-4.1144876, -6., 0.08298874, -1.2335253, 7.6566525],
-            #     [-4.977256, 16.026318, 8.160973, 12.019077, -6.351266],
-            #     [ 5.583577, 10.599161, 13.44928, 1.0351582, 3.1638136 ]])
-            means = tf.constant([[-15.692321, -1.1227798, -15.462275, -7.772279, 0.45660973],
-                [ 13.653507, 12.54893875, -16.00213, -17.85245, -19.995266],
-                [  10.38526535, -5.5862007, 2.0345726, -12.112765, -19.61071],
-                [  25.736, 25.068437, -16.550621, -9.046288, -18.059994],
-                [-15., 10., 2., 8., -9.]])
-            means = means[:nmodes, :]
+            model_name = f"{mcmc_name}{nmodes}_steps{T}_seed{seed}"
 
             indicator = tf.cast(tfp.distributions.Bernoulli(probs=0.5).sample(nmodes-1), dtype=bool)
             indicator = tf.concat([tf.constant([True]), indicator], axis=0)
             random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
             random_weights = tf.where(indicator, random_weights, 0.)
-            # ratio_sample = random_weights / tf.reduce_sum(random_weights)
-            ratio_sample = [0.19549179, 0.1501031, 0.50429535, 0.15010974, 0.] #! delete
-            ratio_sample = ratio_sample[:nmodes] #! delete
+            ratio_sample = random_weights / tf.reduce_sum(random_weights)
+            print("ratio sample:", ratio_sample)
 
             ratio_target = 0.5
             delta = 1. #! delete
+            
+            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-5, 5]^d
+            print("means", means)
 
             create_target_model = models.create_mixture_20_gaussian(means, ratio=ratio_target, scale=delta, return_logprob=True)
             create_sample_model = models.create_mixture_20_gaussian(means, ratio=ratio_sample, scale=delta, return_logprob=True)
 
         elif model == "gauss-scaled":
-            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_seed{seed}"
             create_target_model = models.create_mixture_gaussian_scaled(ratio=ratio_target, return_logprob=True)
             create_sample_model = models.create_mixture_gaussian_scaled(ratio=ratio_sample, return_logprob=True)
 
@@ -409,7 +394,7 @@ if __name__ == '__main__':
             c_shift = args.shift
             c_off = tf.constant([c_shift, c_shift] + [0.] * (dh - 2))
 
-            model_name = f"{mcmc_name}{model}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}"
+            model_name = f"{mcmc_name}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}"
             create_target_model = models.create_rbm(c=0., dx=dim, dh=dh, return_logprob=True)
             create_sample_model = models.create_rbm(c=c_off, dx=dim, dh=dh, return_logprob=True)
 
@@ -429,7 +414,7 @@ if __name__ == '__main__':
 
         if len(args.load) > 0 :
             try:
-                test_imq_df = pd.read_csv(args.load + f"/{model_name}_delta{delta}.csv")
+                test_imq_df = pd.read_csv(args.load + f"{model}/{model_name}_delta{delta}.csv")
                 print(f"Loaded pre-saved data for steps = {T}")
             except:
                 print(f"Pre-saved data for steps = {T}, delta = {delta} not found. Running from scratch now.")
@@ -443,11 +428,11 @@ if __name__ == '__main__':
                 mcmckernel=MCMCKernel, method=method)
 
             # save res
-            test_imq_df.to_csv(f"res/bootstrap/{model_name}_delta{delta}.csv", index=False)
-            pickle.dump(best_hess_dict, open(f"res/bootstrap/{model_name}_delta{delta}.pkl", "wb"))
+            test_imq_df.to_csv(f"{res_root}/{model_name}_delta{delta}.csv", index=False)
+            pickle.dump(best_hess_dict, open(f"{res_root}/{model_name}_delta{delta}.pkl", "wb"))
 
         # between-modes vector (only for plotting)
-        best_hess_dict = pickle.load(open(f"res/bootstrap/{model_name}_delta{delta}.pkl", "rb"))
+        best_hess_dict = pickle.load(open(f"{res_root}/{model_name}_delta{delta}.pkl", "rb"))
 
         # for plotting dist of perturbed samples
         if method == "mcmc":
@@ -487,7 +472,7 @@ if __name__ == '__main__':
         subfig.suptitle(f"delta = {delta}")
         axs = subfig.subplots(5, 1)
         axs = axs.flat
-        xlim, ylim = 30, 30
+        xlim, ylim = 15, 15
 
         samples_df_off_target = pd.DataFrame({
             "x1": off_sample_init[:, 0],
@@ -557,4 +542,4 @@ if __name__ == '__main__':
         axs[4].set_xlabel("std")
         if ind != len(delta_list) - 1: axs[4].legend([],[], frameon=False)
 
-    fig.savefig(f"figs/bootstrap/{model_name}.png")
+    fig.savefig(f"{fig_root}/{model_name}.png")
