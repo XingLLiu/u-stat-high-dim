@@ -394,10 +394,14 @@ class DSGaussBernRBM(DataSource):
         c = self.c
         dh = len(c)
         dx = len(b)
+        # self.X = tf.zeros((self.burnin, n, dx)).numpy()
+        # self.H = tf.zeros((self.burnin, n, dh)).numpy()
 
         # Initialize the state of the Markov chain
         with util.NumpySeedContext(seed=seed):
             X = tf.random.normal((n, dx))
+            X /= tf.reduce_max(self.B)**2 # for better mixing when entries of B are large
+
             H = tf.cast(
                 np.random.randint(1, 2, (n, dh)), 
                 dtype=tf.float32
@@ -406,6 +410,8 @@ class DSGaussBernRBM(DataSource):
             # burn-in
             for t in range(self.burnin):
                 X, H = self._blocked_gibbs_next(X, H)
+                # self.X[t, :] = X.numpy()
+                # self.H[t, :] = H.numpy()
             # sampling
             X, H = self._blocked_gibbs_next(X, H)
         if return_latent:

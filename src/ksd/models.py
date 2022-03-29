@@ -257,6 +257,7 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
       return mix_gauss, log_prob_fn  
 
 def create_rbm(
+  B_scale: tf.Tensor=10.,
   c: tf.Tensor=0.,
   dx: int=50,
   dh: int=40,
@@ -275,7 +276,7 @@ def create_rbm(
     burnin_number: number of burn-in iterations for Gibbs sampler
   """
   # Model p
-  B = tf.eye(tf.reduce_max((dx, dh)))[:dx, :dh] * 10.
+  B = tf.eye(tf.reduce_max((dx, dh)))[:dx, :dh] * B_scale
   b = tf.zeros(dx)
   c = c if isinstance(c, tf.Tensor) else tf.zeros(dh)
 
@@ -291,4 +292,4 @@ def create_rbm(
   if not return_logprob:
     return dist
   else:
-    return dist, dist.log_prob 
+    return dist, dist.log_prob

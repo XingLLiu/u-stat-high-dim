@@ -426,9 +426,10 @@ class GaussBernRBM(UnnormalizedDensity):
         """
         XB = tf.linalg.matmul(X, self.B) # n x dh
         Y = 0.5*XB + self.c # n x dh
-        E2y = tf.exp(2*Y) # n x dh
+        E2my = tf.exp(-2*Y) # n x dh
         # n x dh
-        Phi = tf.math.divide((E2y-1.0),(E2y+1))
+        Phi = tf.math.divide((1.0-E2my),(1+E2my))
+        
         # n x dx
         T = tf.linalg.matmul(Phi, 0.5*tf.transpose(self.B))
         S = self.b - X + T

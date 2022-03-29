@@ -39,7 +39,7 @@ class Bootstrap:
       u_p = self.ksd.eval_mat(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
     else:
       u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-    
+
     u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
 
     # compute test statistic
@@ -60,6 +60,9 @@ class Bootstrap:
     """
     n = u_p.shape[0]
     u_p = tf.expand_dims(u_p, axis=0) # 1 x n x n
+    self.u_p = u_p
+    # check for numerical overflow
+    _ = tf.debugging.assert_all_finite(u_p, "Stein kernel u_p")
 
     # draw multinomial samples
     if multinom_samples is None:
@@ -77,6 +80,7 @@ class Bootstrap:
     w_outer = tf.linalg.set_diag(w_outer, tf.zeros(w_outer.shape[0:-1])) # num_boot x n x n
     # compute bootstrap samples
     self.ksd_star = tf.reduce_sum(w_outer * u_p, [1, 2]) # num_boot
+    
     return w_outer * u_p
 
   def _test_once(self, alpha):
