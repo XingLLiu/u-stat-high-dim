@@ -239,12 +239,12 @@ class RandomWalkMH(MCMC):
       root_cov_2_det, inv_root_cov_2_det = kwargs["hess2_inv_sqrt_det"], kwargs["hess2_sqrt_det"]
 
       #TODO asymmetric discrete jump
-      xp_next1 = (x_current - mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
-      xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + mode1 # n x dim
+      # xp_next1 = (x_current - mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
+      # xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + mode1 # n x dim
 
       #TODO symmetric discrete jump
-      # xp_next1 = (x_current - std * mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
-      # xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + std * mode1 # n x dim
+      xp_next1 = (x_current - std * mode1) @ inv_root_cov_1 @ root_cov_2 + std * mode2 # n x dim
+      xp_next2 = (x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + std * mode1 # n x dim
 
       #TODO interpolation proposals; jacobian is different from that for the above!
       # xp_next1 = (1 - std) * x_current + std * ((x_current - mode1) @ inv_root_cov_1 @ root_cov_2 + mode2) # n x dim
