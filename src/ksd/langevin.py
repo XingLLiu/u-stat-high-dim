@@ -36,6 +36,42 @@ def prepare_proposal_input(mode1: tf.Tensor, mode2: tf.Tensor, hess1_inv: tf.Ten
     }
     return hess_dict
 
+def prepare_proposal_input_all(mode_list: list, inv_hess_list: list):
+    """Given a list of modes and the local inverse Hessians, compute the
+    quantities needed to construct the proposals.
+    
+    Args:
+        mode_list: list of modes of shape (dim,)
+        inv_hess_list: list of inverse Hessians at the modes, of shape dim x dim
+    """
+    modes = tf.stack(mode_list) # nmodes x dim
+
+    # if Hessian estimates were not stable, set to I_d
+    for i, inv_hess in enumerate(inv_hess_list):
+      if tf.linalg.det(inv_hess) <= 0:
+        inv_hess_list[i] = tf.eye(inv_hess.shape[0])
+
+    inv_hess_sqrt_list = [tf.linalg.sqrtm(x) for x in inv_hess_list]
+    inv_hess_sqrt = tf.stack(inv_hess_sqrt_list) # nmodes x dim x dim
+
+    hess_sqrt_list = [tf.linalg.inv(x) for x in inv_hess_sqrt_list]
+    hess_sqrt = tf.stack(hess_sqrt_list) # nmodes x dim x dim
+  
+    hess_sqrt_det_list = [tf.linalg.det(x) for x in hess_sqrt_list]
+    hess_sqrt_det = tf.stack(hess_sqrt_det_list) # nmodes
+
+    inv_hess_sqrt_det_list = [tf.linalg.det(x) for x in inv_hess_sqrt_list]
+    inv_hess_sqrt_det = tf.stack(inv_hess_sqrt_det_list) # nmodes
+    
+    modes_dict = {
+        "modes": modes,
+        "hess_sqrt": hess_sqrt,
+        "inv_hess_sqrt": inv_hess_sqrt,
+        "hess_sqrt_det": hess_sqrt_det,
+        "inv_hess_sqrt_det": inv_hess_sqrt_det,
+    }
+    return modes_dict
+
 class MCMC:
   def __init__(self, log_prob: callable) -> None:
     self.log_prob = log_prob
@@ -169,7 +205,7 @@ class RandomWalkMH(MCMC):
   def __init__(self, log_prob: callable) -> None:
     self.log_prob = log_prob
     self.x = None
-    self.dir_dist = tfp.distributions.Bernoulli(probs=0.5) # tfd.Normal(0., 1.) #! delete
+    self.dir_dist = tfp.distributions.Bernoulli(probs=0.5)
 
   def run(self, steps: int, x_init: tf.Tensor, verbose: bool=False, **kwargs):
     n, dim = x_init.shape
@@ -178,11 +214,19 @@ class RandomWalkMH(MCMC):
 
     self.directions = self.dir_dist.sample((steps-1, n, 1)) # steps-1 x n
 
+    if "ind_pair_list" in kwargs: # use all modes for proposal
+      npairs = len(kwargs["ind_pair_list"])
+      ind_prob = [1/npairs] * npairs
+      self.ind_pair_sample = tfp.distributions.Categorical(ind_prob).sample((steps-1, n)) # steps-1 x n
+      self.ind_pairs = tf.constant(kwargs["ind_pair_list"]) # (nmodes * (nmodes - 1) / 2) x 2]
+
     self.accept_prob = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n
 
     iterator = trange(steps-1) if verbose else range(steps-1)
 
     for t in iterator: 
+      self.t = t
+      
       # propose MH update
       x_current = self.x[t, :, :]
       xp_next, log_det_jacobian = self.proposal(x_current=x_current, noise=self.directions[t, :], **kwargs) # n x dim #! delete
@@ -251,6 +295,38 @@ class RandomWalkMH(MCMC):
       # xp_next2 = ((x_current - std * mode2) @ inv_root_cov_2 @ root_cov_1 + std * mode1) @ tf.linalg.inv(
       #   (1 - std) * inv_root_cov_2 @ root_cov_1 + std * tf.eye(x_current.shape[1])
       # ) # n x dim
+
+      which_next = noise == 1
+      xp_next = tf.where(which_next, xp_next1, xp_next2) # n x dim
+      
+      n = xp_next.shape[0]
+      det_next1 = tf.ones(n) * (inv_root_cov_1_det * root_cov_2_det) # n
+      det_next2 = tf.ones(n) * (inv_root_cov_2_det * root_cov_1_det) # n
+      det_jacobian = tf.math.abs(
+        tf.where(tf.reshape(which_next, (n,)), det_next1, det_next2)
+      ) # n
+      log_det_jacobian = tf.math.log(det_jacobian) # n
+
+    elif "ind_pair_list" in kwargs: # use all modes for proposal
+      ind_pair_ind = self.ind_pair_sample[self.t, :] # n x 1
+      ind_pair = tf.gather(self.ind_pairs, ind_pair_ind) # n x 2
+      
+      mode1 = tf.gather(kwargs["modes"], ind_pair[:, 0]) # n x dim
+      mode2 = tf.gather(kwargs["modes"], ind_pair[:, 1]) # n x dim
+      root_cov_1 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
+      root_cov_2 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
+      inv_root_cov_1 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
+      inv_root_cov_2 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
+      root_cov_1_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 0]) # n
+      root_cov_2_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 1]) # n
+      inv_root_cov_1_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 0]) # n
+      inv_root_cov_2_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 1]) # n
+
+      # construct proposals
+      x_current1 = tf.expand_dims(x_current - std * mode1, axis=1) # n x 1 x dim
+      xp_next1 = tf.squeeze(x_current1 @ inv_root_cov_1 @ root_cov_2, axis=1) + std * mode2 # n x dim
+      x_current2 = tf.expand_dims(x_current - std * mode2, axis=1) # n x 1 x dim
+      xp_next2 = tf.squeeze(x_current2 @ inv_root_cov_2 @ root_cov_1, axis=1) + std * mode1 # n x dim
 
       which_next = noise == 1
       xp_next = tf.where(which_next, xp_next1, xp_next2) # n x dim

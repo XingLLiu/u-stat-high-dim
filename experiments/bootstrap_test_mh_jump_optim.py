@@ -24,7 +24,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
     ntrain = int(n*0.5)
     dim = proposal_off.event_shape[0]
 
-    if method == "mcmc":
+    if method == "mcmc" or method == "mcmc_all":
         ksd = KSD(target=target, kernel=kernel)
         MCMCKernel = kwargs["mcmckernel"]
     elif method == "conv" or method == "convvar":
@@ -81,6 +81,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     # find between-modes dir
                     if len(mode_list) == 1:
                         _, ind_pair_list = [mode_list[0]], [(0, 0)]
+                        # print("Only one mode found")
                     else:
                         _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
 
@@ -119,6 +120,66 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     # run dynamic for T steps with test data and optimal params
                     mh = MCMCKernel(log_prob=log_prob_fn)
                     mh.run(steps=T, x_init=sample_init_test, std=best_std, **best_proposal_dict)
+
+                    # get perturbed samples
+                    x_t = mh.x[-1, :, :].numpy()
+
+                    # get multinomial sample
+                    multinom_one_sample = multinom_samples[seed, :] # nrep x num_boost x ntest
+                
+                else:
+                    x_t = sample_init
+                    multinom_one_sample = multinom_samples_notrain[seed, :] # nrep x num_boost x n
+
+                # compute p-value
+                _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
+                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
+
+            # MCMC kernel with uniformly chosen modes
+            elif method == "mcmc_all":
+                if "no pert" not in name:
+                    sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
+                    
+                    # start optim from either randomly initialised points or training samples
+                    start_pts = start_pts_all[seed, :, :] if random_start_pts else sample_init_train
+                    # merge modes
+                    mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
+
+                    # find between-modes dir
+                    if len(mode_list) == 1:
+                        _, ind_pair_list = [mode_list[0]], [(0, 0)]
+                    else:
+                        _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
+                    
+                    proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
+
+                    best_ksd = 0.
+                    # find best jump scale \gamma^*
+                    for i, std in enumerate(std_ls):
+                        # loop through jump scales
+                        iterator.set_description(f"Jump scale [{i+1} / {len(std_ls)}]]")
+
+                        # run dynamic for T steps
+                        mh = MCMCKernel(log_prob=log_prob_fn)
+                        mh.run(steps=T, std=std, x_init=sample_init_train, ind_pair_list=ind_pair_list, **proposal_dict)
+
+                        # compute ksd
+                        x_t = mh.x[-1, :, :].numpy()
+                        _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
+                        ksd_val = ksd_val.numpy()
+
+                        # update if ksd is larger
+                        if (ksd_val > best_ksd) or (i == 0):
+                            best_std = std
+                            best_ksd = ksd_val
+                            best_proposal_dict = proposal_dict
+
+                    # run dynamic for T steps with test data and optimal params
+                    mh = MCMCKernel(log_prob=log_prob_fn)
+                    mh.run(steps=T, x_init=sample_init_test, std=best_std, ind_pair_list=ind_pair_list, **best_proposal_dict)
+
+                    # gather proposal params into one dict
+                    best_proposal_dict = {**best_proposal_dict, "ind_pair_list": ind_pair_list}
 
                     # get perturbed samples
                     x_t = mh.x[-1, :, :].numpy()
@@ -287,11 +348,13 @@ if __name__ == "__main__":
     parser.add_argument("--nrep", type=int, default=50)
     parser.add_argument("--ratio_t", type=float, default=0.5, help="max num of steps")
     parser.add_argument("--ratio_s", type=float, default=1.)
+    parser.add_argument("--delta", type=float, default=8.)
     parser.add_argument("--k", type=int, default=1)
     parser.add_argument("--nmodes", type=int, default=10)
     parser.add_argument("--nbanana", type=int, default=2)
     parser.add_argument("--shift", type=float, default=0.)
     parser.add_argument("--dh", type=int, default=10, help="dim of h for RBM")
+    parser.add_argument("--ratio_s_var", type=float, default=0.)
     args = parser.parse_args()
     model = args.model
     method = args.method
@@ -304,18 +367,20 @@ if __name__ == "__main__":
     ratio_target = args.ratio_t
     ratio_sample = args.ratio_s
     k = args.k
-    delta_list = [4.0] if args.model != "bimodal" else [8.] # [1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.]
+    delta_list = [args.delta] if args.model != -1 else [1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.]
     
     if args.mcmckernel == "mh":
         MCMCKernel = mcmc.RandomWalkMH
-        mcmc_name = "mh_"
+        mcmc_name = "mh"
     elif args.mcmckernel == "barker":
         MCMCKernel = mcmc.RandomWalkBarker
-        mcmc_name = "barker_"
-    if args.method == "conv":
-        mcmc_name = "conv_"
-    elif args.method == "convvar":
-        mcmc_name = "convvar_"
+        mcmc_name = "barker"
+
+    if method == "mcmc_all":
+        mcmc_name = f"{mcmc_name}_all"
+    
+    if method != "mcmc" and method != "mcmc_all":
+        mcmc_name = args.method
 
     # create folder for experiment
     res_root = f"res/{model}"
@@ -336,26 +401,27 @@ if __name__ == "__main__":
         
         # set model
         if model == "bimodal":
-            model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_dim{dim}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_dim{dim}_seed{seed}_delta{delta}_n{n}"
             create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_target)
             create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
 
         elif model == "bimodal_shift":
             shift = args.shift
-            model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_shift{shift}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_shift{shift}_seed{seed}_delta{delta}"
             create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, shift=shift, return_logprob=True, ratio=ratio_target)
             create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
 
         elif model == "t-banana":
             nmodes = args.nmodes
             nbanana = args.nbanana
-            model_name = f"{mcmc_name}_steps{T}_nmodes{nmodes}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_dim{dim}_nmodes{nmodes}_n{n}_seed{seed}"
             ratio_target = [1/nmodes] * nmodes
-            random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
+            
+            random_weights = tf.exp(tf.random.normal((nmodes,)) * args.ratio_s_var)
             ratio_sample = random_weights / tf.reduce_sum(random_weights)
             print("ratio sample:", ratio_sample.numpy())
 
-            loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*10, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
+            loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
             print("means", loc)
 
             b = 0.003 # 0.03
@@ -366,7 +432,7 @@ if __name__ == "__main__":
 
         elif model == "gaussianmix":
             nmodes = args.nmodes
-            model_name = f"{mcmc_name}{nmodes}_steps{T}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_nmodes{nmodes}_seed{seed}_delta{delta}"
 
             indicator = tf.cast(tfp.distributions.Bernoulli(probs=0.5).sample(nmodes-1), dtype=bool)
             indicator = tf.concat([tf.constant([True]), indicator], axis=0)
@@ -375,10 +441,10 @@ if __name__ == "__main__":
             ratio_sample = random_weights / tf.reduce_sum(random_weights)
             print("ratio sample:", ratio_sample)
 
-            ratio_target = 0.5
+            ratio_target = 1.
             delta = 1. #! delete
             
-            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-5, 5]^d
+            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes)
             print("means", means)
 
             create_target_model = models.create_mixture_20_gaussian(means, ratio=ratio_target, scale=delta, return_logprob=True)
@@ -392,11 +458,11 @@ if __name__ == "__main__":
         elif model == "rbm":
             dh = args.dh
             c_shift = args.shift
-            c_off = tf.constant([c_shift, c_shift] + [0.] * (dh - 2))
+            c_off = tf.concat([tf.ones(2) * c_shift, tf.zeros(dh-2)], axis=0)
 
             model_name = f"{mcmc_name}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}"
-            create_target_model = models.create_rbm(c=0., dx=dim, dh=dh, return_logprob=True)
-            create_sample_model = models.create_rbm(c=c_off, dx=dim, dh=dh, return_logprob=True)
+            create_target_model = models.create_rbm(c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
+            create_sample_model = models.create_rbm(c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
 
 
         # target distribution
@@ -414,7 +480,7 @@ if __name__ == "__main__":
 
         if len(args.load) > 0 :
             try:
-                test_imq_df = pd.read_csv(args.load + f"{model}/{model_name}_delta{delta}.csv")
+                test_imq_df = pd.read_csv(args.load + f"{model}/{model_name}.csv")
                 print(f"Loaded pre-saved data for steps = {T}")
             except:
                 print(f"Pre-saved data for steps = {T}, delta = {delta} not found. Running from scratch now.")
@@ -428,14 +494,14 @@ if __name__ == "__main__":
                 mcmckernel=MCMCKernel, method=method)
 
             # save res
-            test_imq_df.to_csv(f"{res_root}/{model_name}_delta{delta}.csv", index=False)
-            pickle.dump(best_hess_dict, open(f"{res_root}/{model_name}_delta{delta}.pkl", "wb"))
+            test_imq_df.to_csv(f"{res_root}/{model_name}.csv", index=False)
+            pickle.dump(best_hess_dict, open(f"{res_root}/{model_name}.pkl", "wb"))
 
         # between-modes vector (only for plotting)
-        best_hess_dict = pickle.load(open(f"{res_root}/{model_name}_delta{delta}.pkl", "rb"))
+        best_hess_dict = pickle.load(open(f"{res_root}/{model_name}.pkl", "rb"))
 
         # for plotting dist of perturbed samples
-        if method == "mcmc":
+        if method == "mcmc" or method == "mcmc_all":
             off_sample = proposal_off.sample(1000)
             best_std_off = test_imq_df.loc[(test_imq_df.type == "off-target"), "best_std"].median()
             mh_off = MCMCKernel(log_prob=log_prob_fn)
@@ -538,7 +604,7 @@ if __name__ == "__main__":
             axs[4].axis(xmin=0.4, xmax=1.6, ymin=0, ymax=1.01)
         elif method == "conv" or method == "convvar":
             axs[4].axis(ymin=0, ymax=1.01)
-        axs[4].set_title("median of estimated best std = {:.2f} (off),z {:.2f} (on)".format(best_std_off, best_std_on))
+        axs[4].set_title("median of estimated best std = {:.2f} (off), {:.2f} (on)".format(best_std_off, best_std_on))
         axs[4].set_xlabel("std")
         if ind != len(delta_list) - 1: axs[4].legend([],[], frameon=False)
 

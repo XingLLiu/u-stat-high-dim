@@ -257,7 +257,7 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
       return mix_gauss, log_prob_fn  
 
 def create_rbm(
-  B_scale: tf.Tensor=10.,
+  B_scale: tf.Tensor=8.,
   c: tf.Tensor=0.,
   dx: int=50,
   dh: int=40,
