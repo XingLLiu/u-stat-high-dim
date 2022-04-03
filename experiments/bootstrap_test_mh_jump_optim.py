@@ -414,7 +414,7 @@ if __name__ == "__main__":
         elif model == "t-banana":
             nmodes = args.nmodes
             nbanana = args.nbanana
-            model_name = f"{mcmc_name}_steps{T}_dim{dim}_nmodes{nmodes}_n{n}_seed{seed}"
+            model_name = f"{mcmc_name}_steps{T}_dim{dim}_nmodes{nmodes}_nbanana{nbanana}_ratiosvar{args.ratio_s_var}_n{n}_seed{seed}"
             ratio_target = [1/nmodes] * nmodes
             
             random_weights = tf.exp(tf.random.normal((nmodes,)) * args.ratio_s_var)
@@ -461,8 +461,8 @@ if __name__ == "__main__":
             c_off = tf.concat([tf.ones(2) * c_shift, tf.zeros(dh-2)], axis=0)
 
             model_name = f"{mcmc_name}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}"
-            create_target_model = models.create_rbm(c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
-            create_sample_model = models.create_rbm(c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
+            create_target_model = models.create_rbm(B_scale=6., c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
+            create_sample_model = models.create_rbm(B_scale=6., c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
 
 
         # target distribution

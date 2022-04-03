@@ -120,85 +120,11 @@ class MCMC:
     unif = tf.random.uniform(shape=accept_prob.shape) # n
     cond = tf.expand_dims(unif < accept_prob, axis=-1) # n x 1
     x_next = tf.where(cond, x_proposed, x_current) # n x dim
+    if_accept = tf.reshape(tf.cast(cond, dtype=tf.float32), (-1,)) # n
 
     assert x_next.shape == x_proposed.shape
     assert tf.experimental.numpy.all(tf.where(cond, x_next == x_proposed, x_next == x_current))
-    return x_next, tf.cast(cond, dtype=tf.int64)
-
-
-class MALA(MCMC):
-  def __init__(self, log_prob: callable) -> None:
-      super().__init__(log_prob)
-      self.log_prob = log_prob
-      self.x = None
-      self.noise_dist = tfd.Normal(0., 1.)
-
-  def run(self, steps: int, step_size: float, x_init: tf.Tensor, verbose: bool=False):
-    n, dim = x_init.shape
-    self.x = tf.Variable(-1 * tf.ones((steps, n, dim))) # nsteps x n x dim
-    self.x[0, :, :].assign(x_init)
-
-    self.noise = self.noise_dist.sample((steps, n, dim)) # nsteps x n x dim
-    scale = tf.math.sqrt(2 * step_size)
-
-    # accept_thresholds = tfd.Uniform().sample((steps, n)) # nsteps x n
-
-    self.accept_prob = 0. # n x 1
-    
-    iterator = trange(steps-1) if verbose else range(steps-1)
-
-    for t in iterator:
-      x_t = tf.identity(self.x[t, :, :])
-      # calculate score of current samples
-      with tf.GradientTape() as g:
-        g.watch(x_t)
-        log_prob_x = self.log_prob(x_t) # n x dim
-      score = g.gradient(log_prob_x, x_t) # n x dim
-      assert score.shape == (n, dim)
-      
-      # compute langevin update
-      drive = step_size * score # n x dim
-      xp_next = self.x[t, :, :] + drive + scale * self.noise[t, :, :] # n x dim
-
-      # calculate score of proposed samples
-      with tf.GradientTape() as g:
-        g.watch(xp_next)
-        log_prob_xp = self.log_prob(xp_next) # n x dim
-      score_xp = g.gradient(log_prob_xp, xp_next) # n x dim
-      assert score_xp.shape == (n, dim)
-
-      # compute acceptance prob
-      accept_prob = self.compute_accept_prob(
-        x_proposed=xp_next,
-        x_current=self.x[t, :, :],
-        score_proposed=score_xp,
-        score_current=score,
-        step_size=step_size
-      ) # n
-
-      # move
-      x_next, if_accept = self.metropolis(x_proposed=xp_next, x_current=self.x[t, :, :], accept_prob=accept_prob) # n x dim, n x 1
-      self.accept_prob += if_accept / steps # n x 1
-
-      # store next samples
-      self.x[t+1, :, :].assign(x_next)
-
-  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, score_x: tf.Tensor, step_size: float):
-    '''Compute log k(x'| x), where k is the transition kernel 
-    k(x' | x) \propto \exp(- 1 / (4 * \epsilon) \| x' - x - \epsilon * score(x) \|_2^2)
-    
-    Args:
-      x_proposed: n x dim. Proposed samples
-      x_current: n x dim. Samples at time t-1
-      score: n x dim. Score evaluated at x_current
-
-    Output:
-      log_kernel: n. k(x', x)
-    '''
-    mean = xp - x - step_size * score_x # n x dim
-    mean_norm_sq = tf.reduce_sum(mean**2, axis=1) # n
-    log_kernel = - 1 / (4. * step_size) * mean_norm_sq # n
-    return log_kernel
+    return x_next, if_accept
 
 
 class RandomWalkMH(MCMC):
@@ -221,6 +147,7 @@ class RandomWalkMH(MCMC):
       self.ind_pairs = tf.constant(kwargs["ind_pair_list"]) # (nmodes * (nmodes - 1) / 2) x 2]
 
     self.accept_prob = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n
+    self.if_accept = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n
 
     iterator = trange(steps-1) if verbose else range(steps-1)
 
@@ -241,8 +168,9 @@ class RandomWalkMH(MCMC):
       self.accept_prob[t, :].assign(accept_prob)
       
       # move
-      x_next, _ = self.metropolis(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # n x dim, n x 1
+      x_next, if_accept = self.metropolis(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # n x dim, n x 1
       # x_next = xp_next #! delete
+      self.if_accept[t, :].assign(if_accept)
 
       # store next samples
       self.x[t+1, :, :].assign(x_next)
@@ -311,16 +239,17 @@ class RandomWalkMH(MCMC):
       ind_pair_ind = self.ind_pair_sample[self.t, :] # n x 1
       ind_pair = tf.gather(self.ind_pairs, ind_pair_ind) # n x 2
       
+      # inverse hessian = covariance matrix
       mode1 = tf.gather(kwargs["modes"], ind_pair[:, 0]) # n x dim
       mode2 = tf.gather(kwargs["modes"], ind_pair[:, 1]) # n x dim
-      root_cov_1 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
-      root_cov_2 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
-      inv_root_cov_1 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
-      inv_root_cov_2 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
-      root_cov_1_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 0]) # n
-      root_cov_2_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 1]) # n
-      inv_root_cov_1_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 0]) # n
-      inv_root_cov_2_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 1]) # n
+      inv_root_cov_1 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
+      inv_root_cov_2 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
+      root_cov_1 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
+      root_cov_2 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
+      inv_root_cov_1_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 0]) # n
+      inv_root_cov_2_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 1]) # n
+      root_cov_1_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 0]) # n
+      root_cov_2_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 1]) # n
 
       # construct proposals
       x_current1 = tf.expand_dims(x_current - std * mode1, axis=1) # n x 1 x dim
