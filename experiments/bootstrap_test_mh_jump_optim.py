@@ -63,7 +63,9 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
         conv_ind_all_notrain = tf.experimental.numpy.random.randint(low=0, high=num_est, size=(nrep, n))
 
     iterator.set_description(f"Running with sample size {n}")
-    for seed in iterator:
+    for iter in iterator:
+        # each sample is different
+        tf.random.set_seed(iter + n)
 
         for name, proposal in zip(names, proposals):
             sample_init = proposal.sample(n)
@@ -74,7 +76,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
                     
                     # start optim from either randomly initialised points or training samples
-                    start_pts = start_pts_all[seed, :, :] if random_start_pts else sample_init_train
+                    start_pts = start_pts_all[iter, :, :] if random_start_pts else sample_init_train
                     # merge modes
                     mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
 
@@ -125,15 +127,15 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     x_t = mh.x[-1, :, :].numpy()
 
                     # get multinomial sample
-                    multinom_one_sample = multinom_samples[seed, :] # nrep x num_boost x ntest
+                    multinom_one_sample = multinom_samples[iter, :] # nrep x num_boost x ntest
                 
                 else:
                     x_t = sample_init
-                    multinom_one_sample = multinom_samples_notrain[seed, :] # nrep x num_boost x n
+                    multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
 
                 # compute p-value
                 _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
-                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
+                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, iter, name]
 
             # MCMC kernel with uniformly chosen modes
             elif method == "mcmc_all":
@@ -141,7 +143,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
                     
                     # start optim from either randomly initialised points or training samples
-                    start_pts = start_pts_all[seed, :, :] if random_start_pts else sample_init_train
+                    start_pts = start_pts_all[iter, :, :] if random_start_pts else sample_init_train
                     # merge modes
                     mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
 
@@ -185,15 +187,15 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     x_t = mh.x[-1, :, :].numpy()
 
                     # get multinomial sample
-                    multinom_one_sample = multinom_samples[seed, :] # nrep x num_boost x ntest
+                    multinom_one_sample = multinom_samples[iter, :] # nrep x num_boost x ntest
                 
                 else:
                     x_t = sample_init
-                    multinom_one_sample = multinom_samples_notrain[seed, :] # nrep x num_boost x n
+                    multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
 
                 # compute p-value
                 _, p_val = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
-                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
+                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, iter, name]
 
             # use convolution
             elif method == "conv":
@@ -206,8 +208,8 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     params = tf.Variable(tf.concat([log_sigma, u_vec], axis=0))
 
                     # get noise samples for p and Q
-                    conv_samples_full = conv_samples_full_all[seed, :] # l x 1
-                    conv_samples = tf.gather(conv_samples_full, conv_ind_all[seed, :], axis=0) # n x 1
+                    conv_samples_full = conv_samples_full_all[iter, :] # l x 1
+                    conv_samples = tf.gather(conv_samples_full, conv_ind_all[iter, :], axis=0) # n x 1
 
                     # optimise
                     ksd.optim(
@@ -229,15 +231,15 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     x_t = sample_init_test
 
                     # get multinomial sample
-                    multinom_one_sample = multinom_samples[seed, :] # nrep x num_boost x ntest
+                    multinom_one_sample = multinom_samples[iter, :] # nrep x num_boost x ntest
 
                 else:
                     # get noise samples for p and Q
-                    conv_samples_full = conv_samples_full_all[seed, :] # l x 1
-                    conv_samples = tf.gather(conv_samples_full, conv_ind_all_notrain[seed, :], axis=0) # n x 1
+                    conv_samples_full = conv_samples_full_all[iter, :] # l x 1
+                    conv_samples = tf.gather(conv_samples_full, conv_ind_all_notrain[iter, :], axis=0) # n x 1
 
                     x_t = sample_init
-                    multinom_one_sample = multinom_samples_notrain[seed, :] # nrep x num_boost x n
+                    multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
 
                 _, p_val = bootstrap.test_once(
                     alpha=0.05, 
@@ -249,7 +251,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     **best_proposal_dict
                 )
                 best_std = tf.exp(best_proposal_dict["log_noise_std"]).numpy()
-                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
+                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, iter, name]
 
             # use convolution and only optimise for var
             elif method == "convvar":
@@ -257,11 +259,11 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
 
                     # get noise samples for p and Q
-                    conv_samples_full = conv_samples_full_all[seed, :] # l x 1
-                    conv_samples = tf.gather(conv_samples_full, conv_ind_all[seed, :], axis=0) # n x 1
+                    conv_samples_full = conv_samples_full_all[iter, :] # l x 1
+                    conv_samples = tf.gather(conv_samples_full, conv_ind_all[iter, :], axis=0) # n x 1
 
                     # start optim from either randomly initialised points or training samples
-                    start_pts = start_pts_all[seed, :, :] if random_start_pts else sample_init_train
+                    start_pts = start_pts_all[iter, :, :] if random_start_pts else sample_init_train
                     # merge modes
                     mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
 
@@ -306,15 +308,15 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     x_t = sample_init_test
 
                     # get multinomial sample
-                    multinom_one_sample = multinom_samples[seed, :] # nrep x num_boost x ntest
+                    multinom_one_sample = multinom_samples[iter, :] # nrep x num_boost x ntest
 
                 else:
                     # get noise samples for p and Q
-                    conv_samples_full = conv_samples_full_all[seed, :] # l x 1
-                    conv_samples = tf.gather(conv_samples_full, conv_ind_all_notrain[seed, :], axis=0) # n x 1
+                    conv_samples_full = conv_samples_full_all[iter, :] # l x 1
+                    conv_samples = tf.gather(conv_samples_full, conv_ind_all_notrain[iter, :], axis=0) # n x 1
 
                     x_t = sample_init
-                    multinom_one_sample = multinom_samples_notrain[seed, :] # nrep x num_boost x n
+                    multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
 
                 _, p_val = bootstrap.test_once(
                     alpha=0.05, 
@@ -326,7 +328,7 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     **best_proposal_dict
                 )
                 best_std = tf.exp(best_proposal_dict["log_noise_std"]).numpy()
-                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, seed, name]
+                ksd_df.loc[len(ksd_df)] = [n, best_std, p_val, iter, name]
 
     return ksd_df, best_proposal_dict
 
@@ -341,7 +343,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="bimodal")
     parser.add_argument("--mcmckernel", type=str, default="mh")
     parser.add_argument("--method", type=str, default="mcmc")
-    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=2022)
     parser.add_argument("--T", type=int, default=50)
     parser.add_argument("--n", type=int, default=1000, help="sample size")
     parser.add_argument("--dim", type=int, default=5)
@@ -389,7 +391,7 @@ if __name__ == "__main__":
     tf.io.gfile.makedirs(fig_root)
 
     # set random seed for all
-    tf.random.set_seed(seed)
+    rdg = tf.random.Generator.from_seed(seed)
 
     # create figure
     fig = plt.figure(constrained_layout=True, figsize=(5*len(delta_list), 15))
@@ -405,50 +407,22 @@ if __name__ == "__main__":
             create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_target)
             create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
 
-        elif model == "bimodal_shift":
-            shift = args.shift
-            model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_shift{shift}_seed{seed}_delta{delta}"
-            create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, shift=shift, return_logprob=True, ratio=ratio_target)
-            create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
-
         elif model == "t-banana":
             nmodes = args.nmodes
             nbanana = args.nbanana
             model_name = f"{mcmc_name}_steps{T}_dim{dim}_nmodes{nmodes}_nbanana{nbanana}_ratiosvar{args.ratio_s_var}_n{n}_seed{seed}"
             ratio_target = [1/nmodes] * nmodes
             
-            random_weights = tf.exp(tf.random.normal((nmodes,)) * args.ratio_s_var)
+            random_weights = tf.exp(rdg.normal((nmodes,)) * args.ratio_s_var)
             ratio_sample = random_weights / tf.reduce_sum(random_weights)
-            print("ratio sample:", ratio_sample.numpy())
 
-            loc = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes) # uniform in [-20, 20]^d
-            print("means", loc)
+            loc = rdg.uniform((nmodes, dim), minval=-tf.ones((dim,))*20, maxval=tf.ones((dim,))*20) # uniform in [-20, 20]^d
 
             b = 0.003 # 0.03
             create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=b,
                 nbanana=nbanana, return_logprob=True)
             create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=b,
                 nbanana=nbanana, return_logprob=True)
-
-        elif model == "gaussianmix":
-            nmodes = args.nmodes
-            model_name = f"{mcmc_name}_steps{T}_nmodes{nmodes}_seed{seed}_delta{delta}"
-
-            indicator = tf.cast(tfp.distributions.Bernoulli(probs=0.5).sample(nmodes-1), dtype=bool)
-            indicator = tf.concat([tf.constant([True]), indicator], axis=0)
-            random_weights = tfp.distributions.Uniform(low=0., high=1.).sample(nmodes)
-            random_weights = tf.where(indicator, random_weights, 0.)
-            ratio_sample = random_weights / tf.reduce_sum(random_weights)
-            print("ratio sample:", ratio_sample)
-
-            ratio_target = 1.
-            delta = 1. #! delete
-            
-            means = tfp.distributions.Uniform(low=-tf.ones((dim,))*20, high=tf.ones((dim,))*20).sample(nmodes)
-            print("means", means)
-
-            create_target_model = models.create_mixture_20_gaussian(means, ratio=ratio_target, scale=delta, return_logprob=True)
-            create_sample_model = models.create_mixture_20_gaussian(means, ratio=ratio_sample, scale=delta, return_logprob=True)
 
         elif model == "gauss-scaled":
             model_name = f"{mcmc_name}_steps{T}_seed{seed}"
