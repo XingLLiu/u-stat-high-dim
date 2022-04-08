@@ -12,7 +12,7 @@ __author__ = 'wittawat'
 
 from abc import ABCMeta, abstractmethod
 import autograd
-import kgof.data as data
+import src.kgof.data as data
 import scipy.stats as stats
 #import warnings
 import logging
@@ -427,8 +427,7 @@ class GaussBernRBM(UnnormalizedDensity):
         XB = tf.linalg.matmul(X, self.B) # n x dh
         Y = 0.5*XB + self.c # n x dh
         E2my = tf.exp(-2*Y) # n x dh
-        # n x dh
-        Phi = tf.math.divide((1.0-E2my),(1+E2my))
+        Phi = tf.math.divide((1.0-E2my),(1+E2my)) # n x dh
         
         # n x dx
         T = tf.linalg.matmul(Phi, 0.5*tf.transpose(self.B))
