@@ -18,5 +18,9 @@ __pycache__/*
 # egg-info
 *.egg-info/*
 
+# data
+mnist/
+
 # results
 /res/*
+/archive/res

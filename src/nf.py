@@ -35,6 +35,12 @@ from torchvision import transforms
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
+# Tensorflow
+import tensorflow as tf
+
+# Plots
+import matplotlib.pyplot as plt
+
 # Path to the folder where the datasets are/should be downloaded (e.g. MNIST)
 DATASET_PATH = "mnist/data_mnist"
 # Path to the folder where the pretrained models are saved
@@ -118,28 +124,42 @@ test_loader = data.DataLoader(
 )
 
 
-def show_imgs(imgs, title=None, row_size=4):
-    # Form a grid of pictures (we use max. 8 columns)
-    num_imgs = imgs.shape[0] if isinstance(imgs, torch.Tensor) else len(imgs)
-    is_int = (
-        imgs.dtype == torch.int32
-        if isinstance(imgs, torch.Tensor)
-        else imgs[0].dtype == torch.int32
-    )
-    nrow = min(num_imgs, row_size)
-    ncol = int(math.ceil(num_imgs / nrow))
-    imgs = torchvision.utils.make_grid(
-        imgs, nrow=nrow, pad_value=128 if is_int else 0.5
-    )
-    np_imgs = imgs.cpu().numpy()
-    # Plot the grid
-    plt.figure(figsize=(1.5 * nrow, 1.5 * ncol))
-    plt.imshow(np.transpose(np_imgs, (1, 2, 0)), interpolation="nearest")
-    plt.axis("off")
-    if title is not None:
-        plt.title(title)
-    plt.show()
-    plt.close()
+# def show_imgs(imgs, title=None, row_size=4):
+#     # Form a grid of pictures (we use max. 8 columns)
+#     num_imgs = imgs.shape[0] if isinstance(imgs, torch.Tensor) else len(imgs)
+#     is_int = (
+#         imgs.dtype == torch.int32
+#         if isinstance(imgs, torch.Tensor)
+#         else imgs[0].dtype == torch.int32
+#     )
+#     nrow = min(num_imgs, row_size)
+#     ncol = int(math.ceil(num_imgs / nrow))
+#     imgs = torchvision.utils.make_grid(
+#         imgs, nrow=nrow, pad_value=128 if is_int else 0.5
+#     )
+#     np_imgs = imgs.cpu().numpy()
+#     # Plot the grid
+#     plt.figure(figsize=(1.5 * nrow, 1.5 * ncol))
+#     plt.imshow(np.transpose(np_imgs, (1, 2, 0)), interpolation="nearest")
+#     plt.axis("off")
+#     if title is not None:
+#         plt.title(title)
+#     plt.show()
+#     plt.close()
+
+def show_imgs(imgs, figsize=(5, 5), row_size=4):
+  num_imgs = imgs.shape[0] if isinstance(imgs, tf.Tensor) else len(imgs)
+  nrow = min(num_imgs, row_size)
+  ncol = int(math.ceil(num_imgs / nrow))
+
+  plt.figure(figsize=figsize)
+  for i in range(num_imgs):
+      plt.subplot(nrow, ncol, i+1)
+      plt.xticks([])
+      plt.yticks([])
+      plt.grid(False)
+      plt.imshow(tf.reshape(imgs[i], (28, 28, 1)) / 255.)
+  plt.show()
 
 
 class ImageFlow(pl.LightningModule):
@@ -629,7 +649,17 @@ def create_multiscale_flow():
 
 
 # Below is our code to generate the data for the MNIST Normalizing Flow experiment
+flow_dict = {"multiscale": {}}
+flow_dict["multiscale"]["model"], flow_dict["multiscale"]["result"] = train_flow(
+    create_multiscale_flow(), model_name="MNISTFlow_multiscale"
+)
 
+def load_model():
+  flow_dict = {"multiscale": {}}
+  flow_dict["multiscale"]["model"], flow_dict["multiscale"]["result"] = train_flow(
+      create_multiscale_flow(), model_name="MNISTFlow_multiscale"
+  )
+  return flow_dict["multiscale"]["model"]
 
 def sample_NF_grad_NF(seed):
     """
@@ -679,46 +709,114 @@ def sample_MNIST_grad_NF(seed):
     ), grad_log_px.cpu().detach().numpy().reshape(1, 28**2)
 
 
+class NF:
+  """Only works on cpu"""
+  def __init__(self) -> None:
+    self.model, _ = train_flow(
+        create_multiscale_flow(), model_name="MNISTFlow_multiscale"
+    )
+    self.event_shape = [28*28]
+    self.device = self.model.device
+
+  def sample(self, shape: int, seed: int=None):
+
+    if seed: pl.seed_everything(seed)
+
+    samples = (
+        self.model
+        .sample(img_shape=[shape, 8, 7, 7])
+        .to(torch.float32)
+        .clone()
+        .cpu()
+        .detach()
+        .numpy()
+    )
+    samples = tf.reshape(tf.constant(samples), (-1, 28*28))
+    return samples
+
+  def log_prob(self, x, seed: int=None):
+    if seed: pl.seed_everything(seed)
+
+    x = torch.tensor(x.numpy()).reshape((-1, 1, 28, 28)).to(self.device)
+    log_p = self.model._get_likelihood(x, return_ll=True)
+    log_p = tf.constant(log_p.detach().numpy())
+    return log_p
+
+  def grad_log(self, x, seed: int=None):
+    if seed: pl.seed_everything(seed)
+
+    x = torch.tensor(x.numpy()).reshape((-1, 1, 28, 28)).to(self.device).requires_grad_(True)
+    log_p = torch.sum(self.model._get_likelihood(x, return_ll=True))
+    log_p.backward()
+    grad_log_px = tf.reshape(
+        tf.constant(x.grad),
+        (-1, 28*28)
+    )
+
+    return grad_log_px
+
+
+class NFReal(NF):
+  """Only works on cpu"""
+  def __init__(self) -> None:
+      super().__init__()
+
+  def sample(self, shape: int, seed: int=None):
+    if seed:
+      pl.seed_everything(seed)
+      np.random.seed(seed)
+    
+    index = np.random.randint(len(train_set), size=shape)
+    samples = (
+        torch.concat([train_set[i][0][None, :] for i in index])
+        .to(torch.float32)
+        .clone()
+        .cpu()
+        .detach()
+        .numpy()
+    )
+    samples = tf.reshape(tf.constant(samples), (-1, 28*28))
+    return samples
+
+
+# class NF:
+#   def __init__(self) -> None:
+#     self.model, _ = train_flow(
+#         create_multiscale_flow(), model_name="MNISTFlow_multiscale"
+#     )
+#     self.device = self.model.device
+
+#   def sample(self, shape: int, seed: int=None):
+
+#     if seed: pl.seed_everything(seed)
+
+#     samples = (
+#         self.model
+#         .sample(img_shape=[shape, 8, 7, 7])
+#         .to(torch.float32)
+#         .clone()
+#         .detach()
+#     )
+#     samples = torch.reshape(samples, (-1, 28*28))
+#     return samples
+
+#   def log_prob(self, x):
+#     x = x.reshape((-1, 1, 28, 28))
+#     log_p = self.model._get_likelihood(x, return_ll=True)
+#     return log_p
+
+#   def grad_log(self, x):
+#     x = x.reshape((-1, 1, 28, 28)).requires_grad_(True)
+#     log_p = self.model._get_likelihood(x, return_ll=True)
+#     log_p.backward()
+#     grad_log_px = x.grad
+#     return grad_log_px
+
+
+
 if __name__ == "__main__":
     flow_dict = {"multiscale": {}}
     flow_dict["multiscale"]["model"], flow_dict["multiscale"]["result"] = train_flow(
         create_multiscale_flow(), model_name="MNISTFlow_multiscale"
     )
-    print("Starting")
-
-    # Generate 2 datasets, one for testing and one for the parametric bootstrap
-    L = (("testing", 200, 500), ("bootstrap", 50, 5000))
-    for j in range(len(L)):
-        directory, repetitions, m = L[j]
-        Path("data/NF_MNIST/" + directory).mkdir(exist_ok=True, parents=True)
-        X_level = np.empty((repetitions, m, 28**2))
-        score_X_level = np.empty((repetitions, m, 28**2))
-        X_power = np.empty((repetitions, m, 28**2))
-        score_X_power = np.empty((repetitions, m, 28**2))
-        for r in range(repetitions):
-            t = time.time()
-            for i in range(m):
-                seed = i + r * 10 ** (len(str(m)) + 1)
-                X_level[r, i], score_X_level[r, i] = sample_NF_grad_NF(seed)
-                X_power[r, i], score_X_power[r, i] = sample_MNIST_grad_NF(seed)
-            print(
-                "Step:",
-                j + 1,
-                "/",
-                len(L),
-                ",",
-                r + 1,
-                "/",
-                repetitions,
-                "time:",
-                time.time() - t,
-            )
-        np.save("data/NF_MNIST/" + directory + "/X_mnist_level.npy", X_level)
-        np.save(
-            "data/NF_MNIST/" + directory + "/score_X_mnist_level.npy", score_X_level
-        )
-        np.save("data/NF_MNIST/" + directory + "/X_mnist_power.npy", X_power)
-        np.save(
-            "data/NF_MNIST/" + directory + "/score_X_mnist_power.npy", score_X_power
-        )
-    print("NF MNIST data has been saved in data/NF_MNIST.")
+    print("Loaded trained model")
