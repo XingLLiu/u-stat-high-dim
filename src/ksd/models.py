@@ -2,11 +2,18 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import src.kgof.density as density
+# from src.nf import NF, NFReal
 
 def check_log_prob(dist, log_prob):
   """Check if log_prob == dist.log_prob + const."""
   x = dist.sample(10)
   diff = dist.log_prob(x) - log_prob(x)
+
+  # if isinstance(dist, NF) or isinstance(dist, NFReal):
+  #   diff = dist.log_prob(x, seed=1) - log_prob(x, seed=1)
+  # else:
+  #   diff = dist.log_prob(x) - log_prob(x)
+  
   res = tf.experimental.numpy.allclose(diff, diff[0])
   assert res, "log_prob function is not implemented correctly"
 
@@ -293,3 +300,18 @@ def create_rbm(
     return dist
   else:
     return dist, dist.log_prob
+
+
+
+def generate_nf_mnist(real_mnist: bool, return_logprob: bool=False):
+  """Generate two model classes, one for the trained normalising flow model (GLOW)
+  and one for the true MNIST dataset. """
+  if real_mnist:
+    model = NF()
+  else:
+    model = NFReal()
+
+  if not return_logprob:
+    return model
+  else:
+    return model, model.log_prob
