@@ -16,6 +16,40 @@ import src.ksd.models as models
 import src.ksd.langevin as mcmc
 from src.ksd.find_modes import find_modes, pairwise_directions
 
+
+###
+#! delete
+def t_hess(x, loc, nv=7):
+    dim = x.shape[1]
+    scale = tf.math.sqrt(0.01 * tf.math.sqrt(float(dim)) * tf.eye(dim))
+    sigma = scale @ tf.transpose(scale)
+    sigma_inv = tf.linalg.inv(sigma)
+    
+    x_c = x - loc # n x dim
+    y = tf.matmul(x_c, sigma_inv, transpose_b=True) # n x dim
+    y_norm_sq = tf.einsum("ij,ij->i", y, x_c) # n
+    factor1 = tf.expand_dims(-0.5 * (nv + dim) / (1 + y_norm_sq / nv), axis=1) # n x 1
+    term1 = 2/nv * tf.expand_dims(factor1, axis=-1) * tf.expand_dims(sigma_inv, axis=0) # n x dim x dim
+    
+    factor2 = tf.expand_dims(
+        tf.expand_dims(0.5 * (nv + dim) / (1 + y_norm_sq / nv)**2, axis=1),
+        axis=1
+    ) # n x 1 x 1
+    outer = tf.expand_dims(x_c, axis=-1) @ tf.expand_dims(x_c, axis=1) # n x dim x dim
+
+    term2 = 4/nv**2 * factor2 * tf.expand_dims(sigma_inv @ sigma_inv, axis=0) @ outer # n x dim x dim
+    
+    hess = term1 + term2
+    return hess
+
+def mixture_t_hess(mode_list):
+    inv_hess_list_true = [
+        -tf.linalg.inv(t_hess(tf.reshape(x, (1, -1)), tf.reshape(x, (1, -1))))[0, :] for x in mode_list
+    ]
+    return inv_hess_list_true
+###
+
+
 def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_off, kernel, alpha, num_boot, T, 
     std_ls, random_start_pts=False, method="mcmc", **kwargs):
     """compute KSD and repeat for nrep times"""
@@ -147,6 +181,12 @@ def run_bootstrap_experiment(nrep, target, proposal_on, log_prob_fn, proposal_of
                     # merge modes
                     mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
 
+
+                    #! delete
+                    if model == "t-banana": 
+                        inv_hess_list = mixture_t_hess(mode_list)
+
+ 
                     # find between-modes dir
                     if len(mode_list) == 1:
                         _, ind_pair_list = [mode_list[0]], [(0, 0)]
