@@ -152,7 +152,7 @@ def create_mixture_t_banana_fast(dim, nbanana, locs, ratio, cov_mat_t, b=0.03, s
   return log_prob_mix_fast
 
 def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor, 
-  return_logprob=False, nbanana: int=5, **kwargs):
+  return_logprob=False, nbanana: int=5, std: float=0.01, **kwargs):
   """Create a mixture of t and t-tailed banana distributions. The first 5 modes are
   banana distributions, and the rest are t distributions.
   
@@ -165,7 +165,7 @@ def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor,
   assert nmodes >= nbanana, f"number of mixtures {nmodes} must be >= {nbanana}"
 
   banana_component = [create_banana(dim, loc=loc[i, :], **kwargs) for i in range(nbanana)]
-  cov_mat = tf.math.sqrt(0.01 * tf.math.sqrt(float(dim)) * tf.eye(dim))
+  cov_mat = tf.math.sqrt(std * tf.math.sqrt(float(dim)) * tf.eye(dim))
   t_component = [
       tfd.MultivariateStudentTLinearOperator(
         df=7, 
@@ -315,3 +315,32 @@ def generate_nf_mnist(real_mnist: bool, return_logprob: bool=False):
     return model
   else:
     return model, model.log_prob
+
+
+def create_mixture_t(dim: int, ratio: tf.Tensor, loc: tf.Tensor, 
+  std: float=0.01, return_logprob=False):
+  """Create a mixture of t distributions. 
+
+  ratio: mixture proportions. Must have length >= nbanana
+  loc: location vectors of shape (len(ratio), dim). The first 5 rows are the loc vectors for the
+    banana distributions, and the rest are for the t-distributions
+  nmix: number of t distributions in the mixture
+  """
+  nmodes = len(ratio)
+
+  cov_mat = tf.math.sqrt(std * tf.math.sqrt(float(dim)) * tf.eye(dim))
+  t_component = [
+      tfd.MultivariateStudentTLinearOperator(
+        df=7, 
+        loc=loc[i, :], 
+        scale=tf.linalg.LinearOperatorLowerTriangular(cov_mat)
+      ) for i in range(nmodes)
+    ]
+  mixture_dist = tfd.Mixture(
+      cat=tfd.Categorical(probs=ratio),
+      components=t_component)
+
+  if not return_logprob:
+    return mixture_dist
+  else:
+    return mixture_dist, mixture_dist.log_prob
