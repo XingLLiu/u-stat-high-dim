@@ -45,6 +45,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
     res_df = pd.DataFrame(columns=["method", "rej", "seed"])
     
     if random_start_pts:
+        print("Use randomly initialised points")
         # generate points for finding modes
         unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
         start_pts_all = 20. * unif_dist.sample((nrep, ntrain)) #TODO change range
@@ -240,6 +241,7 @@ if __name__ == "__main__":
     parser.add_argument("--dh", type=int, default=10, help="dim of h for RBM")
     parser.add_argument("--ratio_s_var", type=float, default=0.)
     parser.add_argument("--rand_start", type=bool, default=False)
+    parser.add_argument("--t_std", type=float, default=0.01)
     args = parser.parse_args()
     model = args.model
     method = args.method
@@ -290,19 +292,20 @@ if __name__ == "__main__":
     elif model == "t-banana":
         nmodes = args.nmodes
         nbanana = args.nbanana
-        model_name = f"{mcmc_name}_steps{T}_dim{dim}_nmodes{nmodes}_nbanana{nbanana}_ratiosvar{args.ratio_s_var}_n{n}_seed{seed}"
+        model_name = f"{mcmc_name}_steps{T}_dim{dim}_nmodes{nmodes}_nbanana{nbanana}_ratiosvar{args.ratio_s_var}_t-std{args.t_std}_n{n}_seed{seed}"
         ratio_target = [1/nmodes] * nmodes
         
         random_weights = tf.exp(rdg.normal((nmodes,)) * args.ratio_s_var)
         ratio_sample = random_weights / tf.reduce_sum(random_weights)
 
         loc = rdg.uniform((nmodes, dim), minval=-tf.ones((dim,))*20, maxval=tf.ones((dim,))*20) # uniform in [-20, 20]^d
+        print(loc)
 
         b = 0.003 # 0.03
         create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=b,
-            nbanana=nbanana, return_logprob=True)
+            nbanana=nbanana, std=args.t_std, return_logprob=True)
         create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=b,
-            nbanana=nbanana, return_logprob=True)
+            nbanana=nbanana, std=args.t_std, return_logprob=True)
 
     elif model == "gauss-scaled":
         model_name = f"{mcmc_name}_steps{T}_seed{seed}"
