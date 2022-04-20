@@ -14,7 +14,7 @@ from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 import src.ksd.models as models
 import src.ksd.langevin as mcmc
-from src.ksd.find_modes import find_modes, pairwise_directions
+from src.ksd.find_modes import find_modes, pairwise_directions, pairwise_directions_order
 from src.kgof.ksdagg import ksdagg_wild_test
 
 
@@ -102,6 +102,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
                 _, ind_pair_list = [mode_list[0]], [(0, 0)]
             else:
                 _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
+                # _, ind_pair_list = pairwise_directions_order(mode_list, return_index=True) #TODO new proposal
             
             proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
 
@@ -224,6 +225,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--load", type=str, default="", help="path to pre-saved results")
     parser.add_argument("--model", type=str, default="bimodal")
+    parser.add_argument("--suffix", type=str, default="")
     parser.add_argument("--mcmckernel", type=str, default="mh")
     parser.add_argument("--method", type=str, default="mcmc")
     parser.add_argument("--seed", type=int, default=2022)
@@ -285,7 +287,7 @@ if __name__ == "__main__":
     
     # set model
     if model == "bimodal":
-        model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_dim{dim}_seed{seed}_delta{delta}_n{n}"
+        model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_dim{dim}_seed{seed}_delta{delta}_n{n}{args.suffix}"
         create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_target)
         create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
 
