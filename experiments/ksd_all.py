@@ -317,12 +317,12 @@ if __name__ == "__main__":
         c_shift = args.shift
         c_off = tf.concat([tf.ones(2) * c_shift, tf.zeros(dh-2)], axis=0)
 
-        model_name = f"{mcmc_name}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}"
+        model_name = f"{mcmc_name}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}_n{n}"
         create_target_model = models.create_rbm(B_scale=6., c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
         create_sample_model = models.create_rbm(B_scale=6., c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
 
     elif model == "nf":
-        model_name = f"{mcmc_name}{rnd_st_suff}_steps{T}_seed{seed}_n{n}"
+        model_name = f"{mcmc_name}{rnd_st_suff}_steps{T}_n{n}_seed{seed}"
         create_target_model = models.generate_nf_mnist(real_mnist=False, return_logprob=True)
         create_sample_model = models.generate_nf_mnist(real_mnist=True, return_logprob=True)
 

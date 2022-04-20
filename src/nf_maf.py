@@ -1,3 +1,4 @@
+from json.tool import main
 import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -10,6 +11,8 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import os
 import random
+from tqdm import trange
+import pickle
 
 # from data.dataset_loader import load_and_preprocess_mnist, inverse_logit
 # from normalizingflows.flow_catalog import Made, BatchNorm, get_trainable_variables
@@ -87,7 +90,7 @@ def load_and_preprocess_mnist(logit_space=True, batch_size=128, shuffle=True, cl
         
         for name, arr in zip(["train", "val", "test"], [y_train, y_val, y_test]):
           print(f"num in classes in {name}:", 
-                [(classes[i], np.sum(arr == classes[i])) for i in classes])
+                [(c, np.sum(arr == c)) for c in classes])
 
     # reshape if necessary
     if channels:
@@ -258,30 +261,39 @@ def train_density_estimation(distribution, optimizer, batch):
     return loss
 
 
-def show(xx):
-    for i in range(xx.shape[0]):
-        plt.figure()
-        data = xx[i]
-        data = inverse_logit(data)
-        plt.imshow(data, cmap='gray')
+def show(imgs, row_size=4, figsize=(5, 5)):
+    num_imgs = imgs.shape[0] if isinstance(imgs, tf.Tensor) else len(imgs)
+    nrow = min(num_imgs, row_size)
+    ncol = int(np.ceil(num_imgs / nrow))
 
-def init_model():
+    plt.figure(figsize=figsize)
+    for i in range(num_imgs):
+        img = imgs[i]
+        img = inverse_logit(img)
+        plt.subplot(nrow, ncol, i+1)
+        plt.xticks([])
+        plt.yticks([])
+        plt.grid(False)
+        plt.imshow(img, cmap="gray")
+
+
+def init_model(category: int=None, load: bool=True):
     tf.random.set_seed(1234)
 
     # parameters
     batch_size = 128
     dataset = "mnist"
-    layers = 8
+    layers = 10
     base_lr = 1e-3
     end_lr = 1e-4
-    max_epochs = 700 # 300 # 700 is enough
+    max_epochs = 800 # 300 # 700 is enough
     shape = [256, 256]
     exp_number = 1
     mnist_trainsize = 50000
 
     # define if training should happen on all classes or one specific class
     # possibilities: [0, 1], [1, 5, 8, 9], -1
-    category = [0, 1]
+    category = -1 if category == None else [0, 1]
 
     # train: 50000, validation: 10000, test: 10000
     batched_train_data, batched_val_data, batched_test_data, _ = load_and_preprocess_mnist(
@@ -337,15 +349,84 @@ def init_model():
 
     # initialize checkpoints
     checkpoint_directory = "res/tmp_{}_{}".format(layers, shape[0])
+    tf.io.gfile.makedirs(checkpoint_directory)
     checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
 
     opt = tf.keras.optimizers.Adam(learning_rate=learning_rate_fn)  # optimizer
     checkpoint = tf.train.Checkpoint(optimizer=opt, model=maf)
-    # return checkpoint, maf
 
-    # load best model with min validation loss
-    checkpoint.restore(checkpoint_prefix)
-    print("Successfully loaded trained model!")
+
+    if load:
+        # load best model with min validation loss
+        checkpoint.restore(checkpoint_prefix)
+        print("Successfully loaded trained model!")
+
+    else:
+        global_step = []
+        train_losses = []
+        val_losses = []
+        min_val_loss = tf.convert_to_tensor(np.inf, dtype=tf.float32)  # high value to ensure that first loss < min_loss
+        min_train_loss = tf.convert_to_tensor(np.inf, dtype=tf.float32)
+        min_val_epoch = 0
+        min_train_epoch = 0
+        delta_stop = 100 # 50  # threshold for early stopping
+
+        # start training
+        for i in trange(max_epochs):
+            
+            batched_train_data.shuffle(buffer_size=mnist_trainsize, reshuffle_each_iteration=True)
+            batch_train_losses = []
+            for batch in batched_train_data:
+                batch_loss = train_density_estimation(maf, opt, batch)
+                batch_train_losses.append(batch_loss)
+                
+            train_loss = tf.reduce_mean(batch_train_losses)
+
+            if i % int(1) == 0:
+                batch_val_losses = []
+                for batch in batched_val_data:
+                    batch_loss = nll(maf, batch)
+                    batch_val_losses.append(batch_loss)
+                        
+                val_loss = tf.reduce_mean(batch_val_losses)
+                
+                global_step.append(i)
+                train_losses.append(train_loss)
+                val_losses.append(val_loss)
+                print(f"{i}, train_loss: {train_loss}, val_loss: {val_loss}")
+
+                if train_loss < min_train_loss:
+                    min_train_loss = train_loss
+                    min_train_epoch = i
+                    
+                if val_loss < min_val_loss:
+                    min_val_loss = val_loss
+                    min_val_epoch = i
+                    checkpoint.write(file_prefix=checkpoint_prefix)
+
+                # elif i - min_val_epoch > delta_stop:  # no decrease in min_val_loss for "delta_stop epochs"
+                #     break
+
+        loss_hist = {"global_step": global_step, "train_losses": train_losses, "val_losses": val_losses}
+        pickle.dump(loss_hist, open(f"{checkpoint_directory}/loss_hist.pkl", "wb"))
+
+        # save loss history plot
+        fig = plt.figure()
+        plt.plot(global_step, train_losses, label="train loss")
+        plt.plot(global_step, val_losses, label="val loss")
+        plt.legend()
+        fig.savefig(f"{checkpoint_directory}/loss_hist.png")
+
+        # allow log_prob to take inputs of shape (28, 28)
+        log_prob_old = maf.log_prob
+        def maf_log_prob(img):
+            img = tf.reshape(img, (-1, 28, 28))
+            return log_prob_old(img)
+
+        maf.log_prob = maf_log_prob
 
     return checkpoint, maf, batched_train_data
 
+
+if __name__ == "__main__":
+    init_model(category=0, load=False)
