@@ -261,8 +261,8 @@ class RandomWalkMH(MCMC):
       xp_next = tf.where(which_next, xp_next1, xp_next2) # n x dim
       
       n = xp_next.shape[0]
-      det_next1 = tf.ones(n) * (inv_root_cov_1_det * root_cov_2_det) # n
-      det_next2 = tf.ones(n) * (inv_root_cov_2_det * root_cov_1_det) # n
+      det_next1 = inv_root_cov_1_det * root_cov_2_det # n
+      det_next2 = inv_root_cov_2_det * root_cov_1_det # n
       det_jacobian = tf.math.abs(
         tf.where(tf.reshape(which_next, (n,)), det_next1, det_next2)
       ) # n
