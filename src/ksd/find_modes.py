@@ -102,40 +102,32 @@ def find_modes(start_pts, log_prob_fn, threshold, grad_log, **kwargs):
 
     return mode_list, inv_hess_list
 
-def pairwise_directions(modes, return_index=False):
-    """Compute v_{ij} = \mu_i - \mu_j for all 1 \leq i < j \leq len(modes). 
-    Order does not matter for symmetric kernels
-    modes: list of mode vectors. Must have length >= 2
-    """
-    n = len(modes)
-    dir_list = []
-    index = []
-    for i in range(n-1):
-        for j in range(i+1, n):
-            dir = modes[i] - modes[j]
-            dir_list.append(dir)
-            index.append((i, j))
-    
-    if not return_index:
-        return dir_list
-    else:
-        return dir_list, index
+def pairwise_directions(modes, return_index=False, ordered=True):
+    """Compute v_{ij} = \mu_i - \mu_j for all 1 \leq i, j \leq len(modes).
+    If ordered == True, then (i, j) and (j, i) are treated as two distinct pairs.
+    Otherwise, only (i, j) where i < j are returned.
 
-def pairwise_directions_order(modes, return_index=False):
-    """Compute v_{ij} = \mu_i - \mu_j for all 1 \leq i < j \leq len(modes). 
-    Order does not matter for symmetric kernels
-    modes: list of mode vectors. Must have length >= 2
+    Args:
+        modes: list of mode vectors. Must have length >= 2
     """
     n = len(modes)
     dir_list = []
     index = []
-    for i in range(n):
-        for j in range(n):
-            if i != j:
+    
+    if ordered:
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    dir = modes[i] - modes[j]
+                    dir_list.append(dir)
+                    index.append((i, j))
+    else:
+        for i in range(n-1):
+            for j in range(i+1, n):
                 dir = modes[i] - modes[j]
                 dir_list.append(dir)
                 index.append((i, j))
-    
+        
     if not return_index:
         return dir_list
     else:

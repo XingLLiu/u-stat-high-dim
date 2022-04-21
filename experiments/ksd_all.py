@@ -14,7 +14,7 @@ from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 import src.ksd.models as models
 import src.ksd.langevin as mcmc
-from src.ksd.find_modes import find_modes, pairwise_directions, pairwise_directions_order
+from src.ksd.find_modes import find_modes, pairwise_directions
 from src.kgof.ksdagg import ksdagg_wild_test
 
 
@@ -102,7 +102,6 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
                 _, ind_pair_list = [mode_list[0]], [(0, 0)]
             else:
                 _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
-                # _, ind_pair_list = pairwise_directions_order(mode_list, return_index=True) #TODO new proposal
             
             proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
 
