@@ -268,7 +268,7 @@ def show(imgs, row_size=4, figsize=(5, 5)):
 
     plt.figure(figsize=figsize)
     for i in range(num_imgs):
-        img = imgs[i]
+        img = np.reshape(imgs[i], (28, 28))
         img = inverse_logit(img)
         plt.subplot(nrow, ncol, i+1)
         plt.xticks([])
@@ -277,13 +277,12 @@ def show(imgs, row_size=4, figsize=(5, 5)):
         plt.imshow(img, cmap="gray")
 
 
-def init_model(category: int=None, load: bool=True):
-    tf.random.set_seed(1234)
+def init_model(category: int=None, load: bool=True, seed: int=1234, layers: int=10, logit_space: bool=True):
+    tf.random.set_seed(seed)
 
     # parameters
     batch_size = 128
     dataset = "mnist"
-    layers = 10
     base_lr = 1e-3
     end_lr = 1e-4
     max_epochs = 800 # 300 # 700 is enough
@@ -293,11 +292,11 @@ def init_model(category: int=None, load: bool=True):
 
     # define if training should happen on all classes or one specific class
     # possibilities: [0, 1], [1, 5, 8, 9], -1
-    category = -1 if category == None else [0, 1]
+    category = -1 if category == None else category
 
     # train: 50000, validation: 10000, test: 10000
     batched_train_data, batched_val_data, batched_test_data, _ = load_and_preprocess_mnist(
-        logit_space=True, batch_size=batch_size, classes=category)
+        logit_space=logit_space, batch_size=batch_size, classes=category)
 
     # get shape of images
     sample_batch = next(iter(batched_train_data))
@@ -327,7 +326,6 @@ def init_model(category: int=None, load: bool=True):
         # add BatchNorm every two layers
         if (i+1) % int(2) == 0: 
             bijectors.append(BatchNorm(eps=10e-5, decay=0.95))
-
 
     bijectors.append(tfb.Reshape(event_shape_out=(size,size), event_shape_in=(size*size,))) # reshape array to image shape, before: (size*size,)
 
@@ -359,7 +357,7 @@ def init_model(category: int=None, load: bool=True):
     if load:
         # load best model with min validation loss
         checkpoint.restore(checkpoint_prefix)
-        print("Successfully loaded trained model!")
+        print(f"Successfully loaded trained model {checkpoint_prefix} !")
 
     else:
         global_step = []
@@ -417,16 +415,75 @@ def init_model(category: int=None, load: bool=True):
         plt.legend()
         fig.savefig(f"{checkpoint_directory}/loss_hist.png")
 
-        # allow log_prob to take inputs of shape (28, 28)
-        log_prob_old = maf.log_prob
-        def maf_log_prob(img):
-            img = tf.reshape(img, (-1, 28, 28))
-            return log_prob_old(img)
+    # redefine log_prob to allow inputs of shape (28, 28)
+    log_prob_old = maf.log_prob
+    def maf_log_prob(img):
+        img = tf.reshape(img, (-1, 28, 28))
+        return log_prob_old(img)
 
-        maf.log_prob = maf_log_prob
+    # #! delete
+    # jitter = 1e5
+    # def maf_log_prob(img):
+    #     img = tf.math.log(img/(1-img))  # logit function
+    #     img = tf.clip_by_value(img, clip_value_min=-jitter, clip_value_max=jitter)
+    #     img = tf.reshape(img, (-1, 28, 28))
+    #     return log_prob_old(img)
+
+    maf.log_prob = maf_log_prob
+
+    # redefine sample to change dtype and shape
+    sample_fn = maf.sample
+    def maf_sample(shape):
+        samples = sample_fn(shape)
+        samples = tf.convert_to_tensor(samples, dtype=tf.float32)
+        samples = tf.reshape(samples, (-1, 28*28))
+        return samples
+    
+    # #! delete
+    # def maf_sample(shape):
+    #     samples = sample_fn(shape)
+    #     samples = tf.convert_to_tensor(samples, dtype=tf.float32)
+    #     samples = tf.reshape(samples, (-1, 28*28))
+    #     samples = tf.math.sigmoid(samples)
+    #     samples = tf.clip_by_value(samples, clip_value_min=1/jitter, clip_value_max=1-1/jitter)
+    #     return samples
+
+    #! delete
+    # jitter = 1e3
+    # def maf_sample(shape):
+    #     samples = sample_fn(shape)
+    #     samples = tf.convert_to_tensor(samples, dtype=tf.float32)
+    #     samples = tf.reshape(samples, (-1, 28*28))
+    #     samples = tf.clip_by_value(samples, clip_value_min=-jitter, clip_value_max=jitter)
+    #     return samples
+    
+    maf.sample = maf_sample
 
     return checkpoint, maf, batched_train_data
 
 
+class MNISTSampler:
+    def __init__(self, category: int=None, seed: int=1234, logit_space: bool=False) -> None:
+        tf.random.set_seed(seed)
+
+        # parameters
+        batch_size = 128
+
+        # define if training should happen on all classes or one specific class
+        # possibilities: [0, 1], [1, 5, 8, 9], -1
+        category = -1 if category == None else category
+
+        # train: 50000, validation: 10000, test: 10000
+        sample_batch, _, _, _ = load_and_preprocess_mnist(
+            logit_space=logit_space, batch_size=batch_size, classes=category)
+        self.train_data_tensor = tf.concat(list(sample_batch), axis=0)
+        self.data_size = self.train_data_tensor.shape[0]
+
+    def sample(self, shape: int):
+        ind = np.random.randint(0, self.data_size, size=shape).tolist()
+        sample_off = np.take(self.train_data_tensor, ind, axis=0)
+        sample_off = tf.reshape(sample_off, (-1, 28*28))
+        return(sample_off)
+
 if __name__ == "__main__":
-    init_model(category=0, load=False)
+    init_model(category=[0, 1], load=False, layers=10, logit_space=False)

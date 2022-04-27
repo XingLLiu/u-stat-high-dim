@@ -19,11 +19,11 @@ from src.kgof.ksdagg import ksdagg_wild_test
 
 
 def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha, num_boot, T, 
-    jump_ls, random_start_pts=False, method="mcmc", **kwargs):
+    jump_ls, rand_start=None, method="mcmc", **kwargs):
     """compute KSD and repeat for nrep times"""
     
     n = kwargs["n"]
-    ntrain = int(n*0.5)
+    ntrain = n//2
     dim = proposal.event_shape[0]
 
     if method == "mcmc":
@@ -44,11 +44,11 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
     res_df = pd.DataFrame(columns=["method", "rej", "seed"])
     
-    if random_start_pts:
+    if rand_start:
         print("Use randomly initialised points")
-        # generate points for finding modes
-        unif_dist = tfp.distributions.Uniform(low=-tf.ones((dim,)), high=tf.ones((dim,)))
-        start_pts_all = 20. * unif_dist.sample((nrep, ntrain)) #TODO change range
+        # generate points for finding modes #TODO change range
+        start_pts_all = tf.random.uniform(
+            shape=(nrep, ntrain//2, dim), minval=-rand_start, maxval=rand_start) # nrep x (ntrain//2) x dim
         
         ## for NF initialisation
         # unif_dist = tfp.distributions.Uniform(low=tf.zeros((dim,)), high=255.*tf.ones((dim,)))
@@ -93,7 +93,11 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
             
             # start optim from either randomly initialised points or training samples
-            start_pts = start_pts_all[iter, :, :] if random_start_pts else sample_init_train
+            if rand_start:
+                start_pts = tf.concat([sample_init_train[:(ntrain//2)], start_pts_all[iter]], axis=0) # ntrain x dim
+            else:
+                start_pts = start_pts_all[iter, :, :]
+
             # merge modes
             mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
 
@@ -217,7 +221,6 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
 num_boot = 800 # number of bootstrap samples to compute critical val
 alpha = 0.05 # test level
-mode_threshold = 1. # threshold for merging modes
 jump_ls = np.linspace(0.8, 1.2, 11).tolist() # std for discrete jump proposal
 
 if __name__ == "__main__":
@@ -241,8 +244,9 @@ if __name__ == "__main__":
     parser.add_argument("--shift", type=float, default=0.)
     parser.add_argument("--dh", type=int, default=10, help="dim of h for RBM")
     parser.add_argument("--ratio_s_var", type=float, default=0.)
-    parser.add_argument("--rand_start", type=bool, default=False)
+    parser.add_argument("--rand_start", type=float, default=None)
     parser.add_argument("--t_std", type=float, default=0.01)
+    parser.add_argument("--threshold", type=float, default=1.)
     args = parser.parse_args()
     model = args.model
     method = args.method
@@ -257,7 +261,8 @@ if __name__ == "__main__":
     k = args.k
     delta = args.delta # [1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.]
     rand_start = args.rand_start
-    
+    mode_threshold = args.threshold # threshold for merging modes
+
     if args.mcmckernel == "mh":
         MCMCKernel = mcmc.RandomWalkMH
         mcmc_name = "mh"
@@ -301,6 +306,7 @@ if __name__ == "__main__":
 
         loc = rdg.uniform((nmodes, dim), minval=-tf.ones((dim,))*20, maxval=tf.ones((dim,))*20) # uniform in [-20, 20]^d
         print(loc)
+        print(ratio_sample)
 
         b = 0.003 # 0.03
         create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=b,
@@ -325,7 +331,7 @@ if __name__ == "__main__":
     elif model == "nf":
         model_name = f"{mcmc_name}{rnd_st_suff}_steps{T}_n{n}_seed{seed}"
         create_target_model = models.generate_nf_mnist(real_mnist=False, return_logprob=True)
-        create_sample_model = models.generate_nf_mnist(real_mnist=True, return_logprob=True)
+        create_sample_model = models.generate_nf_mnist(real_mnist=True, category=[0, 1], return_logprob=True)
 
     print(f"Running {model_name}")
 
@@ -336,8 +342,9 @@ if __name__ == "__main__":
     proposal, log_prob_fn_proposal = create_sample_model
     
     # check if log_prob is correct
-    models.check_log_prob(target, log_prob_fn)
-    models.check_log_prob(proposal, log_prob_fn_proposal)
+    if model != "nf":
+        models.check_log_prob(target, log_prob_fn)
+        models.check_log_prob(proposal, log_prob_fn_proposal)
 
     # run experiment
     res_df = None
@@ -355,7 +362,7 @@ if __name__ == "__main__":
         res_df = run_bootstrap_experiment(
             nrep, target, log_prob_fn, proposal, imq,
             alpha, num_boot, T, jump_ls, threshold=mode_threshold, nstart_pts=nstart_pts, n=n,
-            mcmckernel=MCMCKernel, method=method, random_start_pts=rand_start)
+            mcmckernel=MCMCKernel, method=method, rand_start=rand_start)
 
         # save res
         res_df.to_csv(f"{res_root}/{model_name}.csv", index=False)

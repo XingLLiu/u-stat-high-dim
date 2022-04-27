@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import src.kgof.density as density
-# from src.nf import NF, NFReal
+from src.nf_maf import init_model, MNISTSampler
 
 def check_log_prob(dist, log_prob):
   """Check if log_prob == dist.log_prob + const."""
@@ -302,14 +302,15 @@ def create_rbm(
     return dist, dist.log_prob
 
 
-
-def generate_nf_mnist(real_mnist: bool, return_logprob: bool=False):
+def generate_nf_mnist(real_mnist: bool, category: list=[0, 1], return_logprob: bool=False):
   """Generate two model classes, one for the trained normalising flow model (GLOW)
   and one for the true MNIST dataset. """
   if real_mnist:
-    model = NF()
+    model = MNISTSampler(category=category)
+    model.event_shape = (28*28,)
+    model.log_prob = None
   else:
-    model = NFReal()
+    _, model, _ = init_model()
 
   if not return_logprob:
     return model
