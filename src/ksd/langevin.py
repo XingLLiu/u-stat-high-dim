@@ -104,7 +104,8 @@ class MCMC:
     log_denominator = self.log_prob(x_current) + self.log_transition_kernel(
       xp=x_proposed, x=x_current, **kwargs
     ) # n
-
+    # print(x_proposed[:2])
+    # print(self.log_prob(x_proposed), self.log_prob(x_current))
     log_prob = tf.math.minimum(0., log_numerator - log_denominator)
     return tf.math.exp(log_prob)
 

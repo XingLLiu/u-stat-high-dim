@@ -46,13 +46,15 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
     
     if rand_start:
         print("Use randomly initialised points")
-        # generate points for finding modes #TODO change range
+        # generate points for finding modes
         start_pts_all = tf.random.uniform(
             shape=(nrep, ntrain//2, dim), minval=-rand_start, maxval=rand_start) # nrep x (ntrain//2) x dim
         
         ## for NF initialisation
         # unif_dist = tfp.distributions.Uniform(low=tf.zeros((dim,)), high=255.*tf.ones((dim,)))
         # start_pts_all = unif_dist.sample((nrep, ntrain)) # change range
+    else:
+        print("Use sample as initial points")
 
     if method == "conv":
         # initialise optimiser
@@ -96,7 +98,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             if rand_start:
                 start_pts = tf.concat([sample_init_train[:(ntrain//2)], start_pts_all[iter]], axis=0) # ntrain x dim
             else:
-                start_pts = start_pts_all[iter, :, :]
+                start_pts = sample_init_train # ntrain x dim
 
             # merge modes
             mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
