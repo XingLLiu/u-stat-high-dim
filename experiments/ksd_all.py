@@ -111,26 +111,27 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             
             proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
 
-            best_pksd = 0.
-            # find best jump scale \gamma^*
-            for i, jump in enumerate(jump_ls):
-                # loop through jump scales
+            # find best jump scale
+            mh = MCMCKernel(log_prob=log_prob_fn)
+            mh.run(steps=T, std=jump_ls, x_init=sample_init_train, ind_pair_list=ind_pair_list, **proposal_dict)
+
+            # compute ksd
+            scaled_ksd_vals = []
+            for i in range(len(jump_ls)):
                 iterator.set_description(f"Jump scale [{i+1} / {len(jump_ls)}]]")
-
+                
                 # run dynamic for T steps
-                mh = MCMCKernel(log_prob=log_prob_fn)
-                mh.run(steps=T, std=jump, x_init=sample_init_train, ind_pair_list=ind_pair_list, **proposal_dict)
-
+                x_t = mh.x[i, -1, :, :]
+                
                 # compute ksd
-                x_t = mh.x[-1, :, :].numpy()
                 _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
-                ksd_val = ksd_val.numpy()
-
-                # update if ksd is larger
-                if (ksd_val > best_pksd) or (i == 0):
-                    best_jump = jump
-                    best_pksd = ksd_val
-                    best_proposal_dict = proposal_dict
+                ksd_val = ksd_val
+                
+                scaled_ksd_vals.append(ksd_val)
+            
+            # get best jump scale
+            best_jump = jump_ls[tf.math.argmax(scaled_ksd_vals)]
+            best_proposal_dict = proposal_dict
 
             # run dynamic for T steps with test data and optimal params
             mh = MCMCKernel(log_prob=log_prob_fn)

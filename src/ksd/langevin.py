@@ -135,7 +135,8 @@ class RandomWalkMH(MCMC):
 
   def run(self, steps: int, x_init: tf.Tensor, std: tf.Tensor, verbose: bool=False, **kwargs):
     n, dim = x_init.shape
-    theta = tf.reshape(tf.constant(std), (-1,)) if not isinstance(std, tf.Tensor) else std
+    theta = tf.constant(std) if not isinstance(std, tf.Tensor) else std
+    theta = tf.reshape(theta, (-1,))
 
     x_init = tf.repeat(tf.expand_dims(x_init, axis=0), theta.shape[0], axis=0) # njumps x n x dim
     self.x = [x_init]
