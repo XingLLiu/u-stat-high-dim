@@ -492,14 +492,16 @@ class SDEKSD:
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
     score_X = grad_1 / tf.expand_dims(
       tf.math.reduce_sum(prob_1, axis=0), axis=1) # n x dim
+    ## prevents division by 0
+    score_X = tf.where(tf.math.is_nan(score_X), 0., score_X) # n x dim
     _ = tf.debugging.assert_all_finite(grad_1, "grad_1")
     _ = tf.debugging.assert_all_finite(prob_1, "prob_1")
-    print("X_cp", X_cp[:, 818:819])
-    print("alpha_t", alpha_t)
-    print("diff_1", diff_1[:, 818:819])
-    print("grad_1", grad_1[818:819])
-    xx = tf.math.reduce_sum(prob_1, axis=0).numpy()
-    print("prob_1", xx[818:819])
+    # print("X_cp", X_cp[:, 818:819])
+    # print("alpha_t", alpha_t)
+    # print("diff_1", diff_1[:, 818:819])
+    # print("grad_1", grad_1[818:819])
+    # xx = tf.math.reduce_sum(prob_1, axis=0).numpy()
+    # print("prob_1", xx[818:819])
     _ = tf.debugging.assert_all_finite(score_X, "score")
 
     with tf.GradientTape() as g:
@@ -510,6 +512,8 @@ class SDEKSD:
     grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
     score_Y = grad_2 / tf.expand_dims(
       tf.math.reduce_sum(prob_2, axis=0), axis=1) # m x dim
+    ## prevents division by 0
+    score_Y = tf.where(tf.math.is_nan(score_Y), 0., score_Y) # n x dim
 
     # median heuristic
     self.k.bandwidth(X, Y)
