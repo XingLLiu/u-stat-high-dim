@@ -97,19 +97,20 @@ class MCMC:
 
   def compute_accept_prob(self, x_proposed: tf.Tensor, x_current: tf.Tensor,
     log_det_jacobian: tf.Tensor, **kwargs):
-    '''Compute log acceptance prob in the Metropolis step,
+    '''Compute log acceptance prob in the transition step,
     log( \min(1, k(x, x') * p(x') / (k(x', x) * p(x))) )
     '''
     log_numerator = self.log_prob(x_proposed) + self.log_transition_kernel(
       xp=x_current, x=x_proposed, **kwargs
-    ) + log_det_jacobian # n
+    ) + log_det_jacobian # njumps x n
     log_denominator = self.log_prob(x_current) + self.log_transition_kernel(
       xp=x_proposed, x=x_current, **kwargs
-    ) # n
+    ) # njumps x n
     log_prob = tf.math.minimum(0., log_numerator - log_denominator)
+    assert log_prob.shape == (x_proposed.shape[0], x_proposed.shape[1])
     return tf.math.exp(log_prob)
 
-  def metropolis(self, x_proposed: tf.Tensor, x_current: tf.Tensor, accept_prob: tf.Tensor):
+  def transit(self, x_proposed: tf.Tensor, x_current: tf.Tensor, accept_prob: tf.Tensor):
     '''Metropolis move according to accept_prob
 
     Args:
@@ -118,10 +119,10 @@ class MCMC:
     Output:
       x_next: n x dim. new particles
     '''
-    unif = tf.random.uniform(shape=accept_prob.shape) # n
-    cond = tf.expand_dims(unif < accept_prob, axis=-1) # n x 1
-    x_next = tf.where(cond, x_proposed, x_current) # n x dim
-    if_accept = tf.reshape(tf.cast(cond, dtype=tf.float32), (-1,)) # n
+    unif = tf.random.uniform(shape=accept_prob.shape) # njumps x n
+    cond = tf.expand_dims(unif < accept_prob, axis=-1) # njumps x n x 1
+    x_next = tf.where(cond, x_proposed, x_current) # njumps x n x dim
+    if_accept = tf.squeeze(tf.cast(cond, dtype=tf.float32), axis=-1) # njumps x n
 
     assert x_next.shape == x_proposed.shape
     # assert tf.experimental.numpy.all(tf.where(cond, x_next == x_proposed, x_next == x_current))
@@ -132,11 +133,14 @@ class RandomWalkMH(MCMC):
   def __init__(self, log_prob: callable) -> None:
     self.log_prob = log_prob
 
-  def run(self, steps: int, x_init: tf.Tensor, verbose: bool=False, **kwargs):
+  def run(self, steps: int, x_init: tf.Tensor, std: tf.Tensor, verbose: bool=False, **kwargs):
     n, dim = x_init.shape
-    self.x = [x_init] # 1 x n x dim
-    self.accept_prob = [] # (steps-1) x n
-    self.if_accept = [] # (steps-1) x n
+    theta = tf.reshape(tf.constant(std), (-1,)) if not isinstance(std, tf.Tensor) else std
+
+    x_init = tf.repeat(tf.expand_dims(x_init, axis=0), theta.shape[0], axis=0) # njumps x n x dim
+    self.x = [x_init]
+    self.accept_prob = []
+    self.if_accept = []
 
     if "ind_pair_list" in kwargs: # use all modes for proposal
       npairs = len(kwargs["ind_pair_list"])
@@ -150,8 +154,8 @@ class RandomWalkMH(MCMC):
       self.t = t
       
       # propose MH update
-      x_current = self.x[t]
-      xp_next, log_det_jacobian = self.proposal(x_current=x_current, **kwargs) # n x dim #! delete
+      x_current = self.x[t] # 1 x n x dim
+      xp_next, log_det_jacobian = self.proposal(x_current=x_current, theta=theta, **kwargs) # njumps x n x dim #! delete
 
       # compute acceptance prob
       accept_prob = self.compute_accept_prob(
@@ -159,22 +163,26 @@ class RandomWalkMH(MCMC):
         x_current=x_current,
         log_det_jacobian=log_det_jacobian,
         **kwargs
-      ) # n
+      ) # njumps x n
       self.accept_prob.append(accept_prob)
       
       # move
-      x_next, if_accept = self.metropolis(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # n x dim, n x 1
+      x_next, if_accept = self.transit(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # njumps x n x dim, njumps x n
       # x_next = xp_next #! delete
       self.if_accept.append(if_accept)
 
       # store next samples
       self.x.append(x_next)
     
-    self.x = tf.stack(self.x) # steps x n x dim
-    self.accept_prob = tf.stack(self.accept_prob) # (steps-1) x n
-    self.if_accept = tf.stack(self.if_accept) # (steps-1) x n
+    self.x = tf.stack(self.x, axis=1) # njumps x steps x n x dim
+    self.accept_prob = tf.stack(self.accept_prob, axis=1) # njumps x (steps-1) x n
+    self.if_accept = tf.stack(self.if_accept, axis=1) # njumps x (steps-1) x n
 
-  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, std: float, **kwargs):
+    self.x = tf.squeeze(self.x)
+    self.accept_prob = tf.squeeze(self.accept_prob)
+    self.if_accept = tf.squeeze(self.if_accept)
+
+  def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, **kwargs):
     '''Compute log k(x'| x), where k is the transition kernel 
     k(x' | x) \propto N(x' | x, std**2)
     
@@ -186,16 +194,16 @@ class RandomWalkMH(MCMC):
     Output:
       log_kernel: n. k(x', x)
     '''
-    log_prob = tf.math.log(0.5) * tf.ones(xp.shape[0])
+    log_prob = tf.math.log(0.5) * tf.ones(xp.shape[-2])
 
     return log_prob
 
-  def proposal(self, x_current, **kwargs):
+  def proposal(self, x_current, theta, **kwargs):
     """Default proposal:
 
     x_current: n x dim
     """
-    std = kwargs["std"]
+    theta = tf.expand_dims(tf.expand_dims(theta, axis=-1), axis=-1) # njumps x 1 x 1
 
     if "ind_pair_list" in kwargs: # use all modes for proposal #TODO new proposal
       ind_pair_ind = self.ind_pair_sample[self.t, :] # n x 1
@@ -210,10 +218,13 @@ class RandomWalkMH(MCMC):
       root_cov_2_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 1]) # n
 
       # construct proposals
-      x_current1 = tf.expand_dims(x_current - std * mode1, axis=1) # n x 1 x dim
-      xp_next = tf.squeeze(x_current1 @ inv_root_cov_1 @ root_cov_2, axis=1) + std * mode2 # n x dim
+      x_current_c = x_current - theta * mode1 # njumps x n x dim
+      x_current_c = tf.expand_dims(x_current_c, axis=-2) # njumps x n x 1 x dim
+      x_current_c_scaled = x_current_c @ inv_root_cov_1 @ root_cov_2 # njumpx x n x 1 x dim
+      assert x_current_c_scaled.shape == (theta.shape[0], x_current.shape[-2], 1, x_current.shape[-1]), \
+        (x_current_c_scaled.shape, (theta.shape[0], x_current.shape[-2], 1, x_current.shape[-1]))
+      xp_next = tf.squeeze(x_current_c_scaled, axis=-2) + theta * mode2 # njumps x n x dim
       
-      n = xp_next.shape[0]
       det_jacobian = inv_root_cov_1_det * root_cov_2_det # n
       log_det_jacobian = tf.math.log(det_jacobian) # n
     
@@ -235,11 +246,12 @@ class RandomWalkBarker(RandomWalkMH):
       self.log_prob(x_proposed) + self.log_transition_kernel(
         xp=x_current, x=x_proposed, **kwargs
       ) + log_det_jacobian
-    ) # n
+    ) # njumps x n
     term_x = tf.exp(
       self.log_prob(x_current) + self.log_transition_kernel(
         xp=x_proposed, x=x_current, **kwargs
       )
-    ) # n
+    ) # njumps x n
     prob = term_xp / (term_xp + term_x) # n
+    assert prob.shape == (x_proposed.shape[0], x_proposed.shape[1])
     return prob

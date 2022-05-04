@@ -254,12 +254,17 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
       det2 = tf.linalg.det(cov2)
       def log_prob_fn(x):
         """fast implementation of log_prob"""
-        exp1 = tf.einsum("ij, ij -> i", x-mean1, (x-mean1)@cov1_inv) # n
-        exp2 = tf.einsum("ij, ij -> i", x-mean2, (x-mean2)@cov2_inv) # n
-        return tf.math.log(
-            ratio * (1/tf.math.sqrt(det1)) * tf.math.exp(- 0.5 * exp1) + 
-            (1-ratio) * (1/tf.math.sqrt(det2)) * tf.math.exp(- 0.5 * exp2)
-        )
+        exp1 = (x-mean1) @ cov1_inv @ tf.linalg.matrix_transpose(x-mean1) # n x n
+        exp1_diag = tf.linalg.diag_part(exp1) # n
+        exp2 = (x-mean2) @ cov2_inv @ tf.linalg.matrix_transpose(x-mean2) # n x n
+        exp2_diag = tf.linalg.diag_part(exp2) # n
+
+        const1 = tf.math.log(ratio) - 0.5 * tf.math.log(det1)
+        const2 = tf.math.log(1 - ratio) - 0.5 * tf.math.log(det2)
+
+        return tf.reduce_logsumexp(
+          tf.stack([- 0.5 * exp1_diag + const1, - 0.5 * exp2_diag + const2]),
+          axis=0) # n
       
       return mix_gauss, log_prob_fn  
 
