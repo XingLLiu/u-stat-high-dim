@@ -1,3 +1,5 @@
+from distutils.log import error
+from logging import warning
 import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
@@ -104,8 +106,6 @@ class MCMC:
     log_denominator = self.log_prob(x_current) + self.log_transition_kernel(
       xp=x_proposed, x=x_current, **kwargs
     ) # n
-    # print(x_proposed[:2])
-    # print(self.log_prob(x_proposed), self.log_prob(x_current))
     log_prob = tf.math.minimum(0., log_numerator - log_denominator)
     return tf.math.exp(log_prob)
 
@@ -124,19 +124,19 @@ class MCMC:
     if_accept = tf.reshape(tf.cast(cond, dtype=tf.float32), (-1,)) # n
 
     assert x_next.shape == x_proposed.shape
-    assert tf.experimental.numpy.all(tf.where(cond, x_next == x_proposed, x_next == x_current))
+    # assert tf.experimental.numpy.all(tf.where(cond, x_next == x_proposed, x_next == x_current))
     return x_next, if_accept
 
 
 class RandomWalkMH(MCMC):
   def __init__(self, log_prob: callable) -> None:
     self.log_prob = log_prob
-    self.x = None
 
   def run(self, steps: int, x_init: tf.Tensor, verbose: bool=False, **kwargs):
     n, dim = x_init.shape
-    self.x = tf.Variable(-1 * tf.ones((steps, n, dim))) # nsteps x n x dim
-    self.x[0, :, :].assign(x_init)
+    self.x = [x_init] # 1 x n x dim
+    self.accept_prob = [] # (steps-1) x n
+    self.if_accept = [] # (steps-1) x n
 
     if "ind_pair_list" in kwargs: # use all modes for proposal
       npairs = len(kwargs["ind_pair_list"])
@@ -144,16 +144,13 @@ class RandomWalkMH(MCMC):
       self.ind_pair_sample = tfp.distributions.Categorical(ind_prob).sample((steps-1, n)) # steps-1 x n
       self.ind_pairs = tf.constant(kwargs["ind_pair_list"]) # (nmodes * (nmodes - 1) / 2) x 2
 
-    self.accept_prob = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n
-    self.if_accept = tf.Variable(tf.zeros((steps-1, n))) # (steps-1) x n
-
     iterator = trange(steps-1) if verbose else range(steps-1)
 
     for t in iterator: 
       self.t = t
       
       # propose MH update
-      x_current = self.x[t, :, :]
+      x_current = self.x[t]
       xp_next, log_det_jacobian = self.proposal(x_current=x_current, **kwargs) # n x dim #! delete
 
       # compute acceptance prob
@@ -163,15 +160,19 @@ class RandomWalkMH(MCMC):
         log_det_jacobian=log_det_jacobian,
         **kwargs
       ) # n
-      self.accept_prob[t, :].assign(accept_prob)
+      self.accept_prob.append(accept_prob)
       
       # move
       x_next, if_accept = self.metropolis(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # n x dim, n x 1
       # x_next = xp_next #! delete
-      self.if_accept[t, :].assign(if_accept)
+      self.if_accept.append(if_accept)
 
       # store next samples
-      self.x[t+1, :, :].assign(x_next)
+      self.x.append(x_next)
+    
+    self.x = tf.stack(self.x) # steps x n x dim
+    self.accept_prob = tf.stack(self.accept_prob) # (steps-1) x n
+    self.if_accept = tf.stack(self.if_accept) # (steps-1) x n
 
   def log_transition_kernel(self, xp: tf.Tensor, x: tf.Tensor, std: float, **kwargs):
     '''Compute log k(x'| x), where k is the transition kernel 
@@ -215,6 +216,9 @@ class RandomWalkMH(MCMC):
       n = xp_next.shape[0]
       det_jacobian = inv_root_cov_1_det * root_cov_2_det # n
       log_det_jacobian = tf.math.log(det_jacobian) # n
+    
+    else:
+      raise ValueError("ind_pair_list not found in the args")
 
     return xp_next, log_det_jacobian
 
