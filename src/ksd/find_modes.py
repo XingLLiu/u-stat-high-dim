@@ -90,15 +90,17 @@ def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, verbose: bool=False, g
 
     return optim_results
 
-def find_modes(start_pts, log_prob_fn, threshold, grad_log, **kwargs):
+def find_modes(start_pts, log_prob_fn, threshold, grad_log, threshold_ignore=1e-8, 
+    max_iterations=50, **kwargs):
     """Run run_bfgs and merge_modes"""
     # run BFGS to find modes
-    bfgs = run_bfgs(start_pts, log_prob_fn, grad_log)
+    bfgs = run_bfgs(start_pts, log_prob_fn, grad_log, max_iterations=max_iterations)
     end_pts = bfgs.position
     inverse_hessian_estimate = bfgs.inverse_hessian_estimate
 
     # merge modes
-    mode_list, inv_hess_list = merge_modes(inverse_hessian_estimate, end_pts, threshold, log_prob_fn)
+    mode_list, inv_hess_list = merge_modes(inverse_hessian_estimate, end_pts, threshold, 
+        log_prob_fn, threshold_ignore=threshold_ignore)
 
     return mode_list, inv_hess_list
 
