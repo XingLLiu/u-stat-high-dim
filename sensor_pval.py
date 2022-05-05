@@ -97,7 +97,8 @@ samples_init = samples_init[::-1] #!
 sample_off_train, sample_off_test = samples_init[:ntrain, ], samples_init[ntrain:, ]
 
 
-def experiment(T, n, target_dist, sample_init_train, sample_init_test):
+def experiment(T_list, n, target_dist, sample_init_train, sample_init_test):
+    Tmax = T_list[-1]
     jump_ls = tf.linspace(0.8, 1.2, 51)
     
     ntrain = n // 2
@@ -125,8 +126,8 @@ def experiment(T, n, target_dist, sample_init_train, sample_init_test):
     # find modes
     mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=None, threshold=threshold)
     
-    #!
-    inv_hess_list = [tf.eye(8)] * len(inv_hess_list)
+    # #!
+    # inv_hess_list = [tf.eye(8)] * len(inv_hess_list)
 
     proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
     _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
@@ -135,62 +136,64 @@ def experiment(T, n, target_dist, sample_init_train, sample_init_test):
     print("running in parallel ...")
     tic = time.perf_counter()
 
-    mh = MCMCKernel(log_prob=log_prob_fn)
-    mh.run(steps=T, std=jump_ls, x_init=sample_init_train, ind_pair_list=ind_pair_list, **proposal_dict)
-
-    # compute ksd
-    scaled_ksd_vals = []
-    for j in range(jump_ls.shape[0]):
-        x_t = mh.x[j, -1, :, :]
-        _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
-        ksd_val = ksd_val
-        
-        scaled_ksd_vals.append(ksd_val.numpy())
-    
+    mh_jumps = MCMCKernel(log_prob=log_prob_fn)
+    mh_jumps.run(steps=Tmax, std=jump_ls, x_init=sample_init_train, ind_pair_list=ind_pair_list, **proposal_dict)
     toc = time.perf_counter()
     print(f"... done in {toc - tic:0.4f} seconds")
-    best_jump = jump_ls[tf.math.argmax(scaled_ksd_vals)]
 
-    # mh perturbation
-    mh = MCMCKernel(log_prob=log_prob_fn)
-    mh.run(steps=T, std=best_jump, x_init=sample_init_test, 
-           ind_pair_list=ind_pair_list, **proposal_dict)
-    x_0 = mh.x[0, :, :]
-    x_t = mh.x[-1, :, :]
-
-    # compute p-value
-    kernel = IMQ(med_heuristic=True)
-    ksd = KSD(target=target_dist, kernel=kernel)
-    bootstrap = Bootstrap(ksd, n)
-
-    multinom_one_sample = multinom_samples[i, :]
-
-    _, p_val0 = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_0, multinom_samples=multinom_one_sample)
-    _, p_valt = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
-
-    p_val_list.append(p_val0) # no perturbation
-    jump_ratio_list.append(-1.)
-    
-    p_val_list.append(p_valt)
-    jump_ratio_list.append(best_jump.numpy())
+    for T in tqdm(T_list):
+        # compute ksd
+        scaled_ksd_vals = []
+        for j in range(jump_ls.shape[0]):
+            x_t = mh_jumps.x[j, T-1, :, :]
+            _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
+            ksd_val = ksd_val
+            
+            scaled_ksd_vals.append(ksd_val.numpy())
         
-    res = pd.DataFrame({"pval": p_val_list, "jump": jump_ratio_list})
-    scaled_ksd_pd = pd.DataFrame({"ksd_scaled": scaled_ksd_vals, "jump": jump_ls.numpy().tolist()})
+        best_jump = jump_ls[tf.math.argmax(scaled_ksd_vals)]
+
+        # mh perturbation
+        mh = MCMCKernel(log_prob=log_prob_fn)
+        mh.run(steps=T, std=best_jump, x_init=sample_init_test, 
+            ind_pair_list=ind_pair_list, **proposal_dict)
+        x_0 = mh.x[0, :, :]
+        x_t = mh.x[-1, :, :]
+
+        # compute p-value
+        kernel = IMQ(med_heuristic=True)
+        ksd = KSD(target=target_dist, kernel=kernel)
+        bootstrap = Bootstrap(ksd, n)
+
+        multinom_one_sample = multinom_samples[i, :]
+
+        _, p_val0 = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_0, multinom_samples=multinom_one_sample)
+        _, p_valt = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
+
+        p_val_list.append(p_val0) # no perturbation
+        jump_ratio_list.append(-1.)
+        
+        p_val_list.append(p_valt)
+        jump_ratio_list.append(best_jump.numpy())
+            
+        scaled_ksd_pd = pd.DataFrame({"ksd_scaled": scaled_ksd_vals, "jump": jump_ls.numpy().tolist()})
+
+        scaled_ksd_pd.to_csv(f"res/sensors/hess_sensors_ksd_{T}.csv", index=False)
+    
+    res = pd.DataFrame({"T": T_list, "pval": p_val_list, "jump": jump_ratio_list})
+    res.to_csv(f"res/sensors/hess_sensors_pvals_{T}.csv", index=False)
     
     return res, scaled_ksd_pd
 
 if __name__ == "__main__":
-    T = 4000
+    T_list = [1000, 2000, 4000, 6000, 8000, 10000, 20000]
 
     tf.random.set_seed(1)
     tic = time.perf_counter()
-    res_df, scaled_ksd_pd = experiment(T, n, target,
+    res_df, scaled_ksd_pd = experiment(T_list, n, target,
                                 sample_init_train=sample_off_train,
                                 sample_init_test=sample_off_test,
                                 )
     toc = time.perf_counter()
     print(f"Finished in {toc - tic:0.4f} seconds")
-
-    res_df.to_csv(f"res/sensors/sensors_pvals_{T}.csv", index=False)
-    scaled_ksd_pd.to_csv(f"res/sensors/sensors_ksd_{T}.csv", index=False)
     

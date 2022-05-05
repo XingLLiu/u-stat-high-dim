@@ -30,54 +30,6 @@ class Sensor:
         self.sigma = sigma
         self.shift = 25.
 
-    def log_prob_nonbatch(self, loc):
-        term1 = []
-        for i in range(2):
-            for j in range(4):
-                norm_sq = norm2(self.Xb[i, :], loc[:, (2 * j) : (2 * j +2)])**2
-                tt1 = -norm_sq / (2*self.R**2) * self.Ob[j, i]
-                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2))*(1 - self.Ob[j, i])
-                term1.append(tt1 + tt2)
-
-        term2 = []
-        for i in range(3):
-            for j in range(i+1, 4):
-                norm_sq = norm2(
-                    loc[:, (2 * i):(2 * i +2)], loc[:, (2 * j) : (2 * j +2)])**2
-                tt1 = -norm_sq / (2*self.R**2) * self.Os[i, j]
-                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2))*(1 - self.Os[i, j])
-                term2.append(tt1 + tt2)
-
-        term1_obs = []
-        for i in range(2):
-            for j in range(4):
-                tt = dnorm_log(self.Yb[j, i], 
-                           mean = norm2(self.Xb[i, ], loc[:, (2 * j):(2 * j +2)]),
-                           sd = self.sigma)*self.Ob[j, i]
-                term1_obs.append(tt)
-
-        term2_obs = []
-        for i in range(3):
-            for j in range(i+1, 4):
-                tt = dnorm_log(self.Ys[i, j],
-                           mean = norm2(loc[:, (2 * i):(2 * i +2)], loc[:, (2 * j) : (2 * j +2)]),
-                           sd = self.sigma)*self.Os[i, j]
-                term2_obs.append(tt)
-
-        term1 = tf.stack(term1, axis=1) # n x 8
-        term2 = tf.stack(term2, axis=1) # n x 6
-        term1_obs = tf.stack(term1_obs, axis=1) # n x 8
-        term2_obs = tf.stack(term2_obs, axis=1) # n x 6
-
-        terms_concat = tf.concat([term1, term2, term1_obs, term2_obs], axis=-1) # n x 28
-
-        loglkhd = tf.reduce_sum(terms_concat, axis=-1)
-        prior = tf.reduce_sum(
-            dnorm_log(loc, mean = tf.zeros((8,)), sd = 10.*tf.ones((8,))),
-            axis=-1)
-        post = loglkhd + prior
-        return post + self.shift
-
     def log_prob(self, loc):
         term1 = []
         for i in range(2):
@@ -131,3 +83,60 @@ class Sensor:
             axis=-1) # batch x n
         post = loglkhd + prior # batch x n
         return post + self.shift
+
+
+class SensorImproper(Sensor):
+
+    def __init__(self, Ob, Os, Xb, Xs, Yb, Ys, R=0.3, sigma=0.02):
+        super().__init__(Ob, Os, Xb, Xs, Yb, Ys, R, sigma)
+
+    def log_prob(self, loc):
+        term1 = []
+        for i in range(3):
+            for j in range(8):
+                norm_sq = norm2(self.Xb[i, :], tf.gather(loc, range(2*j, 2*j +2), axis=-1))**2 # batch x n
+                tt1 = -norm_sq / (2*self.R**2) * self.Ob[j, i] # batch x n
+                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2)) * (1 - self.Ob[j, i]) # batch x n
+                term1.append(tt1 + tt2)
+
+        term2 = []
+        for i in range(7):
+            for j in range(i+1, 8):
+                norm_sq = norm2(
+                    tf.gather(loc, range(2*i, 2*i+2), axis=-1),
+                    tf.gather(loc, range(2*j, 2*j+2), axis=-1))**2 # batch x n
+                tt1 = -norm_sq / (2*self.R**2) * self.Os[i, j] # batch x n
+                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2)) * (1 - self.Os[i, j]) # batch x n
+                term2.append(tt1 + tt2)
+
+        term1_obs = []
+        for i in range(3):
+            for j in range(8):
+                tt = dnorm_log(
+                    self.Yb[j, i], 
+                    mean=norm2(self.Xb[i], tf.gather(loc, range(2*j, 2*j+2), axis=-1)),
+                    sd=self.sigma) * self.Ob[j, i] # batch x n
+                term1_obs.append(tt)
+
+        term2_obs = []
+        for i in range(7):
+            for j in range(i+1, 8):
+                tt = dnorm_log(
+                    self.Ys[i, j],
+                    mean=norm2(
+                        tf.gather(loc, range(2*i, 2*i+2), axis=-1),
+                        tf.gather(loc, range(2*j, 2*j+2), axis=-1)),
+                    sd=self.sigma) * self.Os[i, j] # batch x n
+                term2_obs.append(tt)
+
+
+        term1 = tf.stack(term1, axis=-1) # batch x n x 24
+        term2 = tf.stack(term2, axis=-1) # batch x n x 36
+        term1_obs = tf.stack(term1_obs, axis=-1) # batch x n x 24
+        term2_obs = tf.stack(term2_obs, axis=-1) # batch x n x 36
+
+        terms_concat = tf.concat([term1, term2, term1_obs, term2_obs], axis=-1) # batch x n x 120
+
+        loglkhd = tf.reduce_sum(terms_concat, axis=-1) # batch x n
+        return loglkhd + self.shift
+
