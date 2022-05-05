@@ -8,6 +8,7 @@ from builtins import range
 from past.utils import old_div
 from builtins import object
 from future.utils import with_metaclass
+from sensor_pval import Xb
 __author__ = 'wittawat'
 
 from abc import ABCMeta, abstractmethod
@@ -370,7 +371,7 @@ class GaussBernRBM(UnnormalizedDensity):
         p(x, h) = Z^{-1} exp(0.5*x^T B h + b^T x + c^T h - 0.5||x||^2)
     where h is a vector of {-1, 1}.
     """
-    def __init__(self, B, b, c):
+    def __init__(self, B, b, c, burnin=2000):
         """
         B: a dx x dh matrix 
         b: a numpy array of length dx
@@ -385,27 +386,29 @@ class GaussBernRBM(UnnormalizedDensity):
         self.B = B
         self.b = b
         self.c = c
+        self.event_shape = [dx]
+        self.ds = self.get_datasource(burnin=burnin) # sample function
 
     def log_den(self, X):
         B = self.B # dx x dh
         b = self.b # dx
         c = self.c # dh
 
-        XBC = 0.5*tf.linalg.matmul(X, B) + c # n x dh
+        XBC = 0.5*tf.linalg.matmul(X, B) + c # batch x n x dh
         unden = tf.linalg.matmul(
                 X, 
                 tf.reshape(b, (-1, 1))
             ) - 0.5*tf.math.reduce_sum(
                 X**2, 
-                1, 
+                axis=-1, 
                 keepdims=True
             ) + tf.math.reduce_sum(
-                tf.reduce_logsumexp([XBC, -XBC], 0),
-                1,
+                tf.reduce_logsumexp([XBC, -XBC], axis=0),
+                axis=-1,
                 keepdims=True
-            ) # n x 1
-        unden = tf.reshape(unden, (-1,)) # n
-        assert len(unden) == X.shape[0]
+            ) # batch x n x 1
+        unden = tf.squeeze(unden, axis=-1) # batch x n
+        assert unden.shape == X.shape[:(-1)], [unden.shape, X.shape[:(-1)]]
         assert not tf.experimental.numpy.any(tf.math.is_inf(unden)), \
             "log density is infinity; either hyperparameters or input are too large"
         return unden
@@ -424,14 +427,13 @@ class GaussBernRBM(UnnormalizedDensity):
 
         Return an n x d numpy array of gradients.
         """
-        XB = tf.linalg.matmul(X, self.B) # n x dh
-        Y = 0.5*XB + self.c # n x dh
-        E2my = tf.exp(-2*Y) # n x dh
-        Phi = tf.math.divide((1.0-E2my),(1+E2my)) # n x dh
+        XB = tf.linalg.matmul(X, self.B) # batch x n x dh
+        Y = 0.5*XB + self.c # batch x n x dh
+        E2my = tf.exp(-2*Y) # batch x n x dh
+        Phi = tf.math.divide((1.0-E2my),(1+E2my)) # batch x n x dh
         
-        # n x dx
-        T = tf.linalg.matmul(Phi, 0.5*tf.transpose(self.B))
-        S = self.b - X + T
+        T = tf.linalg.matmul(Phi, 0.5*tf.transpose(self.B)) # batch x n x dx
+        S = self.b - X + T # batch x n x dx
         return S
 
     def get_datasource(self, burnin=2000):
@@ -439,6 +441,10 @@ class GaussBernRBM(UnnormalizedDensity):
 
     def dim(self):
         return len(self.b)
+
+    def sample(self, shape):
+        return tf.cast(self.ds.sample(shape).data(), dtype=tf.float32) #TODO not setting seed!
+
 
 # end GaussBernRBM
 

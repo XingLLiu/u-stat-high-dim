@@ -292,14 +292,13 @@ def create_rbm(
   b = tf.zeros(dx)
   c = c if isinstance(c, tf.Tensor) else tf.zeros(dh)
 
-  dist = density.GaussBernRBM(B, b, c)
-  dist.event_shape = [dx]
+  dist = density.GaussBernRBM(B, b, c, burnin_number)
   dist.log_prob = dist.log_den
 
-  # sample function
-  ds = dist.get_datasource()
-  ds.burnin = burnin_number
-  dist.sample = lambda shape: tf.cast(ds.sample(shape).data(), dtype=tf.float32) #TODO not setting seed!
+  # # sample function
+  # ds = dist.get_datasource()
+  # ds.burnin = burnin_number
+  # dist.sample = lambda shape: tf.cast(ds.sample(shape).data(), dtype=tf.float32) #TODO not setting seed!
 
   if not return_logprob:
     return dist
