@@ -28,61 +28,69 @@ class Sensor:
         self.Ys = Ys
         self.R = R
         self.sigma = sigma
+        self.nb = Xb.shape[0]
+        self.ns = Xs.shape[0]
         self.shift = 25.
 
-    def log_prob(self, loc):
-        term1 = []
-        for i in range(2):
-            for j in range(4):
-                norm_sq = norm2(self.Xb[i, :], tf.gather(loc, range(2*j, 2 * j +2), axis=-1))**2 # batch x n
-                tt1 = -norm_sq / (2*self.R**2) * self.Ob[j, i] # batch x n
-                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2))*(1 - self.Ob[j, i]) # batch x n
-                term1.append(tt1 + tt2)
+    def _loglkhd(self, loc):
+        ## observed sensors
+        loc_exp = tf.reshape(loc, loc.shape[:-1] + [self.ns, 1, 2]) # batch x n x ns x 1 x 2
+        # observation term
+        norm = norm2(
+            tf.expand_dims(self.Xb, axis=0), # 1 x nb x 2
+            loc_exp
+        ) # batch x n x nb x ns
+        norm_sq = norm**2 # batch x n x ns x nb
+        tt1 = -norm_sq / (2*self.R**2) * self.Ob # batch x n x ns x nb
+        tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2)) * (1 - self.Ob) # batch x n x ns x nb
+        tt_obs = tt1 + tt2
 
-        term2 = []
-        for i in range(3):
-            for j in range(i+1, 4):
-                norm_sq = norm2(
-                    tf.gather(loc, range(2*i, 2*i+2), axis=-1),
-                    tf.gather(loc, range(2*j, 2*j+2), axis=-1))**2 # batch x n
-                tt1 = -norm_sq / (2*self.R**2) * self.Os[i, j] # batch x n
-                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2))*(1 - self.Os[i, j]) # batch x n
-                term2.append(tt1 + tt2)
+        # distance term
+        tt_dist = dnorm_log(
+            self.Yb, 
+            mean=norm,
+            sd=self.sigma) * self.Ob # batch x n x ns x nb
+        
+        term1_all = tf.reshape(tt_obs + tt_dist, tt_obs.shape[:-2] + [self.ns*self.nb]) # batch x n x (ns * nb)
+        
+        ## non-observed sensors
+        loc_exp1 = tf.reshape(loc, loc.shape[:-1] + [1, self.ns, 2]) # batch x n x 1 x ns x 2
+        loc_exp2 = tf.reshape(loc, loc.shape[:-1] + [self.ns, 1, 2]) # batch x n x ns x 1 x 2
+        norm = norm2(loc_exp1, loc_exp2) # batch x n x ns x ns
+        norm_sq = norm**2 # batch x n x ns x ns
+        # jitter; does not contribute to computation since only entries in upper triangular
+        # area is used
+        norm_sq += 1e-18 * tf.eye(self.ns)
 
-        term1_obs = []
-        for i in range(2):
-            for j in range(4):
-                tt = dnorm_log(
-                    self.Yb[j, i], 
-                    mean=norm2(self.Xb[i], tf.gather(loc, range(2*j, 2*j+2), axis=-1)),
-                    sd=self.sigma) * self.Ob[j, i] # batch x n
-                term1_obs.append(tt)
+        # observation term
+        tt1 = -norm_sq / (2*self.R**2) * self.Os # batch x n x ns x ns
+        tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2)) * (1 - self.Os) # batch x n x ns x ns
+        term2 = tt1 + tt2
+        assert term2.shape == loc.shape[:-1] + [self.ns, self.ns]
 
-        term2_obs = []
-        for i in range(3):
-            for j in range(i+1, 4):
-                tt = dnorm_log(
-                    self.Ys[i, j],
-                    mean=norm2(
-                        tf.gather(loc, range(2*i, 2*i+2), axis=-1),
-                        tf.gather(loc, range(2*j, 2*j+2), axis=-1)),
-                    sd=self.sigma) * self.Os[i, j] # batch x n
-                term2_obs.append(tt)
+        # distance term
+        tt_dist = dnorm_log(
+            self.Ys,
+            mean=norm,
+            sd=self.sigma) * self.Os # batch x n x ns x ns
+        assert tt_dist.shape == loc.shape[:-1] + [self.ns, self.ns]
 
-
-        term1 = tf.stack(term1, axis=-1) # batch x n x 8
-        term2 = tf.stack(term2, axis=-1) # batch x n x 6
-        term1_obs = tf.stack(term1_obs, axis=-1) # batch x n x 8
-        term2_obs = tf.stack(term2_obs, axis=-1) # batch x n x 6
-
-        terms_concat = tf.concat([term1, term2, term1_obs, term2_obs], axis=-1) # batch x n x 28
+        # select only (i,j)-entries where 1 <= i < j <= ns
+        pad = tf.experimental.numpy.triu(tf.ones(tt_dist.shape), k=1) # batch x n x ns x ns
+        term2_all = tf.reshape((term2 + tt_dist) * pad, term2.shape[:-2] + [self.ns**2]) # batch x n x ns**2
+        
+        # combine
+        terms_concat = tf.concat([term1_all, term2_all], axis=-1) # batch x n x (ns**2 + ns * nb)
 
         loglkhd = tf.reduce_sum(terms_concat, axis=-1) # batch x n
+        return loglkhd
+
+    def log_prob(self, loc):
+        loglkhd = self._loglkhd(loc)
         prior = tf.reduce_sum(
             dnorm_log(loc, mean=tf.zeros((8,)), sd=10.*tf.ones((8,))),
             axis=-1) # batch x n
-        post = loglkhd + prior # batch x n
-        return post + self.shift
+        return loglkhd + prior + self.shift # batch x n
 
 
 class SensorImproper(Sensor):
@@ -91,52 +99,7 @@ class SensorImproper(Sensor):
         super().__init__(Ob, Os, Xb, Xs, Yb, Ys, R, sigma)
 
     def log_prob(self, loc):
-        term1 = []
-        for i in range(3):
-            for j in range(8):
-                norm_sq = norm2(self.Xb[i, :], tf.gather(loc, range(2*j, 2*j +2), axis=-1))**2 # batch x n
-                tt1 = -norm_sq / (2*self.R**2) * self.Ob[j, i] # batch x n
-                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2)) * (1 - self.Ob[j, i]) # batch x n
-                term1.append(tt1 + tt2)
-
-        term2 = []
-        for i in range(7):
-            for j in range(i+1, 8):
-                norm_sq = norm2(
-                    tf.gather(loc, range(2*i, 2*i+2), axis=-1),
-                    tf.gather(loc, range(2*j, 2*j+2), axis=-1))**2 # batch x n
-                tt1 = -norm_sq / (2*self.R**2) * self.Os[i, j] # batch x n
-                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2)) * (1 - self.Os[i, j]) # batch x n
-                term2.append(tt1 + tt2)
-
-        term1_obs = []
-        for i in range(3):
-            for j in range(8):
-                tt = dnorm_log(
-                    self.Yb[j, i], 
-                    mean=norm2(self.Xb[i], tf.gather(loc, range(2*j, 2*j+2), axis=-1)),
-                    sd=self.sigma) * self.Ob[j, i] # batch x n
-                term1_obs.append(tt)
-
-        term2_obs = []
-        for i in range(7):
-            for j in range(i+1, 8):
-                tt = dnorm_log(
-                    self.Ys[i, j],
-                    mean=norm2(
-                        tf.gather(loc, range(2*i, 2*i+2), axis=-1),
-                        tf.gather(loc, range(2*j, 2*j+2), axis=-1)),
-                    sd=self.sigma) * self.Os[i, j] # batch x n
-                term2_obs.append(tt)
-
-
-        term1 = tf.stack(term1, axis=-1) # batch x n x 24
-        term2 = tf.stack(term2, axis=-1) # batch x n x 36
-        term1_obs = tf.stack(term1_obs, axis=-1) # batch x n x 24
-        term2_obs = tf.stack(term2_obs, axis=-1) # batch x n x 36
-
-        terms_concat = tf.concat([term1, term2, term1_obs, term2_obs], axis=-1) # batch x n x 120
-
-        loglkhd = tf.reduce_sum(terms_concat, axis=-1) # batch x n
+        loglkhd = self._loglkhd(loc)
         return loglkhd + self.shift
+
 
