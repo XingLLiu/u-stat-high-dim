@@ -23,7 +23,7 @@ tfb = tfp.bijectors
 tfk = tf.keras
 
 
-def logit(z, beta=10e-6):
+def logit(z, beta=10e-5):
     """
     Conversion to logit space according to equation (24) in [Papamakarios et al. (2017)].
     Includes scaling the input image to [0, 1] and conversion to logit space.
@@ -32,11 +32,14 @@ def logit(z, beta=10e-6):
     :return: Input tensor in logit space.
     """
 
-    inter = beta + (1 - 2 * beta) * (z / 256)
-    return tf.math.log(inter/(1-inter))  # logit function
+    # inter = beta + (1 - 2 * beta) * (z / 256)
+    # return tf.math.log(inter/(1-inter))  # logit function
 
+    z = (z / 256.) * (1 - beta) + 0.5 * beta  # Scale to prevent boundaries 0 and 1
+    z = tf.math.log(z) - tf.math.log(1-z)
+    return z
 
-def inverse_logit(x, beta=10e-6):
+def inverse_logit(x, beta=10e-5):
     """
     Reverts the preprocessing steps and conversion to logit space and outputs an image in
     range [0, 256]. Inverse of equation (24) in [Papamakarios et al. (2017)].
@@ -45,8 +48,11 @@ def inverse_logit(x, beta=10e-6):
     :return: Input tensor in logit space.
     """
 
-    x = tf.math.sigmoid(x)
-    return (x-beta)*256 / (1 - 2*beta)
+    # x = tf.math.sigmoid(x)
+    # return (x-beta)*256 / (1 - 2*beta)
+
+    z = tf.math.sigmoid(x)
+    return z * 256.
 
 def load_and_preprocess_mnist(logit_space=True, batch_size=128, shuffle=True, classes=-1, channels=False):
     """
@@ -277,7 +283,7 @@ def show(imgs, row_size=4, figsize=(5, 5)):
         plt.imshow(img, cmap="gray")
 
 
-def init_model(category: int=None, load: bool=True, seed: int=1234, layers: int=10, logit_space: bool=True):
+def init_model(category: int=None, load: bool=True, seed: int=1234, layers: int=10, logit_space: bool=True, load_dir: str=None):
     tf.random.set_seed(seed)
 
     # parameters
@@ -285,7 +291,7 @@ def init_model(category: int=None, load: bool=True, seed: int=1234, layers: int=
     dataset = "mnist"
     base_lr = 1e-3
     end_lr = 1e-4
-    max_epochs = 800 # 300 # 700 is enough
+    max_epochs = 800 # 700 is enough
     shape = [256, 256]
     exp_number = 1
     mnist_trainsize = 50000
@@ -356,8 +362,8 @@ def init_model(category: int=None, load: bool=True, seed: int=1234, layers: int=
 
     if load:
         # load best model with min validation loss
-        checkpoint.restore(checkpoint_prefix)
-        print(f"Successfully loaded trained model {checkpoint_prefix} !")
+        checkpoint.restore(load_dir)
+        print(f"Successfully loaded trained model {load_dir} !")
 
     else:
         global_step = []
