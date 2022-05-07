@@ -18,7 +18,7 @@ from src.sensors import Sensor, SensorImproper
 
 MCMCKernel = RandomWalkBarker # RandomWalkBarker 
 
-MODEL = "original"
+MODEL = "modified"
 T_LIST = [10, 50] # [1000, 2000, 4000, 6000, 8000, 10000, 20000]
 
 if MODEL == "modified":
