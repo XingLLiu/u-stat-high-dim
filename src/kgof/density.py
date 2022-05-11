@@ -8,7 +8,7 @@ from builtins import range
 from past.utils import old_div
 from builtins import object
 from future.utils import with_metaclass
-from sensor_pval import Xb
+# from sensor_pval import Xb
 __author__ = 'wittawat'
 
 from abc import ABCMeta, abstractmethod

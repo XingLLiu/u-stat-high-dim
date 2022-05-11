@@ -48,7 +48,7 @@ def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, shift=0., return_logp
     a = [1. if x < k else 0. for x in range(dim)]
     a = tf.constant(a)
     multiplier = delta/tf.math.sqrt(float(k))
-    mean1 = tf.zeros(dim) + shift # -multiplier * a + shift
+    mean1 = tf.zeros(dim) + shift
     mean2 = multiplier * a + shift
     mix_gauss = tfd.Mixture(
       cat=tfd.Categorical(probs=[ratio, 1-ratio]),
@@ -57,18 +57,32 @@ def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, shift=0., return_logp
         tfd.MultivariateNormalDiag(mean2)
     ])
     
-    if not return_logprob:
-      return mix_gauss
-    else:      
+    # consider each case separately for numerical stability
+    if ratio == 1.:
+      def log_prob_fn(x):
+        """fast implementation of log_prob"""
+        exp = tf.reduce_sum((x - mean1)**2, axis=-1) # n
+        return - 0.5 * exp
+    
+    elif ratio == 0.:
+      def log_prob_fn(x):
+        """fast implementation of log_prob"""
+        exp = tf.reduce_sum((x - mean2)**2, axis=-1) # n
+        return - 0.5 * exp
+
+    else:
+      log_ratio1 = tf.math.log(ratio)
+      log_ratio2 = tf.math.log(1-ratio)
       def log_prob_fn(x):
         """fast implementation of log_prob"""
         exp1 = tf.reduce_sum((x - mean1)**2, axis=-1) # n
         exp2 = tf.reduce_sum((x - mean2)**2, axis=-1) # n
-        return tf.math.log(
-            ratio * tf.math.exp(- 0.5 * exp1) + 
-            (1-ratio) * tf.math.exp(- 0.5 * exp2)
-        )
-      
+        exps = tf.stack([-0.5 * exp1 + log_ratio1, -0.5 * exp2 + log_ratio2]) # 2 x n
+        return tf.math.reduce_logsumexp(exps, axis=0) # n
+    
+    if not return_logprob:
+      return mix_gauss
+    else:      
       return mix_gauss, log_prob_fn  
 
 
