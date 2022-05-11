@@ -1,6 +1,42 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+def plot_sensors(x, lims=None, loc_true=None, extra=None, legend=True):
+    n = x.shape[0]
+    nsensors = x.shape[1] // 2
+    
+    x = tf.reshape(x, (n*nsensors, 2)).numpy()
+    sensors_ind = [str(i) for i in range(1, nsensors+1)]
+    
+    plot_df = pd.DataFrame({"x0": x[:, 0], "x1": x[:, 1], 
+                            "sensor": sensors_ind * n})
+    
+    g = plt.Figure()
+    sns.scatterplot(data=plot_df, x="x0", y="x1", hue="sensor")
+    
+    if loc_true is not None:
+        loc_true_np = tf.reshape(loc_true, (nsensors, 2)).numpy()
+        loc_true_df = pd.DataFrame({"x0": loc_true_np[:, 0], "x1": loc_true_np[:, 1],
+                                "sensor": sensors_ind})
+        plt.scatter(loc_true_df["x0"], loc_true_df["x1"], color="black", marker="^", s=48)
+        # sns.scatterplot(data=loc_true_df, x="x0", y="x1", palette=["black", "black"], markers=["v", "P"])
+
+    if extra is not None:
+        extra_np = tf.reshape(extra, (-1, 2)).numpy()
+        plt.scatter(extra_np[:, 0], extra_np[:, 1], color="grey", marker="P")
+    
+    if lims is not None:
+        _ = plt.axis(xmin=lims[0], xmax=lims[1], ymin=lims[2], ymax=lims[3])
+
+    if not legend:
+        plt.legend([],[], frameon=False)
+    
+    return g
+        
 
 def norm2_sq(loca, locb):
     diff = loca - locb # batch x n x dim

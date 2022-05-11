@@ -1,7 +1,8 @@
 ############################ Example 3: Sensor location problem
+library("parallel")
 
 ######## Data
-model <- "modified"
+model <- "modified" # "original"
 
 if (model == "original") {
   loc_true = t(matrix(c(
@@ -324,17 +325,38 @@ MHwG.RAM <- function(initial.loc, initial.aux, jump.scale,
   
 }
 
-set.seed(1)
-j.list <- c(1.3) # c(0.3, 0.7, 0.9, 1.1) # c(0.1, 0.5, 1.0, 1.08, 1.20) 
+## run with different jump scales
+# set.seed(1)
+# j.list <- c(0.3, 0.7, 0.9, 1.3) # c(0.1, 0.5, 1.0, 1.08, 1.20) 
 
-res <- sapply(1 : length(j.list), function(k) {
-  j.scale <- rep(j.list[k], ns)
+# res <- mclapply(1 : length(j.list), function(k) {
+#   j.scale <- rep(j.list[k], ns)
+#   res.ram <- MHwG.RAM(runif(2*ns), runif(2*ns), jump.scale = j.scale, 
+#                                 Ob, Os, Xb, Xs, Yb, Ys, 
+#                                 n.sample = 400000, n.burn = 40000)
+  
+#   write.csv(res.ram$x, paste0(path, "_", j.list[k], ".csv"), row.names=FALSE)
+# }, mc.cores=length(j.list))
+
+
+## run with different seeds for the same jump scale
+args = commandArgs(trailingOnly=TRUE)
+
+j.scale.val <- as.double(args[[1]])
+seed.list <- 1:10 # 1:20
+
+res <- mclapply(1 : length(seed.list), function(k) {
+  set.seed(k)
+  j.scale <- rep(j.scale.val, ns)
   res.ram <- MHwG.RAM(runif(2*ns), runif(2*ns), jump.scale = j.scale, 
                                 Ob, Os, Xb, Xs, Yb, Ys, 
                                 n.sample = 400000, n.burn = 40000)
   
-  write.csv(res.ram$x, paste0(path, "_", j.list[k], ".csv"), row.names=FALSE)
-})
+  write.csv(res.ram$x, paste0(path, j.scale.val, "/", "seed", k, ".csv"), row.names=FALSE)
+}, mc.cores=length(seed.list))
+
+
+
 
 
 # j.scale <- rep(1.08, ns)

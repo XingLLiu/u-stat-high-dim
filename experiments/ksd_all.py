@@ -121,8 +121,10 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
                 iterator.set_description(f"Jump scale [{i+1} / {len(jump_ls)}]]")
                 
                 # run dynamic for T steps
-                x_t = mh.x[i, -1, :, :]
-                
+                x_t = mh.x[i, -1, :]
+                if len(x_t.shape) == 1: 
+                    x_t = tf.expand_dims(x_t, -1)
+
                 # compute ksd
                 _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
                 ksd_val = ksd_val
@@ -141,7 +143,9 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             best_proposal_dict = {**best_proposal_dict, "ind_pair_list": ind_pair_list}
 
             # get perturbed samples
-            x_t = mh.x[-1, :, :].numpy()
+            x_t = mh.x[-1]
+            if len(x_t.shape) == 1: 
+                x_t = tf.expand_dims(x_t, -1)
 
             # get multinomial sample
             multinom_one_sample = multinom_samples[iter, :] # nrep x num_boost x ntest
@@ -224,7 +228,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
 num_boot = 800 # number of bootstrap samples to compute critical val
 alpha = 0.05 # test level
-jump_ls = np.linspace(0.8, 1.2, 11).tolist() # std for discrete jump proposal
+jump_ls = np.linspace(0.5, 1.5, 51).tolist() # std for discrete jump proposal
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
