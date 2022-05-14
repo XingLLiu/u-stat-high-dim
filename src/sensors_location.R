@@ -350,9 +350,9 @@ res <- mclapply(1 : length(seed.list), function(k) {
   j.scale <- rep(j.scale.val, ns)
   res.ram <- MHwG.RAM(runif(2*ns), runif(2*ns), jump.scale = j.scale, 
                                 Ob, Os, Xb, Xs, Yb, Ys, 
-                                n.sample = 400000, n.burn = 40000)
+                                n.sample = 800000, n.burn = 80000)
   
-  write.csv(res.ram$x, paste0(path, j.scale.val, "/", "seed", k, ".csv"), row.names=FALSE)
+  write.csv(res.ram$x, paste0(path, j.scale.val, "/", "seed", k, "long.csv"), row.names=FALSE)
 }, mc.cores=length(seed.list))
 
 

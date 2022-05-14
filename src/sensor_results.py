@@ -21,8 +21,8 @@ MCMCKernel = RandomWalkMH # RandomWalkBarker
 MODEL = "modified" # "original"
 T = 1000
 NSAMPLE = 1000
-RAM_SCALE_LIST = [1.08] # [0.1, 0.3, 0.5, 0.7, 0.9, 1.08, 1.3]
-seed_list = range(20)
+RAM_SCALE_LIST = [0.1, 0.3, 0.5, 0.7, 0.9, 1.08, 1.3]
+seed_list = range(1, 11) # range(1, 21)
 
 if MODEL == "modified":
     # Observation indicators from the fifth sensor (1st column) to the first four sensors
@@ -149,8 +149,8 @@ def load_preprocess_sensors(path, n, ntrain):
     mcmc_res = pd.read_csv(path)
 
     ## thin sample
-    # ind = tf.range(start=0, limit=400000, delta=400000//n)
-    ind = tf.range(start=0, limit=800000, delta=800000//n)
+    ind = tf.range(start=0, limit=400000, delta=400000//n)
+    # ind = tf.range(start=0, limit=800000, delta=800000//n)
     samples_off = tf.constant(mcmc_res.loc[ind].to_numpy(), dtype=tf.float32)
 
     ## split to train and test
@@ -178,12 +178,13 @@ def experiment(T, n, target_dist):
     res = []
     iterator = tqdm(RAM_SCALE_LIST)
     for ram_scale in iterator:
+        res_samples = {}
         for i, seed in enumerate(seed_list):
             iterator.set_description(f"seed [{i+1} / {len(seed_list)}]")
             multinom_samples = bootstrap.multinom.sample((nrep, num_boot))
 
             ## load data
-            sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{seed+1}.csv", n, ntrain)
+            sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{seed}.csv", n, ntrain)
 
             ## sample initial points for finding modes
             start_pts = tf.concat([
@@ -242,7 +243,9 @@ def experiment(T, n, target_dist):
 
             res.append([ram_scale, p_val0, p_valt, best_jump.numpy(), ksd0, ksdt, seed])
 
-        pickle.dump({"perturbed": mh, "sample_train": sample_train, "sample_test": sample_test},
+            res_samples[seed] = {"perturbed": mh, "sample_train": sample_train, "sample_test": sample_test}
+
+        pickle.dump(res_samples,
             open(f"res/sensors/sample_{model_name}_{ram_scale}.pkl", "wb"))
 
     res_df = pd.DataFrame(res, columns=["ram_scale", "p_val_ksd", "p_val_pksd", "best_jump", "ksd", "pksd", "seed"])
