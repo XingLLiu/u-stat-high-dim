@@ -21,9 +21,11 @@ MCMCKernel = RandomWalkMH # RandomWalkBarker
 MODEL = "modified" # "original"
 T = 1000
 NSAMPLE = 1000
-RAM_SCALE_LIST = [0.1, 0.3, 0.5, 0.7, 0.9, 1.08, 1.3]
-RAM_SEED = 9
+RAM_SCALE = 1.08
+RAM_SEED = 3
+N_LIST = [100, 250, 500, 750, 1000]
 REP = 10
+root = f"res/sensors_n_seed{RAM_SEED}"
 
 if MODEL == "modified":
     # Observation indicators from the fifth sensor (1st column) to the first four sensors
@@ -70,7 +72,7 @@ if MODEL == "modified":
 
     ModelClass = Sensor
     model_name = "modified_ram"
-    path = f"res/sensors/{model_name}"
+    path = f"{root}/{model_name}"
 
 elif MODEL == "original":
     loc_true = tf.constant([
@@ -133,7 +135,7 @@ elif MODEL == "original":
 
     ModelClass = SensorImproper
     model_name = "original_ram"
-    path = f"res/sensors/{model_name}"
+    path = f"{root}/{model_name}"
 
 tf.random.set_seed(1)
 
@@ -150,8 +152,7 @@ def load_preprocess_sensors(path, n, ntrain):
     mcmc_res = pd.read_csv(path)
 
     ## thin sample
-    ind = tf.range(start=0, limit=400000, delta=400000//n)
-    # ind = tf.range(start=0, limit=800000, delta=800000//n)
+    ind = tf.constant(range(0, 400*n, 400))
     samples_off = tf.constant(mcmc_res.loc[ind].to_numpy(), dtype=tf.float32)
 
     ## split to train and test
@@ -164,30 +165,31 @@ def load_preprocess_sensors(path, n, ntrain):
 def experiment(T, n, target_dist):
     jump_ls = tf.linspace(0.8, 1.2, 51)
     
-    ntrain = n // 2
     threshold = 1e-4
-    nrep = 1
 
     num_boot = 800
     alpha = 0.05
     
     kernel = IMQ(med_heuristic=True)
     ksd = KSD(target=target_dist, kernel=kernel)
-    bootstrap = Bootstrap(ksd, n-ntrain)
 
     res = []
-    iterator = tqdm(RAM_SCALE_LIST)
-    for ram_scale in iterator:
+    iterator = tqdm(N_LIST)
+    res_samples_all = {}
+    for n in iterator:
         res_samples = {}
+        ntrain = n // 2
+
+        ## initialise multinom samples for bootstrap
+        bootstrap = Bootstrap(ksd, n-ntrain)
+        multinom_samples_all = bootstrap.multinom.sample((REP, num_boot))
+
         for i, seed in enumerate(range(REP)):
             tf.random.set_seed(seed)
             iterator.set_description(f"seed [{i+1} / {REP}]")
 
-            ## get multinom sample for bootstrap
-            multinom_samples = bootstrap.multinom.sample((nrep, num_boot))
-
             ## load, schuffle, and split data
-            sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{RAM_SEED}.csv", n, ntrain)
+            sample_train, sample_test = load_preprocess_sensors(f"{path}{RAM_SCALE}/seed{RAM_SEED}.csv", n, ntrain)
 
             ## sample initial points for finding modes
             start_pts = tf.concat([
@@ -234,7 +236,8 @@ def experiment(T, n, target_dist):
             ksd = KSD(target=target_dist, kernel=kernel)
             bootstrap = Bootstrap(ksd, n-ntrain)
 
-            multinom_one_sample = multinom_samples[0, :]
+            ## get multinom sample for bootstrap
+            multinom_one_sample = multinom_samples_all[i]
 
             # before perturbation
             _, p_val0 = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_0, multinom_samples=multinom_one_sample)
@@ -244,16 +247,18 @@ def experiment(T, n, target_dist):
             _, p_valt = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
             ksdt = bootstrap.ksd_hat
 
-            res.append([ram_scale, p_val0, p_valt, best_jump.numpy(), ksd0, ksdt, seed])
+            res.append([RAM_SCALE, p_val0, p_valt, best_jump.numpy(), ksd0, ksdt, seed, n])
 
             res_samples[seed] = {"perturbed": mh, "sample_train": sample_train, "sample_test": sample_test}
 
-        pickle.dump(res_samples,
-            open(f"res/sensors/sample_{model_name}_{ram_scale}.pkl", "wb"))
+        res_samples_all[n] = res_samples
 
-    res_df = pd.DataFrame(res, columns=["ram_scale", "p_val_ksd", "p_val_pksd", "best_jump", "ksd", "pksd", "seed"])
-    res_df.to_csv(f"res/sensors/res_{model_name}.csv", index=False)
+    res_df = pd.DataFrame(res, columns=["ram_scale", "p_val_ksd", "p_val_pksd", "best_jump", "ksd", "pksd", "seed", "n"])
+    res_df.to_csv(f"{root}/res_{model_name}.csv", index=False)
 
+    pickle.dump(res_samples_all,
+        open(f"{root}/sample_{model_name}_{RAM_SCALE}.pkl", "wb"))
+    
     return res_df
 
 if __name__ == "__main__":

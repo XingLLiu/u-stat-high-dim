@@ -48,7 +48,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
         print("Use randomly initialised points")
         # generate points for finding modes
         start_pts_all = tf.random.uniform(
-            shape=(nrep, ntrain//2, dim), minval=-rand_start, maxval=rand_start) # nrep x (ntrain//2) x dim
+            shape=(nrep, ntrain-ntrain//2, dim), minval=-rand_start, maxval=rand_start) # nrep x (ntrain//2) x dim
         
         ## for NF initialisation
         # unif_dist = tfp.distributions.Uniform(low=tf.zeros((dim,)), high=255.*tf.ones((dim,)))
@@ -228,7 +228,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
 num_boot = 800 # number of bootstrap samples to compute critical val
 alpha = 0.05 # test level
-jump_ls = np.linspace(0.5, 1.5, 51).tolist() # std for discrete jump proposal
+jump_ls = np.linspace(0.5, 1.5, 21).tolist() # std for discrete jump proposal
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -308,7 +308,7 @@ if __name__ == "__main__":
         model_name = f"{mcmc_name}_steps{T}_dim{dim}_nmodes{nmodes}_nbanana{nbanana}_ratiosvar{args.ratio_s_var}_t-std{args.t_std}_n{n}_seed{seed}"
         ratio_target = [1/nmodes] * nmodes
         
-        random_weights = tf.exp(rdg.normal((nmodes,)) * args.ratio_s_var)
+        random_weights = ratio_target + tf.exp(rdg.normal((nmodes,)) * args.ratio_s_var)
         ratio_sample = random_weights / tf.reduce_sum(random_weights)
 
         loc = rdg.uniform((nmodes, dim), minval=-tf.ones((dim,))*20, maxval=tf.ones((dim,))*20) # uniform in [-20, 20]^d
@@ -334,11 +334,6 @@ if __name__ == "__main__":
         model_name = f"{mcmc_name}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}_n{n}"
         create_target_model = models.create_rbm(B_scale=6., c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
         create_sample_model = models.create_rbm(B_scale=6., c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
-
-    elif model == "nf":
-        model_name = f"{mcmc_name}{rnd_st_suff}_steps{T}_n{n}_seed{seed}"
-        create_target_model = models.generate_nf_mnist(real_mnist=False, return_logprob=True)
-        create_sample_model = models.generate_nf_mnist(real_mnist=True, category=[0, 1], return_logprob=True)
 
     print(f"Running {model_name}")
 
