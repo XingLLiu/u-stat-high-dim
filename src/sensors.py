@@ -27,7 +27,7 @@ def plot_sensors(x, lims=None, loc_true=None, extra=None, legend=True):
 
     if extra is not None:
         extra_np = tf.reshape(extra, (-1, 2)).numpy()
-        plt.scatter(extra_np[:, 0], extra_np[:, 1], color="grey", marker="P")
+        plt.scatter(extra_np[:, 0], extra_np[:, 1], color="black", marker="P", s=48)
     
     if lims is not None:
         _ = plt.axis(xmin=lims[0], xmax=lims[1], ymin=lims[2], ymax=lims[3])
