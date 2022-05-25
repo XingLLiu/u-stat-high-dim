@@ -8,6 +8,7 @@ See `example_gaussian_mix.ipynb` for an example of how to use pKSD tests for a g
 ├── res                           # Folder to store results
 ├── experiments.py                # Main script for generating results
 ├── example_gaussian_mix.ipynb    # Demonstration for how to use pKSD tests
+├── setup.py                      # Setup file for easy-install of pKSD
 └── README.md
 ```
 
