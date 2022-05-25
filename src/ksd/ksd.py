@@ -1,21 +1,30 @@
 import tensorflow as tf
-import numpy as np
 import tensorflow_probability as tfp
 from tqdm import trange
+
+from src.ksd.find_modes import find_modes, pairwise_directions
+import src.ksd.langevin as mcmc
+from src.ksd.bootstrap import Bootstrap
 
 class KSD:
   def __init__(
     self,
-    target: tfp.distributions.Distribution,
     kernel: tf.Module,
+    target: tfp.distributions.Distribution=None,
+    log_prob: callable=None
   ):
     """
     Inputs:
-        target (tf.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
+        target (tfp.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
         kernel (tf.nn.Module): [description]
         optimizer (tf.optim.Optimizer): [description]
     """
-    self.p = target
+    if target is not None:
+      self.p = target
+      self.log_prob = target.log_prob
+    else:
+      self.p = None
+      self.log_prob = log_prob
     self.k = kernel
 
   def __call__(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
@@ -32,11 +41,11 @@ class KSD:
     if not hasattr(self.p, "grad_log"):
       with tf.GradientTape() as g:
         g.watch(X_cp)
-        log_prob_X = self.p.log_prob(X_cp)
+        log_prob_X = self.log_prob(X_cp)
       score_X = g.gradient(log_prob_X, X_cp) # n x dim
       with tf.GradientTape() as g:
         g.watch(Y_cp)
-        log_prob_Y = self.p.log_prob(Y_cp) # m x dim
+        log_prob_Y = self.log_prob(Y_cp) # m x dim
       score_Y = g.gradient(log_prob_Y, Y_cp)
     else:
       score_X = self.p.grad_log(X_cp) # n x dim
@@ -100,6 +109,18 @@ class KSD:
       ksd_scaled = ksd / tf.math.sqrt(var)
       return var, ksd_scaled
 
+  def test(self, x: tf.Tensor, num_boot: int):
+    # get multinomial sample
+    # Sampling can be slow. initialise separately for faster implementation
+    n = x.shape[0]
+    bootstrap = Bootstrap(self, n)
+    # (num_boot - 1) because the test statistic is also included 
+    multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
+
+    p_val = bootstrap.test_once(alpha=None, num_boot=num_boot, X=x, multinom_samples=multinom_one_sample)
+    return bootstrap.ksd_hat, p_val
+
+
 class ConvolvedKSD:
   def __init__(
     self,
@@ -108,7 +129,7 @@ class ConvolvedKSD:
   ):
     """
     Inputs:
-        target (tf.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
+        target (tfp.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
         kernel (tf.nn.Module): [description]
         optimizer (tf.optim.Optimizer): [description]
     """
@@ -462,7 +483,7 @@ class SDEKSD:
   ):
     """
     Inputs:
-        target (tf.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
+        target (tfp.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
         kernel (tf.nn.Module): [description]
         optimizer (tf.optim.Optimizer): [description]
     """
@@ -549,3 +570,93 @@ class SDEKSD:
       assert term3_mat.shape == (X.shape[0], Y.shape[0])
       assert term4_mat.shape == (X.shape[0], Y.shape[0])
       return term1_mat + term2_mat + term3_mat + term4_mat
+
+
+class PKSD(KSD):
+  def __init__(self, 
+    kernel: tf.Module, 
+    pert_kernel: mcmc.RandomWalkMH,
+    log_prob, callable=None,
+    target: tfp.distributions.Distribution=None, 
+    score: callable=None
+  ):
+      super().__init__(kernel, target, log_prob)
+      self.pert_kernel = pert_kernel
+      self.score = score
+
+  def find_modes(self, init_points: tf.Tensor, threshold: float, **kwargs):
+    # merge modes
+    mode_list, inv_hess_list = find_modes(
+      init_points, self.log_prob, threshold=threshold, grad_log=self.score, **kwargs)
+
+    # find between-modes dir
+    if len(mode_list) == 1:
+        _, ind_pair_list = [mode_list[0]], [(0, 0)]
+    else:
+        _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
+
+    proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
+    
+    self.ind_pair_list = ind_pair_list
+    self.proposal_dict = proposal_dict
+
+  def test(self, 
+    xtrain: tf.Tensor, 
+    xtest: tf.Tensor, 
+    T: int, 
+    jump_ls: tf.Tensor,
+    num_boot: int=1000, 
+  ):
+    """Finds the best jump scale using the training set, and use this jump scale to perform KSD 
+    test using the perturbed samples.
+    """
+    if self.proposal_dict is None:
+      raise ValueError("Must run find_modes before testing")
+
+    # find best jump scale
+    mh = self.pert_kernel(log_prob=self.log_prob)
+    mh.run(steps=T, std=jump_ls, x_init=xtrain, ind_pair_list=self.ind_pair_list, **self.proposal_dict)
+
+    # compute ksd
+    scaled_ksd_vals = []
+    for i in range(len(jump_ls)):
+      # get samples after T steps
+      x_t = mh.x[i, -1, :]
+
+      if len(x_t.shape) == 1: 
+          x_t = tf.expand_dims(x_t, -1)
+
+      # compute ksd
+      _, ksd_val = self.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
+
+      scaled_ksd_vals.append(ksd_val)
+
+    # get best jump scale
+    best_idx = tf.math.argmax(scaled_ksd_vals)
+    best_jump = jump_ls[best_idx]
+    
+    # store samples corresponding to the best jump scale
+    self.x = mh.x[best_idx]
+
+    # run dynamic for T steps with test data and optimal params
+    mh = self.pert_kernel(log_prob=self.log_prob)
+    mh.run(steps=T, x_init=xtest, std=best_jump, ind_pair_list=self.ind_pair_list, **self.proposal_dict)
+
+    # get perturbed samples
+    x_t = mh.x[-1]
+    if len(x_t.shape) == 1: 
+        x_t = tf.expand_dims(x_t, -1)
+
+    # get multinomial sample
+    # Sampling can be slow. initialise separately for faster implementation
+    ntest = xtest.shape[0]
+    bootstrap = Bootstrap(self, ntest)
+    # (num_boot - 1) because the test statistic is also included 
+    multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
+
+    # compute p-value
+    p_val = bootstrap.test_once(alpha=None, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
+    
+    return bootstrap.ksd_hat, p_val
+
+

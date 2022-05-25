@@ -3,11 +3,8 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
-import matplotlib.pyplot as plt
-from tqdm import trange, tqdm
+from tqdm import trange
 import argparse
-
-import pytorch_lightning as pl
 
 from src.ksd.ksd import KSD, ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
@@ -294,7 +291,6 @@ if __name__ == "__main__":
 
     # set random seed for all
     rdg = tf.random.Generator.from_seed(seed)
-    # pl.seed_everything(seed)
     
     # set model
     if model == "bimodal":

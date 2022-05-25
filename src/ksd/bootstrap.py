@@ -83,17 +83,20 @@ class Bootstrap:
     
     return w_outer * u_p
 
-  def _test_once(self, alpha):
+  def _test_once(self, alpha: float=None):
     """Utility function that performs bootstrap test once"""
-    critical_val = np.quantile(self.ksd_star.numpy(), 1-alpha)
-    reject = 1 if self.ksd_hat > critical_val else 0
     p_val = np.count_nonzero(self.ksd_star.numpy() > self.ksd_hat) / (self.ksd_star.shape[0] + 1)
-    return reject, critical_val, p_val
+    if alpha is not None:
+      critical_val = np.quantile(self.ksd_star.numpy(), 1-alpha)
+      reject = 1 if self.ksd_hat > critical_val else 0
+      return reject, critical_val, p_val
+    else:
+      return p_val
 
   def test_once(
     self, 
-    alpha: float, 
     num_boot: int, 
+    alpha: float=None, 
     X: tf.Tensor=None,
     multinom_samples: tf.Tensor=None,
     **kwargs
@@ -110,8 +113,12 @@ class Bootstrap:
 
     self.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_samples)
 
-    reject, critical_val, p_val = self._test_once(alpha)
-    conclusion = "Rejected" if reject else "NOT rejected"
-    self.test_summary = "Significance\t: {} \nCritical value\t: {:.5f} \np-value\t: {:.5f} \nTest statistic\t: {:.5f} \nTest result\t: {:s}".format(
-      alpha, critical_val, p_val, self.ksd_hat, conclusion)
-    return reject, p_val
+    if alpha is not None:
+      reject, critical_val, p_val = self._test_once(alpha)
+      conclusion = "Rejected" if reject else "NOT rejected"
+      self.test_summary = "Significance\t: {} \nCritical value\t: {:.5f} \np-value\t: {:.5f} \nTest statistic\t: {:.5f} \nTest result\t: {:s}".format(
+        alpha, critical_val, p_val, self.ksd_hat, conclusion)
+      return reject, p_val
+    else:
+      p_val = self._test_once(alpha)
+      return p_val

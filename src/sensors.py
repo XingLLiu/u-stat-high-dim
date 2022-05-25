@@ -22,19 +22,20 @@ def plot_sensors(x, lims=None, loc_true=None, extra=None, legend=True):
         loc_true_np = tf.reshape(loc_true, (nsensors, 2)).numpy()
         loc_true_df = pd.DataFrame({"x0": loc_true_np[:, 0], "x1": loc_true_np[:, 1],
                                 "sensor": sensors_ind})
-        plt.scatter(loc_true_df["x0"], loc_true_df["x1"], color="black", marker="^", s=48)
+        plt.scatter(loc_true_df["x0"], loc_true_df["x1"], color="black", marker="^", s=48, label="true loc")
         # sns.scatterplot(data=loc_true_df, x="x0", y="x1", palette=["black", "black"], markers=["v", "P"])
 
     if extra is not None:
         extra_np = tf.reshape(extra, (-1, 2)).numpy()
-        plt.scatter(extra_np[:, 0], extra_np[:, 1], color="black", marker="P", s=48)
+        plt.scatter(extra_np[:, 0], extra_np[:, 1], color="black", marker="P", s=48, label="extra")
     
     if lims is not None:
         _ = plt.axis(xmin=lims[0], xmax=lims[1], ymin=lims[2], ymax=lims[3])
 
     if not legend:
         plt.legend([],[], frameon=False)
-    
+    else:
+        plt.legend()
     return g
         
 
