@@ -19,29 +19,28 @@
 #     # --nrep=100 --rand_start=10. &
 # done
 
-# # n power test
+# n power test
 for n in 200 500 1000 1500 2000
 do
     CUDA_VISIBLE_DEVICES="" taskset -c 0-5 python \
     experiments.py --model=bimodal --k=1 --dim=50 --T=10 --n=$n --ratio_t=0.5 --ratio_s=1. --delta=6 \
     --nrep=100 --rand_start=10. &
 done
-# wait
-# # n level test
+
+# n level test
 for n in 200 500 1000 1500 2000
 do
     CUDA_VISIBLE_DEVICES="" taskset -c 6-10 python \
     experiments.py --model=bimodal --k=1 --dim=50 --T=10 --n=$n --ratio_t=0.5 --ratio_s=0.5 --delta=6 \
-    --nrep=100 --rand_start=10. & #--mcmckernel=barker
+    --nrep=100 --rand_start=10. &
 done
 
 
 # # inter-modal distance
-# # redo fig1 and 2 in paper
 # for delta in 1 2 3 4 5 6 7 8 9 10 11 12 # 13 14 15
 # do
 #     CUDA_VISIBLE_DEVICES="" taskset -c 0-20 python \
 #     experiments.py --model=bimodal --k=1 --dim=1 --T=10 --n=1000 --ratio_t=0.5 --ratio_s=1. --delta=$delta \
-#     --nrep=100 --rand_start=10. & #--mcmckernel=barker
+#     --nrep=100 --rand_start=10. &
 # done
 wait

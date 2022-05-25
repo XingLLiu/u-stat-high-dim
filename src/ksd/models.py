@@ -2,7 +2,6 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import src.kgof.density as density
-from src.nf_maf import init_model, MNISTSampler
 
 def check_log_prob(dist, log_prob):
   """Check if log_prob == dist.log_prob + const."""
@@ -17,31 +16,7 @@ def check_log_prob(dist, log_prob):
   res = tf.experimental.numpy.allclose(diff, diff[0])
   assert res, "log_prob function is not implemented correctly"
 
-def create_mixture_gaussian(dim, delta, ratio=0.5, return_logprob=False):
-    """Bimodal Gaussian mixture with mean shift only in the first dim"""
-    e1 = tf.eye(dim)[:, 0]
-    mean1 = tf.zeros(dim) #-delta * e1
-    mean2 = delta * e1
-    mix_gauss = tfd.Mixture(
-      cat=tfd.Categorical(probs=[ratio, 1-ratio]),
-      components=[
-        tfd.MultivariateNormalDiag(mean1),
-        tfd.MultivariateNormalDiag(mean2)
-    ])
-
-    if not return_logprob:
-      return mix_gauss
-    else:      
-      def log_prob_fn(x):
-        """fast implementation of log_prob"""
-        exp1 = tf.reduce_sum((x - mean1)**2, axis=-1) # n
-        exp2 = tf.reduce_sum((x - mean2)**2, axis=-1) # n
-        return tf.math.log(
-            ratio * tf.math.exp(- 0.5 * exp1) + (1-ratio) * tf.math.exp(- 0.5 * exp2)
-        )
-      
-      return mix_gauss, log_prob_fn
-
+# end checker for log_prob implementation
 
 def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, shift=0., return_logprob=False):
     """Bimodal Gaussian mixture with mean shift of dist delta in the first k dims"""
@@ -83,7 +58,9 @@ def create_mixture_gaussian_kdim(dim, k, delta, ratio=0.5, shift=0., return_logp
     if not return_logprob:
       return mix_gauss
     else:      
-      return mix_gauss, log_prob_fn  
+      return mix_gauss, log_prob_fn
+
+# end mixture of multivariate Gaussians
 
 
 class Banana(tfp.bijectors.Bijector):
@@ -198,6 +175,7 @@ def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor,
     #   dim=dim, nbanana=nbanana, locs=loc, ratio=ratio, cov_mat_t=cov_mat, **kwargs)
     return mixture_dist, mixture_dist.log_prob
 
+# end mixture of t and banana distributions
 
 def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False):
     """Mixture of 20 Gaussian
@@ -233,21 +211,15 @@ def create_mixture_20_gaussian(means, ratio=0.5, scale=0.1, return_logprob=False
       
       return mix_gauss, log_prob_fn  
 
+# end mixture of 20 Gaussians
+
 def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
     """Bimodal Gaussian mixture with mean shift of dist delta in the first k dims"""
     mean1 = [4., 1.]
     mean2 = [-4., -4.]
-    # mean1 = [10.]
-    # mean2 = [-10.]
-    # mean1 = [-4., 4.]
-    # mean2 = [-4., -4.]
 
     cov1 = tf.constant([[1., 0.8], [0.8, 1]])
     cov2 = tf.constant([[1., -0.8], [-0.8, 1.]]) * 3.
-    # cov1 = tf.constant([[1.]])
-    # cov2 = tf.constant([[4.]])
-    # cov1 = tf.constant([[1., 0.], [0., 1]])
-    # cov2 = tf.constant([[1., -0.], [-0., 1.]]) * 3.
 
     scale1 = tf.linalg.cholesky(cov1)
     scale2 = tf.linalg.cholesky(cov2)
@@ -280,7 +252,9 @@ def create_mixture_gaussian_scaled(ratio=0.5, return_logprob=False):
           tf.stack([- 0.5 * exp1_diag + const1, - 0.5 * exp2_diag + const2]),
           axis=0) # n
       
-      return mix_gauss, log_prob_fn  
+      return mix_gauss, log_prob_fn
+
+# end mixture of scaled Gaussians
 
 def create_rbm(
   B_scale: tf.Tensor=8.,
@@ -319,23 +293,8 @@ def create_rbm(
   else:
     return dist, dist.log_prob
 
-
-def generate_nf_mnist(real_mnist: bool, category: list=[0, 1], return_logprob: bool=False):
-  """Generate two model classes, one for the trained normalising flow model (GLOW)
-  and one for the true MNIST dataset. """
-  if real_mnist:
-    model = MNISTSampler(category=category)
-    model.event_shape = (28*28,)
-    model.log_prob = None
-  else:
-    _, model, _ = init_model()
-
-  if not return_logprob:
-    return model
-  else:
-    return model, model.log_prob
-
-
+# end RBM
+ 
 def create_mixture_t(dim: int, ratio: tf.Tensor, loc: tf.Tensor, 
   std: float=0.01, return_logprob=False):
   """Create a mixture of t distributions. 
@@ -363,3 +322,5 @@ def create_mixture_t(dim: int, ratio: tf.Tensor, loc: tf.Tensor,
     return mixture_dist
   else:
     return mixture_dist, mixture_dist.log_prob
+
+# end mixture of t-distributions
