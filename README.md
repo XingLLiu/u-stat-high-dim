@@ -16,4 +16,4 @@ To reproduce results in the paper, run e.g.,
 # mixture of two gaussians example
 sh sh_scripts/run_bimodal.sh
 ```
-results will be stored in `res/bimodal`.
+Results will be stored in `res/bimodal`.
