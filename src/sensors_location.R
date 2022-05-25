@@ -1,4 +1,7 @@
-############################ Example 3: Sensor location problem
+############################ 
+# Example 3: Sensor location problem
+# adapted from Tak et al. 2016 https://www.tandfonline.com/doi/full/10.1080/10618600.2017.1415911
+############################
 library("parallel")
 
 ######## Data
