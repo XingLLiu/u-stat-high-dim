@@ -85,7 +85,9 @@ class Bootstrap:
 
   def _test_once(self, alpha: float=None):
     """Utility function that performs bootstrap test once"""
-    p_val = np.count_nonzero(self.ksd_star.numpy() > self.ksd_hat) / (self.ksd_star.shape[0] + 1)
+    p_val = (
+      1 + np.count_nonzero(self.ksd_star.numpy() >= self.ksd_hat)
+      ) / (self.ksd_star.shape[0] + 1)
     if alpha is not None:
       critical_val = np.quantile(self.ksd_star.numpy(), 1-alpha)
       reject = 1 if self.ksd_hat > critical_val else 0
