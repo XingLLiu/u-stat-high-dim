@@ -10,13 +10,19 @@ from src.ksd.ksd import KSD, ConvolvedKSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 import src.ksd.models as models
+import src.ksd.models_np as models_np
 import src.ksd.langevin as mcmc
 from src.ksd.find_modes import find_modes, pairwise_directions
 from src.kgof.ksdagg import ksdagg_wild_test
 
+import autograd.numpy as anp
+import kgof
+import kgof.density as kgof_density
+import kgof.goftest as kgof_gof
+
 
 def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha, num_boot, T, 
-    jump_ls, rand_start=None, method="mcmc", **kwargs):
+    jump_ls, rand_start=None, method="mcmc", log_prob_fn_np=None, **kwargs):
     """compute KSD and repeat for nrep times"""
     
     n = kwargs["n"]
@@ -33,11 +39,12 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
     iterator = trange(nrep)
 
-    bootstrap = Bootstrap(ksd, n-ntrain)
-    multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x ntest
+    if method == "mcmc" or method == "ksd":
+        bootstrap = Bootstrap(ksd, n-ntrain)
+        multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x ntest
 
-    bootstrap_nopert = Bootstrap(ksd, n)
-    multinom_samples_notrain = bootstrap_nopert.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
+        bootstrap_nopert = Bootstrap(ksd, n)
+        multinom_samples_notrain = bootstrap_nopert.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
 
     res_df = pd.DataFrame(columns=["method", "rej", "seed"])
     
@@ -66,6 +73,9 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
         # initialise indices for samples for Q
         conv_ind_all = tf.experimental.numpy.random.randint(low=0, high=num_est, size=(nrep, ntrain))
 
+    if method == "fssd":
+        log_prob_fn_np_den = kgof_density.from_log_den(dim, log_prob_fn_np)
+
     iterator.set_description(f"Running with sample size {n}")
     for iter in iterator:
         # each sample is different
@@ -75,13 +85,14 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
         sample_init = proposal.sample(n)
 
         ## KSD
-        iterator.set_description("Running KSD")
-        x_t = sample_init
-        multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
+        if method == "mcmc" or method == "ksd":
+            iterator.set_description("Running KSD")
+            x_t = sample_init
+            multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
 
-        # compute p-value
-        ksd_rej, _ = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
-        res_df.loc[len(res_df)] = ["KSD", ksd_rej, iter]
+            # compute p-value
+            ksd_rej, _ = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
+            res_df.loc[len(res_df)] = ["KSD", ksd_rej, iter]
 
 
         ## pKSD with MCMC kernel with uniformly chosen modes
@@ -181,7 +192,8 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             best_params = ksd.params[-1]
             best_proposal_dict = {
                 "log_noise_std": best_params[0],
-                "u": best_params[1:]}
+                "u": best_params[1:]
+            }
 
             # get samples to compute p-value
             x_t = sample_init_test
@@ -202,23 +214,50 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
 
         ## KSDAGG
-        iterator.set_description("Running KSDAGG")
-        x_t = sample_init
-        ksdagg_rej = ksdagg_wild_test(
-            seed=iter + n,
-            X=x_t,
-            log_prob_fn=log_prob_fn,
-            alpha=alpha,
-            beta_imq=0.5,
-            kernel_type="imq",
-            weights_type="uniform",
-            l_minus=0,
-            l_plus=10,
-            B1=num_boot,
-            B2=500, # num of samples to estimate level
-            B3=50, # num of bisections to estimate quantile
-        )
-        res_df.loc[len(res_df)] = ["KSDAGG", ksdagg_rej, iter]
+        if method == "mcmc" or method == "ksdagg":
+            iterator.set_description("Running KSDAGG")
+            x_t = sample_init
+            ksdagg_rej = ksdagg_wild_test(
+                seed=iter + n,
+                X=x_t,
+                log_prob_fn=log_prob_fn,
+                alpha=alpha,
+                beta_imq=0.5,
+                kernel_type="imq",
+                weights_type="uniform",
+                l_minus=0,
+                l_plus=10,
+                B1=num_boot,
+                B2=500, # num of samples to estimate level
+                B3=50, # num of bisections to estimate quantile
+            )
+            res_df.loc[len(res_df)] = ["KSDAGG", ksdagg_rej, iter]
+
+        
+        ## FSSD
+        if method == "fssd":
+            log_prob_fn_np_den
+            dat = anp.array(sample_init, dtype=anp.float64)
+            dat = kgof.data.Data(dat)
+            tr, te = dat.split_tr_te(tr_proportion=0.2, seed=iter + n)
+            opts = {
+                'reg': 1e-2, # regularization parameter in the optimization objective
+                'max_iter': 200, # maximum number of gradient ascent iterations
+                'tol_fun':1e-7, # termination tolerance of the objective
+            }
+
+            # J is the number of test locations (or features). Typically not larger than 10.
+            J = 1
+
+            # make sure to give tr (NOT te).
+            # do the optimization with the options in opts.
+            V_opt, gw_opt, opt_info = kgof_gof.GaussFSSD.optimize_auto_init(
+                log_prob_fn_np_den, tr, J, **opts)
+
+            fssd_opt = kgof_gof.GaussFSSD(log_prob_fn_np_den, gw_opt, V_opt, alpha)
+            test_result = fssd_opt.perform_test(te)
+            fssd_pval = test_result["pvalue"]
+            res_df.loc[len(res_df)] = ["FSSD", fssd_pval, iter]
 
     return res_df
 
@@ -276,7 +315,7 @@ if __name__ == "__main__":
 
     if method == "mcmc_all":
         mcmc_name = f"{mcmc_name}_all"
-    
+
     if method != "mcmc" and method != "mcmc_all":
         mcmc_name = args.method
 
@@ -297,6 +336,9 @@ if __name__ == "__main__":
         model_name = f"{mcmc_name}_steps{T}_ratio{ratio_target}_{ratio_sample}_k{k}_dim{dim}_seed{seed}_delta{delta}_n{n}{args.suffix}"
         create_target_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_target)
         create_sample_model = models.create_mixture_gaussian_kdim(dim=dim, k=k, delta=delta, return_logprob=True, ratio=ratio_sample)
+
+        # numpy version
+        log_prob_fn_np = models_np.create_mixture_gaussian_kdim_logprobb(dim=dim, k=k, delta=delta, ratio=ratio_target, shift=0.)
 
     elif model == "t-banana":
         nmodes = args.nmodes
@@ -360,7 +402,7 @@ if __name__ == "__main__":
         res_df = run_bootstrap_experiment(
             nrep, target, log_prob_fn, proposal, imq,
             alpha, num_boot, T, jump_ls, threshold=mode_threshold, nstart_pts=nstart_pts, n=n,
-            mcmckernel=MCMCKernel, method=method, rand_start=rand_start)
+            mcmckernel=MCMCKernel, method=method, rand_start=rand_start, log_prob_fn_np=log_prob_fn_np)
 
         # save res
         res_df.to_csv(f"{res_root}/{model_name}.csv", index=False)
