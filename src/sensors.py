@@ -1,4 +1,5 @@
 import numpy as np
+import autograd.numpy as anp
 import tensorflow as tf
 import tensorflow_probability as tfp
 import matplotlib.pyplot as plt
@@ -43,6 +44,10 @@ def norm2_sq(loca, locb):
     diff = loca - locb # batch x n x dim
     return tf.reduce_sum(diff**2, axis=-1) # batch x n
 
+def norm2_sq_np(loca, locb):
+    diff = loca - locb # batch x n x dim
+    return anp.sum(diff**2, axis=-1) # batch x n
+
 def dnorm(x, mean, sd, log=False):
     lkhd = (2*np.pi)**(-0.5) * sd**(-1) * tf.exp(-0.5 * (x - mean)**2 * sd**(-2))
     if not log:
@@ -52,6 +57,10 @@ def dnorm(x, mean, sd, log=False):
 
 def dnorm_log(x, mean, sd):
     ll = -0.5 * tf.math.log(2*np.pi) - tf.math.log(sd) - 0.5 * (x - mean)**2 * sd**(-2)
+    return ll
+
+def dnorm_log_np(x, mean, sd):
+    ll = -0.5 * anp.log(2*np.pi) - anp.log(sd) - 0.5 * (x - mean)**2 * sd**(-2)
     return ll
 
 def sqrt_stable(x, axis):
@@ -121,6 +130,122 @@ class Sensor:
             dnorm_log(loc, mean=tf.zeros((8,)), sd=10.*tf.ones((8,))),
             axis=-1) # batch x n
         return loglkhd + prior + self.shift # batch x n
+
+    def _loglkhd(self, loc):
+        term1 = 0.
+        for i in range(self.nb):
+            for j in range(self.ns):
+                # location term
+                norm_sq = norm2_sq(self.Xb[i, :], tf.gather(loc, range(2*j, 2 * j +2), axis=-1)) # batch x n
+                tt1 = -norm_sq / (2*self.R**2) * self.Ob[j, i] # batch x n
+                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2))*(1 - self.Ob[j, i]) # batch x n
+                term1 += tt1 + tt2
+
+                # distance term
+                norm = tf.math.sqrt(norm_sq)
+                tt = dnorm_log(
+                    self.Yb[j, i], 
+                    mean=norm,
+                    sd=self.sigma) * self.Ob[j, i] # batch x n
+                term1 += tt
+
+        term2 = 0.
+        for i in range(self.ns):
+            for j in range(i+1, self.ns):
+                # location term
+                norm_sq = norm2_sq(
+                    tf.gather(loc, range(2*i, 2*i+2), axis=-1),
+                    tf.gather(loc, range(2*j, 2*j+2), axis=-1)) # batch x n
+                tt1 = -norm_sq / (2*self.R**2) * self.Os[i, j] # batch x n
+                tt2 = tfp.math.log1mexp(norm_sq / (2*self.R**2))*(1 - self.Os[i, j]) # batch x n
+                term2 += tt1 + tt2
+
+                # distance term
+                tt = dnorm_log(
+                    self.Ys[i, j],
+                    mean=tf.math.sqrt(norm_sq),
+                    sd=self.sigma) * self.Os[i, j] # batch x n
+                term2 += tt
+
+        loglkhd = term1 + term2
+        return loglkhd
+
+    def log_prob(self, loc):
+        loglkhd = self._loglkhd(loc)
+        prior = tf.reduce_sum(
+            dnorm_log(loc, mean=tf.zeros((8,)), sd=10.*tf.ones((8,))),
+            axis=-1) # batch x n
+        return loglkhd + prior + self.shift # batch x n
+
+
+class SensorNumpy:
+    """Numpy version of the Sensor class"""
+    def __init__(self, Ob, Os, Xb, Xs, Yb, Ys, R=0.3, sigma=0.02):
+        self.Ob = anp.array(Ob, dtype=anp.float64)
+        self.Os = anp.array(Os, dtype=anp.float64)
+        self.Xb = anp.array(Xb, dtype=anp.float64)
+        self.Xs = anp.array(Xs, dtype=anp.float64)
+        self.Yb = anp.array(Yb, dtype=anp.float64)
+        self.Ys = anp.array(Ys, dtype=anp.float64)
+        self.R = R
+        self.sigma = sigma
+        self.nb = Xb.shape[0]
+        self.ns = Xs.shape[0]
+        self.shift = 25. # for numerical stability
+
+    def _loglkhd(self, loc):
+        """Numpy version of likelihood function"""
+        term1 = 0.
+        for i in range(self.nb):
+            for j in range(self.ns):
+                # location term
+                norm_sq = norm2_sq_np(self.Xb[i, :], loc[:, range(2*j, 2 * j +2)]) # batch x n
+                tt1 = -norm_sq / (2*self.R**2) * self.Ob[j, i] # batch x n
+                tt2 = anp.log1p(
+                    -anp.exp(- norm_sq / (2*self.R**2))
+                ) * (1 - self.Ob[j, i]) # batch x n
+                term1 += tt1 + tt2
+
+                # distance term
+                norm = anp.sqrt(norm_sq)
+                tt = dnorm_log_np(
+                    self.Yb[j, i], 
+                    mean=norm,
+                    sd=self.sigma) * self.Ob[j, i] # batch x n
+                term1 += tt
+
+        term2 = 0.
+        for i in range(self.ns):
+            for j in range(i+1, self.ns):
+                # location term
+                norm_sq = norm2_sq_np(
+                    loc[:, range(2*i, 2*i+2)],
+                    loc[:, range(2*j, 2*j+2)]) # batch x n
+                tt1 = -norm_sq / (2*self.R**2) * self.Os[i, j] # batch x n
+                tt2 = anp.log1p(
+                    -anp.exp(- norm_sq / (2*self.R**2))
+                ) * (1 - self.Os[i, j]) # batch x n
+                term2 += tt1 + tt2
+
+                # distance term
+                tt = dnorm_log_np(
+                    self.Ys[i, j],
+                    mean=anp.sqrt(norm_sq),
+                    sd=self.sigma) * self.Os[i, j] # batch x n
+                term2 += tt
+
+        loglkhd = term1 + term2
+        return loglkhd
+
+    def log_prob(self, loc):
+        """Numpy version of log_prob function"""
+        loglkhd = self._loglkhd(loc)
+        prior = anp.sum(
+            dnorm_log_np(loc, mean=anp.zeros((8,)), sd=10.*anp.ones((8,))),
+            axis=-1,
+        ) # batch x n
+        return loglkhd + prior + self.shift # batch x n
+
 
 class SensorImproper(Sensor):
 

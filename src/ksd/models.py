@@ -143,7 +143,7 @@ def create_mixture_t_banana_fast(dim, nbanana, locs, ratio, cov_mat_t, b=0.03, s
   return log_prob_mix_fast
 
 def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor, 
-  return_logprob=False, nbanana: int=5, std: float=0.01, **kwargs):
+  return_logprob=False, nbanana: int=5, std: float=0.01, b: float=0.003):
   """Create a mixture of t and t-tailed banana distributions. The first 5 modes are
   banana distributions, and the rest are t distributions.
   
@@ -155,7 +155,7 @@ def create_mixture_t_banana(dim: int, ratio: tf.Tensor, loc: tf.Tensor,
   nmodes = len(ratio)
   assert nmodes >= nbanana, f"number of mixtures {nmodes} must be >= {nbanana}"
 
-  banana_component = [create_banana(dim, loc=loc[i, :], **kwargs) for i in range(nbanana)]
+  banana_component = [create_banana(dim, loc=loc[i, :], b=b) for i in range(nbanana)]
   cov_mat = tf.math.sqrt(std * tf.math.sqrt(float(dim)) * tf.eye(dim))
   t_component = [
       tfd.MultivariateStudentTLinearOperator(

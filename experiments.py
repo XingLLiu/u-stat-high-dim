@@ -53,10 +53,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
         # generate points for finding modes
         start_pts_all = tf.random.uniform(
             shape=(nrep, ntrain-ntrain//2, dim), minval=-rand_start, maxval=rand_start) # nrep x (ntrain//2) x dim
-        
-        ## for NF initialisation
-        # unif_dist = tfp.distributions.Uniform(low=tf.zeros((dim,)), high=255.*tf.ones((dim,)))
-        # start_pts_all = unif_dist.sample((nrep, ntrain)) # change range
+
     else:
         print("Use sample as initial points")
 
@@ -236,7 +233,6 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
         
         ## FSSD
         if method == "fssd":
-            log_prob_fn_np_den
             dat = anp.array(sample_init, dtype=anp.float64)
             dat = kgof.data.Data(dat)
             tr, te = dat.split_tr_te(tr_proportion=0.2, seed=iter + n)
@@ -288,7 +284,7 @@ if __name__ == "__main__":
     parser.add_argument("--dh", type=int, default=10, help="dim of h for RBM")
     parser.add_argument("--ratio_s_var", type=float, default=0.)
     parser.add_argument("--rand_start", type=float, default=None)
-    parser.add_argument("--t_std", type=float, default=0.01)
+    parser.add_argument("--t_std", type=float, default=0.1)
     parser.add_argument("--threshold", type=float, default=1.)
     args = parser.parse_args()
     model = args.model
@@ -350,8 +346,6 @@ if __name__ == "__main__":
         ratio_sample = random_weights / tf.reduce_sum(random_weights)
 
         loc = rdg.uniform((nmodes, dim), minval=-tf.ones((dim,))*20, maxval=tf.ones((dim,))*20) # uniform in [-20, 20]^d
-        print(loc)
-        print(ratio_sample)
 
         b = 0.003 # 0.03
         create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=b,
@@ -373,6 +367,9 @@ if __name__ == "__main__":
         create_target_model = models.create_rbm(B_scale=6., c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
         create_sample_model = models.create_rbm(B_scale=6., c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
 
+        # numpy version
+        log_prob_fn_np = models_np.create_rbm(B_scale=6., c=0., dx=dim, dh=dh)
+
     print(f"Running {model_name}")
 
     # target distribution
@@ -382,9 +379,11 @@ if __name__ == "__main__":
     proposal, log_prob_fn_proposal = create_sample_model
     
     # check if log_prob is correct
-    if model != "nf":
-        models.check_log_prob(target, log_prob_fn)
-        models.check_log_prob(proposal, log_prob_fn_proposal)
+    models.check_log_prob(target, log_prob_fn)
+    models.check_log_prob(proposal, log_prob_fn_proposal)
+
+    # check if numpy version agrees with tf version
+    models_np.assert_equal_log_prob(target, log_prob_fn, log_prob_fn_np)
 
     # run experiment
     res_df = None
