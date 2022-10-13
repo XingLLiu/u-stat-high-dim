@@ -1,5 +1,6 @@
 import autograd.numpy as anp
 import kgof.density as kgof_density
+from scipy.special import logsumexp
 
 
 def assert_equal_log_prob(dist, log_prob, log_prob_np):
@@ -40,41 +41,7 @@ def create_mixture_gaussian_kdim_logprobb(dim, k, delta, ratio=0.5, shift=0.):
     return log_prob_fn
 
 
-# def multivariate_t_prob(x, Sigma_inv, df, dim):
-#     '''
-#     Multivariate t-student density:
-#     output:
-#         the density of the given element
-#     input:
-#         x = parameter (d dimensional numpy array or scalar)
-#         mu = mean (d dimensional numpy array or scalar)
-#         Sigma = scale matrix (dxd numpy array)
-#         df = degrees of freedom
-#         d: dimension
-#     '''
-#     diff = x
-#     prod = anp.matmul(diff, Sigma_inv) # n x d
-#     prod = anp.einsum("ij,ij->i", prod, diff) # n
-#     prod /= df
-#     den = anp.power(1 + prod, -(df + dim) * 0.5)
-#     return den
-
-
-# def banana_prob(x, mu, scale, b, df, dim):
-#     '''
-#     '''
-#     id_mat = anp.eye(dim)
-#     scale_mat = anp.concatenate([id_mat[:, :1] * scale, id_mat[:, 1:]], axis=-1)
-#     Sigma_inv_banana = anp.linalg.inv(scale_mat**2)
-
-#     x_0 = x[..., 0:1]
-#     x[..., 1:2] = x[..., 1:2] - b * x_0**2 + 100 * b
-    
-#     den = multivariate_t_prob(x, Sigma_inv_banana, df, dim)
-#     return den
-
-
-def multivariate_t_prob(x, df, dim):
+def multivariate_t_logprob(x, loc, Sigma_inv, df, dim):
     '''
     Multivariate t-student density:
     output:
@@ -86,26 +53,76 @@ def multivariate_t_prob(x, df, dim):
         df = degrees of freedom
         d: dimension
     '''
-    prod = anp.einsum("ij,ij->i", x, x) # n
+    diff = x - loc
+    prod = anp.matmul(diff, Sigma_inv) # n x d
+    prod = anp.einsum("ij,ij->i", prod, diff) # n
     prod /= df
-    den = anp.power(1 + prod, -(df + dim) * 0.5)
-    return den
+    log_den = -0.5 * (df + dim) * anp.log(1 + prod)
+    return log_den
 
 
-def banana_prob(x, mu, scale, b, df, dim):
+def banana_logprob(x, loc, b, df, dim, scale: float=10.):
     '''
     '''
     id_mat = anp.eye(dim)
     scale_mat = anp.concatenate([id_mat[:, :1] * scale, id_mat[:, 1:]], axis=-1)
-    scale_inv_banana = anp.linalg.inv(scale_mat)
+    Sigma = anp.matmul(scale_mat, anp.transpose(scale_mat))
+    Sigma_inv = anp.linalg.inv(Sigma)
 
     x_0 = x[..., 0:1]
     x[..., 1:2] = x[..., 1:2] - b * x_0**2 + 100 * b
+    # print("x", x[:10])
+    # print("params", loc, Sigma_inv, df, dim)
+    log_den = multivariate_t_logprob(x, loc, Sigma_inv, df, dim)
+    # print("log_den", log_den[:10])
+    return log_den
 
-    y = anp.matmul(x - mu, scale_inv_banana)
-    
-    den = multivariate_t_prob(y, df, dim)
-    return den
+
+def create_mixture_t_banana_logprob(dim, ratio, loc, nbanana, std, b):
+  '''
+  '''
+  nmodes = len(ratio)
+  assert nmodes >= nbanana, f"number of mixtures {nmodes} must be >= {nbanana}"
+  
+  t_scale = anp.sqrt(std * anp.sqrt(float(dim)) * anp.eye(dim))
+  Sigma = t_scale @ anp.transpose(t_scale)
+  Sigma_inv = anp.linalg.inv(Sigma)
+
+  ratio = anp.array(ratio).reshape((-1, 1))
+  # log_ratio = [anp.log(r) for r in ratio]
+  # print("ratio", ratio, "log_ratio", log_ratio)
+
+  def log_prob_fn(x):
+    b_log_probs = [
+      banana_logprob(
+        x,
+        loc=loc[i],
+        b=b,
+        df=7,
+        dim=dim,
+      ) for i in range(nbanana)
+    ]
+    # b_log_probs = [log_ratio[i] + b_log_probs[i] for i in range(nbanana)]
+
+    t_log_probs = [
+      multivariate_t_logprob(
+        x, 
+        loc=loc[nbanana+i], 
+        Sigma_inv=Sigma_inv, 
+        df=7, 
+        dim=dim
+      ) for i in range(nmodes-nbanana)
+    ]
+    # t_log_probs = [log_ratio[nbanana+i] + t_log_probs[i] for i in range(nmodes-nbanana)]
+
+    log_probs = b_log_probs + t_log_probs
+
+    # print("b", [p[:10] for p in b_log_probs])
+    # print("t", [p[:10] for p in t_log_probs])
+    log_prob = logsumexp(anp.stack(log_probs, axis=0), axis=0, b=ratio)
+    return log_prob
+
+  return log_prob_fn
 
 
 def create_rbm(
