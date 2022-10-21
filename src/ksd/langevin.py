@@ -169,7 +169,6 @@ class RandomWalkMH(MCMC):
       
       # move
       x_next, if_accept = self.transit(x_proposed=xp_next, x_current=x_current, accept_prob=accept_prob) # njumps x n x dim, njumps x n
-      # x_next = xp_next #! delete
       self.if_accept.append(if_accept)
 
       # store next samples
@@ -179,7 +178,6 @@ class RandomWalkMH(MCMC):
     self.accept_prob = tf.stack(self.accept_prob, axis=1) # njumps x (steps-1) x n
     self.if_accept = tf.stack(self.if_accept, axis=1) # njumps x (steps-1) x n
 
-    self.x = tf.squeeze(self.x)
     self.accept_prob = tf.squeeze(self.accept_prob)
     self.if_accept = tf.squeeze(self.if_accept)
 
