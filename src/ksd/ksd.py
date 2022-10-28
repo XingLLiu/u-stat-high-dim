@@ -65,7 +65,7 @@ class KSD:
     
     # term 1
     term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
-    term1 = tf.reduce_sum(term1_mat)
+    term1 = tf.reduce_sum(term1_mat)            
     # term 2
     term2_mat = tf.expand_dims(score_X, 1) * grad_K_Y # n x m x dim
     term2_mat = tf.reduce_sum(term2_mat, axis=-1)
@@ -81,7 +81,7 @@ class KSD:
     term4 = tf.reduce_sum(term4_mat)
 
     if output_dim == 1:
-      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
+      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])            
       return ksd
     elif output_dim == 2:
       assert term1_mat.shape == (X.shape[0], Y.shape[0])
@@ -490,11 +490,13 @@ class SDEKSD:
     self.p = target
     self.k = kernel
 
-  def __call__(self, X: tf.Tensor, Y: tf.Tensor, conv_samples: tf.Tensor, alpha_t: float, output_dim: int=1):
+  def __call__(self, X: tf.Tensor, Y: tf.Tensor, conv_samples: tf.Tensor, alpha_t: float, gamma_t: float, output_dim: int=1):
     """
     Inputs:
       X: n x dim
       Y: m x dim
+      alpha_t: sqrt(beta) * (1 - sqrt(1 - beta))**t / (1 - sqrt(1 - beta))
+      gamma_t: sqrt(1 - beta)**t
       output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
         the matrix [ u_p(xi, xj) ]_{ij} is returned
     """
@@ -507,28 +509,121 @@ class SDEKSD:
 
     with tf.GradientTape() as g:
       g.watch(X_cp)
-      diff_1 = (X_cp - tf.math.sqrt(1 - alpha_t) * Z) / tf.math.sqrt(alpha_t) # l x n x dim
+      diff_1 = (X_cp - alpha_t * Z) / gamma_t # l x n x dim      
       prob_1 = self.p.prob(diff_1) # l x n
     grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
     score_X = grad_1 / tf.expand_dims(
       tf.math.reduce_sum(prob_1, axis=0), axis=1) # n x dim
     ## prevents division by 0
-    score_X = tf.where(tf.math.is_nan(score_X), 0., score_X) # n x dim
+    # score_X = tf.where(tf.math.is_nan(score_X), 0., score_X) # n x dim
     _ = tf.debugging.assert_all_finite(grad_1, "grad_1")
     _ = tf.debugging.assert_all_finite(prob_1, "prob_1")
     _ = tf.debugging.assert_all_finite(score_X, "score")
 
     with tf.GradientTape() as g:
       g.watch(Y_cp)
-      diff_2 = (Y_cp - tf.math.sqrt(1 - alpha_t) * tf.identity(Z)) / tf.math.sqrt(alpha_t)
+      diff_2 = (Y_cp - alpha_t * tf.identity(Z)) / gamma_t
       prob_2 = self.p.prob(diff_2) # m x dim
     grad_2 = g.gradient(prob_2, Y_cp)
     grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
     score_Y = grad_2 / tf.expand_dims(
       tf.math.reduce_sum(prob_2, axis=0), axis=1) # m x dim
     ## prevents division by 0
-    score_Y = tf.where(tf.math.is_nan(score_Y), 0., score_Y) # n x dim
+    # score_Y = tf.where(tf.math.is_nan(score_Y), 0., score_Y) # n x dim
+
+    # median heuristic
+    self.k.bandwidth(X, Y)
+    
+    # kernel
+    K_XY = self.k(X, Y) # n x m
+    
+    # kernel grad
+    grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
+    grad_K_X = self.k.grad_first(X, Y) # n x m x dim
+
+    # term 1
+    term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
+    term1 = tf.reduce_sum(term1_mat)
+    # term 2
+    term2_mat = tf.expand_dims(score_X, 1) * grad_K_Y # n x m x dim
+    term2_mat = tf.reduce_sum(term2_mat, axis=-1)
+    term2 = tf.reduce_sum(term2_mat)
+    # term3
+    term3_mat = tf.expand_dims(score_Y, 0) * grad_K_X # n x m x dim
+    term3_mat = tf.reduce_sum(term3_mat, axis=-1)
+    term3 = tf.reduce_sum(term3_mat)
+    # term4
+    gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x dim
+    term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
+    term4 = tf.reduce_sum(term4_mat)
+    _ = tf.debugging.assert_all_finite(term1, "term1")
+    _ = tf.debugging.assert_all_finite(term2, "term2")
+    _ = tf.debugging.assert_all_finite(term3, "term3")
+    _ = tf.debugging.assert_all_finite(term4, "term4")
+
+    if output_dim == 1:
+      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])
+      return ksd
+    elif output_dim == 2:
+      assert term1_mat.shape == (X.shape[0], Y.shape[0])
+      assert term2_mat.shape == (X.shape[0], Y.shape[0])
+      assert term3_mat.shape == (X.shape[0], Y.shape[0])
+      assert term4_mat.shape == (X.shape[0], Y.shape[0])
+      return term1_mat + term2_mat + term3_mat + term4_mat
+
+  def eval_imp_samp(self, X: tf.Tensor, Y: tf.Tensor, conv_samples: tf.Tensor, alpha_t: float, gamma_t: float, noise_prob_fn: callable, importance_prob_fn: callable, output_dim: int=1):
+    """
+    Inputs:
+      X: n x dim
+      Y: m x dim
+      alpha_t: sqrt(beta) * (1 - sqrt(1 - beta))**t / (1 - sqrt(1 - beta))
+      gamma_t: sqrt(1 - beta)**t
+      output_dim: dim of output. If 1, then KSD_hat is returned. If 2, then 
+        the matrix [ u_p(xi, xj) ]_{ij} is returned
+    """
+    ## copy data for score computation
+    X_cp = tf.expand_dims(tf.identity(X), axis=0) # 1 x n x dim
+    Y_cp = tf.expand_dims(tf.identity(Y), axis=0) # 1 x m x dim
+
+    ## estimate score for convolution
+    Z = tf.expand_dims(conv_samples, axis=1) # l x 1 x dim
+    Z_cp = tf.identity(Z) # l x 1 x dim
+    Z_1 = X_cp + Z * gamma_t / alpha_t # l x n x dim
+    Z_2 = Y_cp + Z * gamma_t / alpha_t # l x n x dim
+
+    with tf.GradientTape() as g:
+      g.watch(X_cp)
+      diff_1 = (X_cp - alpha_t * Z) / gamma_t # l x n x dim      
+      prob_1 = self.p.prob(diff_1) # l x n
+      den_ratio1 = noise_prob_fn(Z_1) / importance_prob_fn(Z) # l x n
+      prob_1 = prob_1 * den_ratio1 # l x n
+
+    grad_1 = g.gradient(prob_1, X_cp) # 1 x n x dim
+    grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
+    score_X = grad_1 / tf.expand_dims(
+      tf.math.reduce_sum(prob_1, axis=0), axis=1) # n x dim
+    print("score", tf.math.reduce_max(score_X))
+    ## prevents division by 0
+    # score_X = tf.where(tf.math.is_nan(score_X), 0., score_X) # n x dim
+    _ = tf.debugging.assert_all_finite(grad_1, "grad_1")
+    _ = tf.debugging.assert_all_finite(prob_1, "prob_1")
+    _ = tf.debugging.assert_all_finite(score_X, "score")
+
+    with tf.GradientTape() as g:
+      g.watch(Y_cp)
+      diff_2 = (Y_cp - alpha_t * Z_cp) / gamma_t
+      prob_2 = self.p.prob(diff_2) # l x m
+      den_ratio2 = noise_prob_fn(Z_2) / importance_prob_fn(Z_cp) # l x m
+      prob_2 = prob_2 * den_ratio2 # l x m
+
+    grad_2 = g.gradient(prob_2, Y_cp) # l x m x dim
+    grad_2 = tf.squeeze(grad_2, axis=0) # m x dim
+    score_Y = grad_2 / tf.expand_dims(
+      tf.math.reduce_sum(prob_2, axis=0), axis=1) # m x dim
+    ## prevents division by 0
+    # score_Y = tf.where(tf.math.is_nan(score_Y), 0., score_Y) # n x dim
 
     # median heuristic
     self.k.bandwidth(X, Y)
@@ -660,3 +755,94 @@ class PKSD(KSD):
     return bootstrap.ksd_hat, p_val
 
 
+class GKSD:
+  def __init__(
+    self,
+    kernel: tf.Module,
+    A: tf.Tensor,
+    target: tfp.distributions.Distribution=None,
+    log_prob: callable=None,
+  ):
+    """
+    Inputs:
+        target (tfp.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
+        kernel (tf.nn.Module): [description]
+        A: An (r, d) projection matrix, i.e. AA^T = I_r
+        optimizer (tf.optim.Optimizer): [description]
+    """
+    if target is not None:
+      self.p = target
+      self.log_prob = target.log_prob
+    else:
+      self.p = None
+      self.log_prob = log_prob
+    self.k = kernel
+    self.A = A
+
+  def __call__(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
+    """
+    Inputs:
+      X: n x dim
+      Y: m x dim
+    """
+    # copy data for score computation
+    X_cp = tf.identity(X)
+    Y_cp = tf.identity(Y)
+
+    ## calculate scores using autodiff
+    if not hasattr(self.p, "grad_log"):
+      with tf.GradientTape() as g:
+        g.watch(X_cp)
+        log_prob_X = self.log_prob(X_cp)
+      score_X = g.gradient(log_prob_X, X_cp) # n x dim
+      with tf.GradientTape() as g:
+        g.watch(Y_cp)
+        log_prob_Y = self.log_prob(Y_cp) # m x dim
+      score_Y = g.gradient(log_prob_Y, Y_cp)
+    else:
+      score_X = self.p.grad_log(X_cp) # n x dim
+      score_Y = self.p.grad_log(Y_cp) # m x dim
+      assert score_X.shape == X_cp.shape
+
+    A_score_X = tf.linalg.matmul(score_X, self.A, transpose_b=True) # n x r
+    A_score_Y = tf.linalg.matmul(score_Y, self.A, transpose_b=True) # n x r
+
+    # median heuristic #TODO using pre-specified bandwidth
+    if self.k.med_heuristic:
+      self.k.bandwidth(X, Y)
+    
+    # kernel
+    AX = tf.linalg.matmul(X, self.A, transpose_b=True) # n x r
+    AY = tf.linalg.matmul(Y, self.A, transpose_b=True) # m x r
+    K_AXAY = self.k(AX, AY) # n x m
+    
+    # kernel grad
+    grad_K_AY = self.k.grad_second(AX, AY) # n x m x r
+    grad_K_AX = self.k.grad_first(AX, AY) # n x m x r
+    
+    # term 1
+    term1_mat = tf.linalg.matmul(A_score_X, A_score_Y, transpose_b=True) * K_AXAY # n x m
+    term1 = tf.reduce_sum(term1_mat)
+    # term 2
+    term2_mat = tf.expand_dims(A_score_X, 1) * grad_K_AY # n x m x r
+    term2_mat = tf.reduce_sum(term2_mat, axis=-1)
+    term2 = tf.reduce_sum(term2_mat)
+    # term3
+    term3_mat = tf.expand_dims(A_score_Y, 0) * grad_K_AX # n x m x r
+    term3_mat = tf.reduce_sum(term3_mat, axis=-1)
+    term3 = tf.reduce_sum(term3_mat)
+    # term4
+    gradgrad_K = self.k.gradgrad(AX, AY) # n x m x r x r
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x r
+    term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
+    term4 = tf.reduce_sum(term4_mat)
+
+    if output_dim == 1:
+      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])            
+      return ksd
+    elif output_dim == 2:
+      assert term1_mat.shape == (X.shape[0], Y.shape[0])
+      assert term2_mat.shape == (X.shape[0], Y.shape[0])
+      assert term3_mat.shape == (X.shape[0], Y.shape[0])
+      assert term4_mat.shape == (X.shape[0], Y.shape[0]), term4_mat.shape
+      return term1_mat + term2_mat + term3_mat + term4_mat
