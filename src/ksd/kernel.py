@@ -98,24 +98,22 @@ class RBF(tf.Module):
 
     def gradgrad(self, X, Y):
         """
+        Compute trace(\nabla_x \nabla_y k(x, y)).
+
         Args:
             X: tf.Tensor of shape (n, dim)
             Y: tf.Tensor of shape (m, dim)
         Output:
-            tf.Tensor of shape (n, m, dim, dim)
+            tf.Tensor of shape (n, m)
         """
         # Gram matrix
         sigma2_inv = 1 / (1e-9 + self.sigma_sq)
-        K = tf.expand_dims(tf.math.exp(-l2norm(X, Y) * sigma2_inv), 0)
-        # diff_{ijk} = y^i_j - x^i_k
-        diff = tf.transpose(tf.expand_dims(Y, 1) - X, (2, 1, 0))
-        # product of differences
-        diff_outerprod = -tf.expand_dims(diff, 0) * tf.expand_dims(diff, 1)
-        # compute gradgrad_K
-        diag = 2 * sigma2_inv * tf.expand_dims(tf.expand_dims(tf.eye(X.shape[-1]), -1), -1)
-        gradgrad_K_all = (diag + 4 * sigma2_inv ** 2 * diff_outerprod) * K
-        gradgrad_K_all = tf.transpose(gradgrad_K_all, (2, 3, 0, 1))
-        return gradgrad_K_all
+        diff_norm_sq = l2norm(X, Y) # n x m
+        K = tf.math.exp(-l2norm(X, Y) * sigma2_inv) # n x m
+        term1 = 2 * sigma2_inv * X.shape[-1]
+        term2 = - 4 * sigma2_inv ** 2 * diff_norm_sq # n x m
+        gradgrad_tr = (term1 + term2) * K # n x m
+        return gradgrad_tr
 
 
 class IMQ(tf.Module):
@@ -178,25 +176,22 @@ class IMQ(tf.Module):
 
     def gradgrad(self, X, Y):
         """
+        Compute trace(\nabla_x \nabla_y k(x, y)).
+
         Args:
             X: tf.Tensor of shape (n, dim)
             Y: tf.Tensor of shape (m, dim)
         Output:
-            tf.Tensor of shape (n, m, dim, dim)
+            tf.Tensor of shape (n, m)
         """
         sigma2_inv = 1 / (1e-9 + self.sigma_sq)
-        K = tf.expand_dims(1 + tf.expand_dims(l2norm(X, Y) * sigma2_inv, -1), -1) # n x m x 1 x 1
-        # diff_{ijk} = y^k_i - x^k_j
-        diff = tf.expand_dims(Y, -3) - tf.expand_dims(X, -2) # n x m x dim
-        # product of differences
-        diff_outerprod = -tf.expand_dims(diff, -2) * tf.expand_dims(diff, -1) # n x m x dim x dim
-        # compute gradgrad_K
-        diag = - 2 * sigma2_inv * self.beta * tf.expand_dims(
-            tf.expand_dims(tf.eye(X.shape[-1]), -3), 
-            -3,
-        ) # 1 x 1 x dim x dim
-        gradgrad_K_all = (
-            diag * K + self.beta * (self.beta-1) * 4 * sigma2_inv**2 * diff_outerprod
-        ) * tf.pow(K, self.beta-2) # n x m x dim x dim
+        # norm of differences
+        diff_norm_sq = l2norm(X, Y) # n x m
+        K = 1 + diff_norm_sq * sigma2_inv # n x m
+        term1 = - 2 * sigma2_inv * self.beta * X.shape[-1] * K # n x m
+        term2 = - self.beta * (self.beta-1) * 4 * sigma2_inv**2 * diff_norm_sq # n x m
+        gradgrad_tr = (
+            term1 + term2
+        ) * tf.pow(K, self.beta-2) # n x m
 
-        return gradgrad_K_all
+        return gradgrad_tr
