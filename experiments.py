@@ -6,7 +6,7 @@ tfd = tfp.distributions
 from tqdm import trange
 import argparse
 
-from src.ksd.ksd import KSD, ConvolvedKSD
+from src.ksd.ksd import KSD, PKSD, MPKSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 import src.ksd.models as models
@@ -32,8 +32,6 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
     if method == "pksd":
         ksd = KSD(target=target, kernel=kernel)
         MCMCKernel = kwargs["mcmckernel"]
-    elif method == "conv":
-        ksd = ConvolvedKSD(target=target, kernel=kernel)
 
     grad_log = None if not hasattr(target, "grad_log") else target.grad_log
 
@@ -105,60 +103,24 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             else:
                 start_pts = sample_init_train # ntrain x dim
 
-            # merge modes
-            mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=grad_log, **kwargs)
+            # instantiate pKSD class
+            pksd = MPKSD(kernel=kernel, pert_kernel=MCMCKernel, log_prob=log_prob_fn)
 
-            # find between-modes dir
-            if len(mode_list) == 1:
-                _, ind_pair_list = [mode_list[0]], [(0, 0)]
-            else:
-                _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
-            
-            proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
+            # find modes and Hessians
+            pksd.find_modes(start_pts, **kwargs)
 
-            # find best jump scale
-            mh = MCMCKernel(log_prob=log_prob_fn)
-            mh.run(steps=T, std=jump_ls, x_init=sample_init_train, ind_pair_list=ind_pair_list, **proposal_dict)
+            # compute test statistic and p-value using 1000 bootstrap samples 
+            _, pksd_pval = pksd.test(
+                xtrain=sample_init_train, 
+                xtest=sample_init_test, 
+                T=T,
+                jump_ls=jump_ls, 
+                num_boot=1000, 
+            )
+            pksd_rej = float(pksd_pval <= alpha)
 
-            # compute ksd
-            scaled_ksd_vals = []
-            for i in range(len(jump_ls)):
-                iterator.set_description(f"Jump scale [{i+1} / {len(jump_ls)}]]")
-                
-                # run dynamic for T steps
-                x_t = mh.x[i, -1, :]
-                if len(x_t.shape) == 1: 
-                    x_t = tf.expand_dims(x_t, -1)
-
-                # compute ksd
-                _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
-                ksd_val = ksd_val
-                
-                scaled_ksd_vals.append(ksd_val)
-            
-            # get best jump scale
-            best_jump = jump_ls[tf.math.argmax(scaled_ksd_vals)]
-            best_proposal_dict = proposal_dict
-
-            # run dynamic for T steps with test data and optimal params
-            mh = MCMCKernel(log_prob=log_prob_fn)
-            mh.run(steps=T, x_init=sample_init_test, std=best_jump, ind_pair_list=ind_pair_list, **best_proposal_dict)
-
-            # gather proposal params into one dict
-            best_proposal_dict = {**best_proposal_dict, "ind_pair_list": ind_pair_list}
-
-            # get perturbed samples
-            x_t = mh.x[0, -1]
-            if len(x_t.shape) == 1: 
-                x_t = tf.expand_dims(x_t, -1)
-
-            # get multinomial sample
-            multinom_one_sample = multinom_samples[iter, :] # nrep x num_boost x ntest
-        
-            # compute p-value
-            pksd_rej, _ = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
+            # store results
             res_df.loc[len(res_df)] = ["pKSD mc", pksd_rej, iter]
-
         
         elif method == "conv":
             iterator.set_description("Running pKSD conv")
