@@ -22,14 +22,14 @@ import kgof.goftest as kgof_gof
 
 
 def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha, num_boot, T, 
-    jump_ls, rand_start=None, method="mcmc", log_prob_fn_np=None, **kwargs):
+    jump_ls, rand_start=None, method="pksd", log_prob_fn_np=None, **kwargs):
     """compute KSD and repeat for nrep times"""
     
     n = kwargs["n"]
     ntrain = n//2
     dim = proposal.event_shape[0]
 
-    if method == "mcmc":
+    if method == "pksd":
         ksd = KSD(target=target, kernel=kernel)
         MCMCKernel = kwargs["mcmckernel"]
     elif method == "conv":
@@ -39,7 +39,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
     iterator = trange(nrep)
 
-    if method == "mcmc" or method == "ksd":
+    if method == "pksd" or method == "ksd":
         bootstrap = Bootstrap(ksd, n-ntrain)
         multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x ntest
 
@@ -82,7 +82,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
         sample_init = proposal.sample(n)
 
         ## KSD
-        if method == "mcmc" or method == "ksd":
+        if method == "pksd" or method == "ksd":
             iterator.set_description("Running KSD")
             x_t = sample_init
             multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
@@ -93,7 +93,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
 
         ## pKSD with MCMC kernel with uniformly chosen modes
-        if method == "mcmc":
+        if method == "pksd":
             iterator.set_description("Running pKSD mcmc")
     
             # train/test split
@@ -148,7 +148,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             best_proposal_dict = {**best_proposal_dict, "ind_pair_list": ind_pair_list}
 
             # get perturbed samples
-            x_t = mh.x[-1]
+            x_t = mh.x[0, -1]
             if len(x_t.shape) == 1: 
                 x_t = tf.expand_dims(x_t, -1)
 
@@ -211,7 +211,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
 
         ## KSDAGG
-        if method == "mcmc" or method == "ksdagg":
+        if method == "pksd" or method == "ksdagg":
             iterator.set_description("Running KSDAGG")
             x_t = sample_init
             ksdagg_rej = ksdagg_wild_test(
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="bimodal")
     parser.add_argument("--suffix", type=str, default="")
     parser.add_argument("--mcmckernel", type=str, default="mh")
-    parser.add_argument("--method", type=str, default="mcmc")
+    parser.add_argument("--method", type=str, default="pksd")
     parser.add_argument("--seed", type=int, default=2022)
     parser.add_argument("--T", type=int, default=50)
     parser.add_argument("--n", type=int, default=1000, help="sample size")
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     if method == "mcmc_all":
         mcmc_name = f"{mcmc_name}_all"
 
-    if method != "mcmc" and method != "mcmc_all":
+    if method != "pksd" and method != "mcmc_all":
         mcmc_name = args.method
 
     # suffix for random starting points

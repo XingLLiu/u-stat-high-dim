@@ -67,27 +67,27 @@ class KSD:
     term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
     term1 = tf.reduce_sum(term1_mat)            
     # term 2
-    term2_mat = tf.expand_dims(score_X, 1) * grad_K_Y # n x m x dim
+    term2_mat = tf.expand_dims(score_X, -2) * grad_K_Y # n x m x dim
     term2_mat = tf.reduce_sum(term2_mat, axis=-1)
     term2 = tf.reduce_sum(term2_mat)
     # term3
-    term3_mat = tf.expand_dims(score_Y, 0) * grad_K_X # n x m x dim
+    term3_mat = tf.expand_dims(score_Y, -3) * grad_K_X # n x m x dim
     term3_mat = tf.reduce_sum(term3_mat, axis=-1)
     term3 = tf.reduce_sum(term3_mat)
     # term4
     gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
-    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x dim
-    term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=-2, axis2=-1) # n x m x dim
+    term4_mat = tf.reduce_sum(term4_mat, axis=-1) # n x m
     term4 = tf.reduce_sum(term4_mat)
 
     if output_dim == 1:
-      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])            
+      ksd = (term1 + term2 + term3 + term4) / (X.shape[-2] * Y.shape[-2])            
       return ksd
     elif output_dim == 2:
-      assert term1_mat.shape == (X.shape[0], Y.shape[0])
-      assert term2_mat.shape == (X.shape[0], Y.shape[0])
-      assert term3_mat.shape == (X.shape[0], Y.shape[0])
-      assert term4_mat.shape == (X.shape[0], Y.shape[0]), term4_mat.shape
+      assert term1_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
+      assert term2_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
+      assert term3_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
+      assert term4_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
       return term1_mat + term2_mat + term3_mat + term4_mat
 
   def h1_var(self, return_scaled_ksd: bool=False, **kwargs):
@@ -97,7 +97,7 @@ class KSD:
         \sigma_{H_1}^2 is the asymptotic variance of the KSD estimate under H1
     """
     u_mat = self.__call__(output_dim=2, **kwargs) # n x n
-    n = kwargs["X"].shape[0]
+    n = kwargs["X"].shape[-2]
     witness = tf.reduce_sum(u_mat, axis=1) # n
     term1 = tf.reduce_sum(witness**2) * 4 / n**3
     term2 = tf.reduce_sum(u_mat)**2 * 4 / n**4
@@ -112,7 +112,7 @@ class KSD:
   def test(self, x: tf.Tensor, num_boot: int):
     # get multinomial sample
     # Sampling can be slow. initialise separately for faster implementation
-    n = x.shape[0]
+    n = x.shape[-2]
     bootstrap = Bootstrap(self, n)
     # (num_boot - 1) because the test statistic is also included 
     multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
@@ -604,7 +604,6 @@ class SDEKSD:
     grad_1 = tf.squeeze(grad_1, axis=0) # n x dim
     score_X = grad_1 / tf.expand_dims(
       tf.math.reduce_sum(prob_1, axis=0), axis=1) # n x dim
-    print("score", tf.math.reduce_max(score_X))
     ## prevents division by 0
     # score_X = tf.where(tf.math.is_nan(score_X), 0., score_X) # n x dim
     _ = tf.debugging.assert_all_finite(grad_1, "grad_1")
@@ -722,6 +721,7 @@ class PKSD(KSD):
           x_t = tf.expand_dims(x_t, -1)
 
       # compute ksd
+      # TODO: if using m-pKSD, h1_var should be updated too?
       _, ksd_val = self.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
 
       scaled_ksd_vals.append(ksd_val)
@@ -738,48 +738,43 @@ class PKSD(KSD):
     mh.run(steps=T, x_init=xtest, std=best_jump, ind_pair_list=self.ind_pair_list, **self.proposal_dict)
 
     # get perturbed samples
-    x_t = mh.x[-1]
+    x_t = mh.x[0, -1]
     if len(x_t.shape) == 1: 
         x_t = tf.expand_dims(x_t, -1)
 
     # get multinomial sample
     # Sampling can be slow. initialise separately for faster implementation
-    ntest = xtest.shape[0]
+    ntest = xtest.shape[-2]
     bootstrap = Bootstrap(self, ntest)
     # (num_boot - 1) because the test statistic is also included 
     multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
 
     # compute p-value
-    p_val = bootstrap.test_once(alpha=None, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
+    p_val = bootstrap.test_once(
+      alpha=None,
+      num_boot=num_boot,
+      X=x_t,
+      multinom_samples=multinom_one_sample,
+      X_unperturbed=xtest,
+      statistic="m_pksd",
+    )
     
     return bootstrap.ksd_hat, p_val
 
 
-class GKSD:
-  def __init__(
-    self,
-    kernel: tf.Module,
-    A: tf.Tensor,
-    target: tfp.distributions.Distribution=None,
-    log_prob: callable=None,
+class MPKSD(PKSD):
+  def __init__(self, 
+    kernel: tf.Module, 
+    pert_kernel: mcmc.RandomWalkMH,
+    log_prob, callable=None,
+    target: tfp.distributions.Distribution=None, 
+    score: callable=None
   ):
-    """
-    Inputs:
-        target (tfp.distributions.Distribution): Only require the log_probability of the target distribution e.g. unnormalised posterior distribution
-        kernel (tf.nn.Module): [description]
-        A: An (r, d) projection matrix, i.e. AA^T = I_r
-        optimizer (tf.optim.Optimizer): [description]
-    """
-    if target is not None:
-      self.p = target
-      self.log_prob = target.log_prob
-    else:
-      self.p = None
-      self.log_prob = log_prob
-    self.k = kernel
-    self.A = A
+      super().__init__(kernel, target, log_prob)
+      self.pert_kernel = pert_kernel
+      self.score = score
 
-  def __call__(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
+  def u_p(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
     """
     Inputs:
       X: n x dim
@@ -804,45 +799,137 @@ class GKSD:
       score_Y = self.p.grad_log(Y_cp) # m x dim
       assert score_X.shape == X_cp.shape
 
-    A_score_X = tf.linalg.matmul(score_X, self.A, transpose_b=True) # n x r
-    A_score_Y = tf.linalg.matmul(score_Y, self.A, transpose_b=True) # n x r
-
     # median heuristic #TODO using pre-specified bandwidth
     if self.k.med_heuristic:
       self.k.bandwidth(X, Y)
     
     # kernel
-    AX = tf.linalg.matmul(X, self.A, transpose_b=True) # n x r
-    AY = tf.linalg.matmul(Y, self.A, transpose_b=True) # m x r
-    K_AXAY = self.k(AX, AY) # n x m
+    K_XY = self.k(X, Y) # n x m
     
     # kernel grad
-    grad_K_AY = self.k.grad_second(AX, AY) # n x m x r
-    grad_K_AX = self.k.grad_first(AX, AY) # n x m x r
+    grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
+    grad_K_X = self.k.grad_first(X, Y) # n x m x dim
     
     # term 1
-    term1_mat = tf.linalg.matmul(A_score_X, A_score_Y, transpose_b=True) * K_AXAY # n x m
-    term1 = tf.reduce_sum(term1_mat)
+    term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
+    term1 = tf.reduce_sum(term1_mat)            
     # term 2
-    term2_mat = tf.expand_dims(A_score_X, 1) * grad_K_AY # n x m x r
+    term2_mat = tf.expand_dims(score_X, -2) * grad_K_Y # n x m x dim
     term2_mat = tf.reduce_sum(term2_mat, axis=-1)
     term2 = tf.reduce_sum(term2_mat)
     # term3
-    term3_mat = tf.expand_dims(A_score_Y, 0) * grad_K_AX # n x m x r
+    term3_mat = tf.expand_dims(score_Y, -3) * grad_K_X # n x m x dim
     term3_mat = tf.reduce_sum(term3_mat, axis=-1)
     term3 = tf.reduce_sum(term3_mat)
     # term4
-    gradgrad_K = self.k.gradgrad(AX, AY) # n x m x r x r
-    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=2, axis2=3) # n x m x r
-    term4_mat = tf.reduce_sum(term4_mat, axis=2) # n x m
+    gradgrad_K = self.k.gradgrad(X, Y) # n x m x dim x dim
+    term4_mat = tf.experimental.numpy.diagonal(gradgrad_K, axis1=-2, axis2=-1) # n x m x dim
+    term4_mat = tf.reduce_sum(term4_mat, axis=-1) # n x m
     term4 = tf.reduce_sum(term4_mat)
 
     if output_dim == 1:
-      ksd = (term1 + term2 + term3 + term4) / (X.shape[0] * Y.shape[0])            
+      ksd = (term1 + term2 + term3 + term4) / (X.shape[-2] * Y.shape[-2])            
       return ksd
     elif output_dim == 2:
-      assert term1_mat.shape == (X.shape[0], Y.shape[0])
-      assert term2_mat.shape == (X.shape[0], Y.shape[0])
-      assert term3_mat.shape == (X.shape[0], Y.shape[0])
-      assert term4_mat.shape == (X.shape[0], Y.shape[0]), term4_mat.shape
+      assert term1_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
+      assert term2_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
+      assert term3_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
+      assert term4_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
       return term1_mat + term2_mat + term3_mat + term4_mat
+
+  def __call__(
+    self, 
+    X: tf.Tensor, 
+    Y: tf.Tensor, 
+    Xp: tf.Tensor, 
+    Yp: tf.Tensor, 
+    output_dim: int=1,
+  ):
+    """
+    Compute estimate of m-pKSD(Q, P) = pKSD(Q, P) + KSD(Q, P).
+    
+    Args:
+      X, Y: Unperturbed data.
+      Xp, Yp: Perturbed data.
+    """
+    ksd_u_p = self.u_p(X, Y, output_dim)
+    pksd_u_p = self.u_p(Xp, Yp, output_dim)
+
+    return ksd_u_p + pksd_u_p
+
+  def test(self, 
+    xtrain: tf.Tensor, 
+    xtest: tf.Tensor, 
+    T: int, 
+    jump_ls: tf.Tensor,
+    num_boot: int=1000, 
+  ):
+    """Finds the best jump scale using the training set, and use this jump scale to perform KSD 
+    test using the perturbed samples.
+    """
+    if self.proposal_dict is None:
+      raise ValueError("Must run find_modes before testing")
+
+    # find best jump scale
+    mh = self.pert_kernel(log_prob=self.log_prob)
+    mh.run(steps=T, std=jump_ls, x_init=xtrain, ind_pair_list=self.ind_pair_list, **self.proposal_dict)
+
+    # compute ksd
+    scaled_ksd_vals = []
+    for i in range(len(jump_ls)):
+      # get samples after T steps
+      x_0 = mh.x[i, 0, :]
+      x_t = mh.x[i, -1, :]
+      assert tf.rank(x_t.shape) == 1
+
+      if len(x_t.shape) == 1: 
+          x_t = tf.expand_dims(x_t, -1)
+
+      # compute ksd
+      _, ksd_val = self.h1_var(
+        X=x_0,
+        Y=tf.identity(x_0),
+        Xp=x_t,
+        Yp=tf.identity(x_t),
+        return_scaled_ksd=True,
+      )
+
+      scaled_ksd_vals.append(ksd_val)
+
+    # get best jump scale
+    best_idx = tf.math.argmax(scaled_ksd_vals)
+    best_jump = jump_ls[best_idx]
+    self.best_jump_scale = best_jump
+    
+    # store samples corresponding to the best jump scale
+    self.x = mh.x[best_idx]
+
+    # run dynamic for T steps with test data and optimal params
+    mh = self.pert_kernel(log_prob=self.log_prob)
+    mh.run(steps=T, x_init=xtest, std=best_jump, ind_pair_list=self.ind_pair_list, **self.proposal_dict)
+
+    # get perturbed samples
+    x_0 = mh.x[0, 0]
+    x_t = mh.x[0, -1]
+    assert tf.rank(x_t.shape) == 1
+    if len(x_t.shape) == 1: 
+        x_t = tf.expand_dims(x_t, -1)
+
+    # get multinomial sample
+    # Sampling can be slow. initialise separately for faster implementation
+    ntest = xtest.shape[-2]
+    bootstrap = Bootstrap(self, ntest)
+    # (num_boot - 1) because the test statistic is also included 
+    multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
+
+    # compute p-value
+    p_val = bootstrap.test_once(
+      alpha=None,
+      num_boot=num_boot,
+      X=x_t,
+      multinom_samples=multinom_one_sample,
+      X_unperturbed=x_0,
+      statistic="m_pksd",
+    )
+    
+    return bootstrap.ksd_hat, p_val
