@@ -55,38 +55,48 @@ class KSD:
     # median heuristic #TODO using pre-specified bandwidth
     if self.k.med_heuristic:
       self.k.bandwidth(X, Y)
-    
+
     # kernel
     K_XY = self.k(X, Y) # n x m
-    
+
     # kernel grad
     grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
     grad_K_X = self.k.grad_first(X, Y) # n x m x dim
     
     # term 1
     term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
-    term1 = tf.reduce_sum(term1_mat)            
     # term 2
     term2_mat = tf.expand_dims(score_X, -2) * grad_K_Y # n x m x dim
     term2_mat = tf.reduce_sum(term2_mat, axis=-1)
-    term2 = tf.reduce_sum(term2_mat)
     # term3
     term3_mat = tf.expand_dims(score_Y, -3) * grad_K_X # n x m x dim
     term3_mat = tf.reduce_sum(term3_mat, axis=-1)
-    term3 = tf.reduce_sum(term3_mat)
     # term4
-    term4_mat = self.k.gradgrad(X, Y) # n x m x dim x dim
-    term4 = tf.reduce_sum(term4_mat)
+    term4_mat = self.k.gradgrad(X, Y) # n x m
+
+    u_p = term1_mat + term2_mat + term3_mat + term4_mat
+    u_p_nodiag = tf.linalg.set_diag(u_p, tf.zeros(u_p.shape[:-1]))
 
     if output_dim == 1:
-      ksd = (term1 + term2 + term3 + term4) / (X.shape[-2] * Y.shape[-2])            
+      ksd = tf.reduce_sum(
+        u_p_nodiag,
+        axis=[-1, -2]
+      ) / (X.shape[-2] * (Y.shape[-2]-1))
       return ksd
     elif output_dim == 2:
       assert term1_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
       assert term2_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
       assert term3_mat.shape[-2:] == (X.shape[-2], Y.shape[-2])
       assert term4_mat.shape[-2:] == (X.shape[-2], Y.shape[-2]), term4_mat.shape
-      return term1_mat + term2_mat + term3_mat + term4_mat
+      return u_p_nodiag
+
+  def u_p_moment(self, X: tf.Tensor, Y: tf.Tensor, k: int):
+    u_p = self.u_p(X, Y, output_dim=2)
+    u_p_sq = u_p**k
+    u_p_sq = tf.math.reduce_sum(
+      u_p_sq * (1 - tf.eye(u_p_sq.shape[-2]))
+    ) / (X.shape[-2] * (X.shape[-2] - 1))
+    return u_p_sq
 
   def __call__(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
     """
@@ -215,8 +225,6 @@ class PKSD(KSD):
       num_boot=num_boot,
       X=x_t,
       multinom_samples=multinom_one_sample,
-      X_unperturbed=xtest,
-      statistic="m_pksd",
     )
     
     return bootstrap.ksd_hat, p_val
@@ -327,6 +335,77 @@ class MPKSD(PKSD):
       multinom_samples=multinom_one_sample,
       X_unperturbed=x_0,
       statistic="m_pksd",
+    )
+    
+    return bootstrap.ksd_hat, p_val
+
+
+class SPKSD(PKSD):
+  def __init__(self, 
+    kernel: tf.Module, 
+    pert_kernel: mcmc.RandomWalkMH,
+    log_prob, callable=None,
+    target: tfp.distributions.Distribution=None, 
+    score: callable=None
+  ):
+      super().__init__(kernel, target, log_prob)
+      self.pert_kernel = pert_kernel
+      self.score = score
+
+  def __call__(
+    self, 
+    X: tf.Tensor, 
+    Y: tf.Tensor,
+    output_dim: int=1,
+  ):
+    """
+    Compute estimate of spKSD(Q, P) = \sum_j KSD(\mathcal{K}_j Q, P).
+    
+    Args:
+      X, Y: Array of perturbed data.
+    """
+    self.pksd_vals = []
+    pksd_sum = 0.
+    for i in range(X.shape[-3]):
+      self.pksd_vals.append(self.u_p(X[i], Y[i], output_dim))
+      pksd_sum += self.pksd_vals[i]
+
+    return pksd_sum
+
+  def test(self, 
+    x: tf.Tensor,
+    T: int, 
+    jump_ls: tf.Tensor,
+    num_boot: int=1000, 
+  ):
+    """Finds the best jump scale using the training set, and use this jump scale to perform KSD 
+    test using the perturbed samples.
+    """
+    if self.proposal_dict is None:
+      raise ValueError("Must run find_modes before testing")
+
+    # find best jump scale
+    mh = self.pert_kernel(log_prob=self.log_prob)
+    mh.run(steps=T, std=jump_ls, x_init=x, ind_pair_list=self.ind_pair_list, **self.proposal_dict)
+
+    # compute pksd
+    x_t = mh.x[:, -1, :]
+    x_0 = tf.expand_dims(x, axis=0)
+    x_t = tf.concat([x_0, x_t], axis=0) # J x n x dim
+
+    # get multinomial sample
+    # Sampling can be slow. initialise separately for faster implementation
+    bootstrap = Bootstrap(self, x_t.shape[-2])
+    # (num_boot - 1) because the test statistic is also included 
+    multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
+
+    # compute p-value
+    p_val = bootstrap.test_once(
+      alpha=None,
+      num_boot=num_boot,
+      X=x_t,
+      multinom_samples=multinom_one_sample,
+      statistic="pksd",
     )
     
     return bootstrap.ksd_hat, p_val

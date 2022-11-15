@@ -6,7 +6,7 @@ tfd = tfp.distributions
 from tqdm import trange
 import argparse
 
-from src.ksd.ksd import KSD, PKSD, MPKSD
+from src.ksd.ksd import KSD, PKSD, MPKSD, SPKSD
 from src.ksd.kernel import RBF, IMQ
 from src.ksd.bootstrap import Bootstrap
 import src.ksd.models as models
@@ -29,7 +29,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
     ntrain = n//2
     dim = proposal.event_shape[0]
 
-    if method == "pksd":
+    if "pksd" in method or method == "ksd" or method == "all":
         ksd = KSD(target=target, kernel=kernel)
         MCMCKernel = kwargs["mcmckernel"]
 
@@ -37,20 +37,27 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
     iterator = trange(nrep)
 
-    if method == "pksd" or method == "ksd":
+    if "pksd" in method or method == "ksd" or method == "all":
         bootstrap = Bootstrap(ksd, n-ntrain)
         multinom_samples = bootstrap.multinom.sample((nrep, num_boot)) # nrep x num_boot x ntest
 
         bootstrap_nopert = Bootstrap(ksd, n)
         multinom_samples_notrain = bootstrap_nopert.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
 
-    res_df = pd.DataFrame(columns=["method", "rej", "seed"])
+    res_df = pd.DataFrame(columns=["method", "rej", "pval", "seed"])
     
     if rand_start:
         print("Use randomly initialised points")
         # generate points for finding modes
-        start_pts_all = tf.random.uniform(
-            shape=(nrep, ntrain-ntrain//2, dim), minval=-rand_start, maxval=rand_start) # nrep x (ntrain//2) x dim
+        if method == "spksd" or method == "all":
+            start_pts_all = tf.random.uniform(
+                shape=(nrep, n, dim), minval=-rand_start, maxval=rand_start,
+            ) # nrep x (ntrain//2) x dim
+
+        else:
+            start_pts_all = tf.random.uniform(
+                shape=(nrep, ntrain-ntrain//2, dim), minval=-rand_start, maxval=rand_start,
+            ) # nrep x (ntrain//2) x dim
 
     else:
         print("Use sample as initial points")
@@ -80,19 +87,18 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
         sample_init = proposal.sample(n)
 
         ## KSD
-        if method == "pksd" or method == "ksd":
+        if method == "all" or method == "ksd":
             iterator.set_description("Running KSD")
             x_t = sample_init
             multinom_one_sample = multinom_samples_notrain[iter, :] # nrep x num_boost x n
 
             # compute p-value
-            ksd_rej, _ = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
-            res_df.loc[len(res_df)] = ["KSD", ksd_rej, iter]
-
+            ksd_rej, pval = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
+            res_df.loc[len(res_df)] = ["KSD", ksd_rej, pval, iter]
 
         ## pKSD with MCMC kernel with uniformly chosen modes
-        if method == "pksd":
-            iterator.set_description("Running pKSD mcmc")
+        if method == "all" or method == "pksd":
+            iterator.set_description("Running pKSD")
     
             # train/test split
             sample_init_train, sample_init_test = sample_init[:ntrain, ], sample_init[ntrain:, ]
@@ -104,7 +110,7 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
                 start_pts = sample_init_train # ntrain x dim
 
             # instantiate pKSD class
-            pksd = MPKSD(kernel=kernel, pert_kernel=MCMCKernel, log_prob=log_prob_fn)
+            pksd = PKSD(kernel=kernel, pert_kernel=MCMCKernel, log_prob=log_prob_fn)
 
             # find modes and Hessians
             pksd.find_modes(start_pts, **kwargs)
@@ -120,9 +126,33 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             pksd_rej = float(pksd_pval <= alpha)
 
             # store results
-            res_df.loc[len(res_df)] = ["pKSD mc", pksd_rej, iter]
+            res_df.loc[len(res_df)] = ["pKSD", pksd_rej, pksd_pval, iter]
+
+        if method == "all" or method == "spksd":
+            iterator.set_description("Running spKSD")
         
-        elif method == "conv":
+            # start optim from either randomly initialised points or training samples
+            start_pts = start_pts_all[iter] # n x dim
+
+            # instantiate pKSD class
+            pksd = SPKSD(kernel=kernel, pert_kernel=MCMCKernel, log_prob=log_prob_fn)
+
+            # find modes and Hessians
+            pksd.find_modes(start_pts, **kwargs)
+
+            # compute test statistic and p-value using 1000 bootstrap samples 
+            _, pksd_pval = pksd.test(
+                x=sample_init, 
+                T=T,
+                jump_ls=jump_ls, 
+                num_boot=1000, 
+            )
+            pksd_rej = float(pksd_pval <= alpha)
+
+            # store results
+            res_df.loc[len(res_df)] = ["spKSD", pksd_rej, pksd_pval, iter]
+
+        if method == "conv":
             iterator.set_description("Running pKSD conv")
 
             ## pKSD with convolution
@@ -171,9 +201,8 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
             )
             res_df.loc[len(res_df)] = ["pKSD conv", pksd_rej, iter]
 
-
         ## KSDAGG
-        if method == "pksd" or method == "ksdagg":
+        if method == "all" or method == "ksdagg":
             iterator.set_description("Running KSDAGG")
             x_t = sample_init
             ksdagg_rej = ksdagg_wild_test(
@@ -190,11 +219,10 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
                 B2=500, # num of samples to estimate level
                 B3=50, # num of bisections to estimate quantile
             )
-            res_df.loc[len(res_df)] = ["KSDAGG", ksdagg_rej, iter]
-
+            res_df.loc[len(res_df)] = ["KSDAGG", ksdagg_rej, None, iter]
         
         ## FSSD
-        if method == "fssd":
+        if method == "fssd": # or method == "all" :
             dat = anp.array(sample_init, dtype=anp.float64)
             dat = kgof.data.Data(dat)
             tr, te = dat.split_tr_te(tr_proportion=0.2, seed=iter + n)
@@ -209,13 +237,15 @@ def run_bootstrap_experiment(nrep, target, log_prob_fn, proposal, kernel, alpha,
 
             # make sure to give tr (NOT te).
             # do the optimization with the options in opts.
-            V_opt, gw_opt, opt_info = kgof_gof.GaussFSSD.optimize_auto_init(
-                log_prob_fn_np_den, tr, J, **opts)
+            V_opt, gw_opt, _ = kgof_gof.GaussFSSD.optimize_auto_init(
+                log_prob_fn_np_den, tr, J, **opts,
+            )
 
             fssd_opt = kgof_gof.GaussFSSD(log_prob_fn_np_den, gw_opt, V_opt, alpha)
             test_result = fssd_opt.perform_test(te)
             fssd_pval = test_result["pvalue"]
-            res_df.loc[len(res_df)] = ["FSSD", fssd_pval, iter]
+            rej = float(fssd_pval <= alpha)
+            res_df.loc[len(res_df)] = ["FSSD", rej, fssd_pval, iter]
 
     return res_df
 
@@ -315,6 +345,10 @@ if __name__ == "__main__":
         create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=b,
             nbanana=nbanana, std=args.t_std, return_logprob=True)
 
+        # numpy version
+        log_prob_fn_np = models_np.create_mixture_t_banana_logprob(dim=dim, ratio=ratio_target, loc=loc, 
+            nbanana=nbanana, std=args.t_std, b=b)
+
     elif model == "gauss-scaled":
         model_name = f"{mcmc_name}_steps{T}_seed{seed}"
         create_target_model = models.create_mixture_gaussian_scaled(ratio=ratio_target, return_logprob=True)
@@ -345,7 +379,8 @@ if __name__ == "__main__":
     models.check_log_prob(proposal, log_prob_fn_proposal)
 
     # check if numpy version agrees with tf version
-    models_np.assert_equal_log_prob(target, log_prob_fn, log_prob_fn_np)
+    if model != "t-banana":
+        models_np.assert_equal_log_prob(target, log_prob_fn, log_prob_fn_np)
 
     # run experiment
     res_df = None

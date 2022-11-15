@@ -34,45 +34,14 @@ class Bootstrap:
   ):
     n = X.shape[-2]
 
-    # # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
-    # if "log_noise_std" in kwargs and "u" not in kwargs:
-    #   u_p = self.ksd.eval(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-    # elif "log_noise_std" in kwargs and "u" in kwargs:
-    #   u_p = self.ksd.eval_mat(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-    # else:
-    #   # TODO only this runs
-    #   u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-
-    # u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
-
-    # # if required, compute m-pKSD statistic by adding KSD
-    # if statistic == "m_pksd":
-    #   assert X_unperturbed is not None
-    #   u_p_unpert = self.ksd(
-    #     X=X_unperturbed, Y=tf.identity(X_unperturbed), output_dim=2, **kwargs,
-    #   ).numpy() # n x n
-    #   u_p_unpert_nodiag = u_p_unpert - tf.linalg.diag(
-    #     tf.linalg.diag_part(u_p_unpert)
-    #   ) # n x n
-
-    #   u_p_nodiag += u_p_unpert_nodiag # n x n
-
     if statistic == "pksd":
       # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
-      if "log_noise_std" in kwargs and "u" not in kwargs:
-        u_p = self.ksd.eval(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-      elif "log_noise_std" in kwargs and "u" in kwargs:
-        u_p = self.ksd.eval_mat(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-      else:
-        # TODO only this runs
-        u_p = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-
-      u_p_nodiag = u_p - tf.linalg.diag(tf.linalg.diag_part(u_p)) # n x n
+      u_p_nodiag = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
 
     # if required, compute m-pKSD statistic by adding KSD
     elif statistic == "m_pksd":
       assert X_unperturbed is not None
-      u_p = self.ksd(
+      u_p_nodiag = self.ksd(
         X=X_unperturbed,
         Y=tf.identity(X_unperturbed),
         Xp=X,
@@ -81,14 +50,10 @@ class Bootstrap:
         **kwargs,
       ).numpy() # n x n
 
-      u_p_nodiag = u_p - tf.linalg.diag(
-        tf.linalg.diag_part(u_p)
-      ) # n x n
-
     # compute test statistic
     self.ksd_hat = tf.reduce_sum(u_p_nodiag).numpy() / (n*(n - 1))
 
-    return u_p
+    return u_p_nodiag
 
   def compute_bootstrap(
     self, 
