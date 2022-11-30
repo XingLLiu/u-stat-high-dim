@@ -4,6 +4,9 @@ import numpy as np
 
 def l2norm(X, Y):
     """Compute \|X - Y\|_2^2 of tensors X, Y
+    Args:
+        X: Tensors of shape (..., n, dim)
+        Y: Tensors of shape (..., m, dim)
     """
     XY = tf.linalg.matmul(X, Y, transpose_b=True) # n x m
     XX = tf.linalg.matmul(X, X, transpose_b=True)
@@ -17,7 +20,7 @@ def l2norm(X, Y):
 
 def median_heuristic(dnorm2):
     """Compute median heuristic.
-    Inputs:
+    Args:
         dnorm2: (n x n) tensor of \|X - Y\|_2^2
     Return:
         med(\|X_i - Y_j\|_2^2, 1 \leq i < j \leq n)
@@ -60,10 +63,10 @@ class RBF(tf.Module):
     def __call__(self, X, Y):
         """
         Args:
-            Xr: tf.Tensor of shape (n, dim)
-            Yr: tf.Tensor of shape (m, dim)
+            Xr: tf.Tensor of shape (..., n, dim)
+            Yr: tf.Tensor of shape (..., m, dim)
         Output:
-            tf.Tensor of shape (n, m)
+            tf.Tensor of shape (..., n, m)
         """
         dnorm2 = l2norm(X, Y)
         sigma2_inv = 1.0 / (self.sigma_sq + 1e-9)
@@ -80,19 +83,17 @@ class RBF(tf.Module):
     def grad_second(self, X, Y):
         """Compute grad_K in wrt second argument in matrix form.
         Args:
-            Xr: tf.Tensor of shape (n, dim)
-            Yr: tf.Tensor of shape (m, dim)
+            Xr: tf.Tensor of shape (..., n, dim)
+            Yr: tf.Tensor of shape (..., m, dim)
         Output:
-            tf.Tensor of shape (n, m, dim)
+            tf.Tensor of shape (..., n, m, dim)
         """
-        assert tf.rank(X) == 2, "X, Y must have rank 2"
         sigma2_inv = 1 / (1e-9 + self.sigma_sq)
-        K = tf.expand_dims(tf.math.exp(-l2norm(X, Y) * sigma2_inv), 0) # 1 x n x m
+        K = tf.expand_dims(tf.math.exp(- l2norm(X, Y) * sigma2_inv), -1) # n x m x 1
         # diff_{ijk} = y^i_j - x^i_k
-        diff = tf.transpose(tf.expand_dims(Y, -2) - X, (2, 1, 0)) # n x m x dim
+        diff = tf.expand_dims(Y, -3) - tf.expand_dims(X, -2) # n x m x dim
         # compute grad_K
         grad_K_XY = - 2 * sigma2_inv * diff * K # n x m x dim
-        grad_K_XY = tf.transpose(grad_K_XY, (1, 2, 0))
 
         return grad_K_XY
 
@@ -101,10 +102,10 @@ class RBF(tf.Module):
         Compute trace(\nabla_x \nabla_y k(x, y)).
 
         Args:
-            X: tf.Tensor of shape (n, dim)
-            Y: tf.Tensor of shape (m, dim)
+            X: tf.Tensor of shape (..., n, dim)
+            Y: tf.Tensor of shape (..., m, dim)
         Output:
-            tf.Tensor of shape (n, m)
+            tf.Tensor of shape (..., n, m)
         """
         # Gram matrix
         sigma2_inv = 1 / (1e-9 + self.sigma_sq)
@@ -140,10 +141,10 @@ class IMQ(tf.Module):
     def __call__(self, X, Y):
         """
         Args:
-            Xr: tf.Tensor of shape (n, dim)
-            Yr: tf.Tensor of shape (m, dim)
+            Xr: tf.Tensor of shape (..., n, dim)
+            Yr: tf.Tensor of shape (..., m, dim)
         Output:
-            tf.Tensor of shape (n, m)
+            tf.Tensor of shape (..., n, m)
         """
         dnorm2 = l2norm(X, Y)
         sigma2_inv = 1.0 / (self.sigma_sq + 1e-9)
@@ -160,10 +161,10 @@ class IMQ(tf.Module):
     def grad_second(self, X, Y):
         """Compute grad_K in wrt second argument in matrix form.
         Args:
-            Xr: tf.Tensor of shape (n, dim)
-            Yr: tf.Tensor of shape (m, dim)
+            Xr: tf.Tensor of shape (..., n, dim)
+            Yr: tf.Tensor of shape (..., m, dim)
         Output:
-            tf.Tensor of shape (n, m, dim)
+            tf.Tensor of shape (..., n, m, dim)
         """
         sigma2_inv = 1 / (1e-9 + self.sigma_sq)
         K = 1 + tf.expand_dims(l2norm(X, Y) * sigma2_inv, -1) # n x m x 1
@@ -179,10 +180,10 @@ class IMQ(tf.Module):
         Compute trace(\nabla_x \nabla_y k(x, y)).
 
         Args:
-            X: tf.Tensor of shape (n, dim)
-            Y: tf.Tensor of shape (m, dim)
+            X: tf.Tensor of shape (..., n, dim)
+            Y: tf.Tensor of shape (..., m, dim)
         Output:
-            tf.Tensor of shape (n, m)
+            tf.Tensor of shape (..., n, m)
         """
         sigma2_inv = 1 / (1e-9 + self.sigma_sq)
         # norm of differences

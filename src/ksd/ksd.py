@@ -98,6 +98,13 @@ class KSD:
     ) / (X.shape[-2] * (X.shape[-2] - 1))
     return u_p_sq
 
+  def beta_k(self, X: tf.Tensor, Y: tf.Tensor, k: int):
+    u_mat = self.__call__(X, Y, output_dim=2) # n x n
+    n = X.shape[-2]
+    witness = tf.reduce_sum(u_mat, axis=1) / n # n
+    term1 = tf.reduce_sum(witness**k) / n
+    return term1
+
   def __call__(self, X: tf.Tensor, Y: tf.Tensor, output_dim: int=1):
     """
     Inputs:
