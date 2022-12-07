@@ -79,14 +79,16 @@ def run_bfgs(start_pts: tf.Tensor, log_prob_fn: callable, verbose: bool=False, g
                 lambda x: -grad_log(x)
                 )
 
-    optim_results = tfp.optimizer.bfgs_minimize(nll_and_grad, initial_position=start_pts, **kwargs)
+    optim_results = tfp.optimizer.bfgs_minimize(
+        nll_and_grad, initial_position=start_pts, parallel_iterations=1000, **kwargs,
+    )
 
     if_converged = tf.experimental.numpy.all(optim_results.converged).numpy() # should return true if all converged
 
     if not if_converged and verbose:
         nstart_pts = start_pts.shape[0]
         not_conv = nstart_pts - tf.reduce_sum(tf.cast(optim_results.converged, dtype=tf.int32))
-        print(Warning(f"{not_conv} of {nstart_pts} BFGS optim chains did not converge"))
+        Warning(f"{not_conv} of {nstart_pts} BFGS optim chains did not converge")
 
     return optim_results
 

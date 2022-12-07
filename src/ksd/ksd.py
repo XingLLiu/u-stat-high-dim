@@ -164,6 +164,7 @@ class PKSD(KSD):
     # find between-modes dir
     if len(mode_list) == 1:
         _, ind_pair_list = [mode_list[0]], [(0, 0)]
+        Warning("Only one mode is found")
     else:
         _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
 
@@ -172,15 +173,14 @@ class PKSD(KSD):
     self.ind_pair_list = ind_pair_list
     self.proposal_dict = proposal_dict
 
-  def test(self, 
+  def find_optimal_param(
+    self,
     xtrain: tf.Tensor, 
-    xtest: tf.Tensor, 
     T: int, 
     jump_ls: tf.Tensor,
-    num_boot: int=1000, 
   ):
-    """Finds the best jump scale using the training set, and use this jump scale to perform KSD 
-    test using the perturbed samples.
+    """
+      Find the best jump scale using the training set.
     """
     if self.proposal_dict is None:
       raise ValueError("Must run find_modes before testing")
@@ -198,7 +198,7 @@ class PKSD(KSD):
       if len(x_t.shape) == 1: 
           x_t = tf.expand_dims(x_t, -1)
 
-      # compute ksd
+      # compute scaled ksd
       _, ksd_val = self.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
 
       scaled_ksd_vals.append(ksd_val)
@@ -209,6 +209,27 @@ class PKSD(KSD):
     
     # store samples corresponding to the best jump scale
     self.x = mh.x[best_idx]
+
+    return best_jump
+
+  def test(
+    self, 
+    xtrain: tf.Tensor, 
+    xtest: tf.Tensor, 
+    T: int, 
+    jump_ls: tf.Tensor,
+    num_boot: int=1000,
+    multinom_samples: tf.Tensor=None,
+  ):
+    """Find the best jump scale using the training set, and use this jump scale to perform KSD 
+    test using the perturbed samples.
+    """
+    # get best jump scale
+    best_jump = self.find_optimal_param(
+      xtrain=xtrain, 
+      T=T, 
+      jump_ls=jump_ls,
+  )
 
     # run dynamic for T steps with test data and optimal params
     mh = self.pert_kernel(log_prob=self.log_prob)
@@ -223,15 +244,19 @@ class PKSD(KSD):
     # Sampling can be slow. initialise separately for faster implementation
     ntest = xtest.shape[-2]
     bootstrap = Bootstrap(self, ntest)
-    # (num_boot - 1) because the test statistic is also included 
-    multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
+    if multinom_samples is None:
+      multinom_samples = bootstrap.multinom.sample((num_boot,)) # num_boot x ntest
+
+    else:
+      assert multinom_samples.shape == (num_boot, ntest), \
+        f"Expect shape ({num_boot}, {ntest}) but have {multinom_samples.shape}" # num_boot x ntest
 
     # compute p-value
     p_val = bootstrap.test_once(
       alpha=None,
       num_boot=num_boot,
       X=x_t,
-      multinom_samples=multinom_one_sample,
+      multinom_samples=multinom_samples,
     )
     
     return bootstrap.ksd_hat, p_val
@@ -251,10 +276,8 @@ class MPKSD(PKSD):
 
   def __call__(
     self, 
-    X: tf.Tensor, 
-    Y: tf.Tensor, 
-    Xp: tf.Tensor, 
-    Yp: tf.Tensor, 
+    X: tf.Tensor,
+    Y: tf.Tensor,
     output_dim: int=1,
   ):
     """
@@ -264,20 +287,20 @@ class MPKSD(PKSD):
       X, Y: Unperturbed data.
       Xp, Yp: Perturbed data.
     """
-    ksd_u_p = self.u_p(X, Y, output_dim)
-    pksd_u_p = self.u_p(Xp, Yp, output_dim)
+    assert X.shape[0] == 2, "X must have batchsize 2"
+    ksd_u_p = self.u_p(X[0], Y[0], output_dim)
+    pksd_u_p = self.u_p(X[1], Y[1], output_dim)
 
     return ksd_u_p + pksd_u_p
 
-  def test(self, 
+  def find_optimal_param(
+    self,
     xtrain: tf.Tensor, 
-    xtest: tf.Tensor, 
     T: int, 
     jump_ls: tf.Tensor,
-    num_boot: int=1000, 
   ):
-    """Finds the best jump scale using the training set, and use this jump scale to perform KSD 
-    test using the perturbed samples.
+    """
+      Find the best jump scale using the training set.
     """
     if self.proposal_dict is None:
       raise ValueError("Must run find_modes before testing")
@@ -290,19 +313,16 @@ class MPKSD(PKSD):
     scaled_ksd_vals = []
     for i in range(len(jump_ls)):
       # get samples after T steps
-      x_0 = mh.x[i, 0, :]
       x_t = mh.x[i, -1, :]
-      assert tf.rank(x_t.shape) == 1
 
       if len(x_t.shape) == 1: 
           x_t = tf.expand_dims(x_t, -1)
 
-      # compute ksd
+      # compute scaled ksd
+      x_t = tf.stack([xtrain, x_t], axis=0) # 2 x n x dim
       _, ksd_val = self.h1_var(
-        X=x_0,
-        Y=tf.identity(x_0),
-        Xp=x_t,
-        Yp=tf.identity(x_t),
+        X=x_t,
+        Y=tf.identity(x_t),
         return_scaled_ksd=True,
       )
 
@@ -311,10 +331,29 @@ class MPKSD(PKSD):
     # get best jump scale
     best_idx = tf.math.argmax(scaled_ksd_vals)
     best_jump = jump_ls[best_idx]
-    self.best_jump_scale = best_jump
     
     # store samples corresponding to the best jump scale
     self.x = mh.x[best_idx]
+
+    return best_jump
+
+  def test(self, 
+    xtrain: tf.Tensor, 
+    xtest: tf.Tensor, 
+    T: int, 
+    jump_ls: tf.Tensor,
+    num_boot: int=1000, 
+    multinom_samples: tf.Tensor=None,
+  ):
+    """Finds the best jump scale using the training set, and use this jump scale to perform KSD 
+    test using the perturbed samples.
+    """
+    # get best jump scale
+    best_jump = self.find_optimal_param(
+      xtrain=xtrain, 
+      T=T, 
+      jump_ls=jump_ls,
+  )
 
     # run dynamic for T steps with test data and optimal params
     mh = self.pert_kernel(log_prob=self.log_prob)
@@ -327,21 +366,26 @@ class MPKSD(PKSD):
     if len(x_t.shape) == 1: 
         x_t = tf.expand_dims(x_t, -1)
 
+    x_t = tf.stack([x_0, x_t], axis=0) # 2 x n x dim
+
     # get multinomial sample
     # Sampling can be slow. initialise separately for faster implementation
     ntest = xtest.shape[-2]
     bootstrap = Bootstrap(self, ntest)
-    # (num_boot - 1) because the test statistic is also included 
-    multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
+    if multinom_samples is None:
+      multinom_samples = bootstrap.multinom.sample((num_boot,)) # num_boot x ntest
+
+    else:
+      assert multinom_samples.shape == (num_boot, ntest), \
+        f"Expect shape ({num_boot}, {ntest}) but have {multinom_samples.shape}" # num_boot x ntest
 
     # compute p-value
     p_val = bootstrap.test_once(
       alpha=None,
       num_boot=num_boot,
       X=x_t,
-      multinom_samples=multinom_one_sample,
+      multinom_samples=multinom_samples,
       X_unperturbed=x_0,
-      statistic="m_pksd",
     )
     
     return bootstrap.ksd_hat, p_val
@@ -383,7 +427,8 @@ class SPKSD(PKSD):
     x: tf.Tensor,
     T: int, 
     jump_ls: tf.Tensor,
-    num_boot: int=1000, 
+    num_boot: int=1000,
+    multinom_samples: tf.Tensor=None,
   ):
     """Finds the best jump scale using the training set, and use this jump scale to perform KSD 
     test using the perturbed samples.
@@ -402,16 +447,21 @@ class SPKSD(PKSD):
 
     # get multinomial sample
     # Sampling can be slow. initialise separately for faster implementation
-    bootstrap = Bootstrap(self, x_t.shape[-2])
-    # (num_boot - 1) because the test statistic is also included 
-    multinom_one_sample = bootstrap.multinom.sample((num_boot-1,)) # num_boot x ntest
+    n = x_t.shape[-2]
+    bootstrap = Bootstrap(self, n)
+    if multinom_samples is None:
+      multinom_samples = bootstrap.multinom.sample((num_boot,)) # num_boot x n
+
+    else:
+      assert multinom_samples.shape == (num_boot, n), \
+        f"Expect shape ({num_boot}, {n}) but have {multinom_samples.shape}" # num_boot x n
 
     # compute p-value
     p_val = bootstrap.test_once(
       alpha=None,
       num_boot=num_boot,
       X=x_t,
-      multinom_samples=multinom_one_sample,
+      multinom_samples=multinom_samples,
       statistic="pksd",
     )
     

@@ -16,39 +16,13 @@ class Bootstrap:
     self.alpha = None
     self.multinom = tfp.distributions.Multinomial(float(n), probs=tf.ones(n)/n)
   
-  def sample_multinomial(self, n: int, num_boot: int):
-    """
-    Inputs:
-      n: number of samples
-      num_boot: number of bootstrap samples to be drawn
-    
-    Returns:
-      w \sim 1/n * Multi(n; 1/n, \ldots, 1/n)
-    """
-    # n = float(n)
-    w = self.multinom.sample(num_boot) # num_boot x n
-    return w
-
   def compute_test_statistic(
     self, X: tf.Tensor, statistic: str, X_unperturbed: tf.Tensor=None, **kwargs,
   ):
     n = X.shape[-2]
 
-    if statistic == "pksd":
-      # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
-      u_p_nodiag = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
-
-    # if required, compute m-pKSD statistic by adding KSD
-    elif statistic == "m_pksd":
-      assert X_unperturbed is not None
-      u_p_nodiag = self.ksd(
-        X=X_unperturbed,
-        Y=tf.identity(X_unperturbed),
-        Xp=X,
-        Yp=tf.identity(X),
-        output_dim=2,
-        **kwargs,
-      ).numpy() # n x n
+    # compute u_p(xi, xj) using the U-statistic (required for goodness-of-fit tests)
+    u_p_nodiag = self.ksd(X=X, Y=tf.identity(X), output_dim=2, **kwargs).numpy() # n x n
 
     # compute test statistic
     self.ksd_hat = tf.reduce_sum(u_p_nodiag).numpy() / (n*(n - 1))
