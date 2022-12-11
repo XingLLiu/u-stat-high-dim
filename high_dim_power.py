@@ -6,6 +6,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 from tqdm import tqdm, trange
+from scipy.stats import norm
 
 
 def ksd_gaussians(d, bandwidth, delta):
@@ -67,11 +68,10 @@ def compute_population_quantities(
         "ksd": [],
         "cond_var": [],
         "full_var": [],
+        "m3": [],
     }
     
     for d in tqdm(dims):
-        # print(f"dim: {d}")
-
         # sample data
         target_dist, sample_dist = generate_target_proposal(d, delta)
         X = sample_dist.sample((npop,))
@@ -86,16 +86,20 @@ def compute_population_quantities(
         # 2. var_cond
         cond_var = ksd.h1_var(X=X, Y=tf.identity(X)).numpy()
         # cond_var = h1_var_gaussians(d, bandwidth=kernel.sigma_sq, delta=delta)
+        # cond_var = ksd.u_p_abs_cond_central_moment(X=X, Y=tf.identity(X), k=2).numpy()
         # 3. var_full
         up_sq = ksd.u_p_moment(X, tf.identity(X), k=2).numpy()
         # up_sq = up_sq_gaussians(d, bandwidth=kernel.sigma_sq, delta=delta)
         full_var = up_sq - ksd_val**2
-        
+        # 4. m3
+        m3 = ksd.u_p_abs_cond_central_moment(X, tf.identity(X), k=3).numpy()
+
         # store
         res["ksd"].append(ksd_val)
         res["cond_var"].append(cond_var)
         res["full_var"].append(full_var)
-        
+        res["m3"].append(m3)
+
     return res
 
 def compute_ksd(
@@ -107,6 +111,8 @@ def compute_ksd(
     delta: float=2.,
 ):
     """
+    Compute KSD values for each dim d and sample size n.
+
     Args:
         t_ratio: t = (1 - n^{-\gamma}) * KSD * t_ratio.
     """
@@ -114,7 +120,6 @@ def compute_ksd(
     iterator = tqdm(zip(dims, ns), total=len(dims))
 
     for d, n in iterator:
-        # print(f"dim: {d}")
         target_dist, sample_dist = generate_target_proposal(d, delta)
         X = sample_dist.sample((nreps, n))
         
@@ -124,7 +129,6 @@ def compute_ksd(
         
         # compute ksd
         ksd_vals = []
-        # print("d, n, X.shape", d, n, X.shape)
         for i in range(nreps):
             iterator.set_description(f"Repetition [{i+1}/{nreps}")
 
@@ -155,12 +159,56 @@ def compute_analytical_power_bounds(
     
     return lower_bd, upper_bd
 
+def compute_analytical_markov_bounds(
+    n,
+    t_lb,
+    t_ub,
+    ksd,
+    m2,
+    M2,
+):
+    upper_bd = (
+        m2 / (n * (t_lb - ksd)**2) +
+        M2 / (n * (n - 1) * ((t_lb - ksd)**2))
+    )
+    lower_bd = 1 - (
+        m2 / (n * (t_ub - ksd)**2) +
+        M2 / (n * (n - 1) * ((t_ub - ksd)**2))
+    )
+    
+    return lower_bd, upper_bd
+
+def compute_analytical_BE_bounds(
+    n,
+    t_lb,
+    t_ub,
+    ksd,
+    m2,
+    m3,
+    M2,
+):
+    upper_bd = (
+        norm.cdf(np.sqrt(n) * (ksd - t_ub) / (2 * m2**0.5)) +
+        m2 / (n*(n - 1) * (t_ub - ksd)**2) +
+        M2**0.5 * m2 / (n**(3/2) * (n - 1)**0.5 * (t_ub - ksd)**3) +
+        m3 / (n**2 * (t_ub - ksd)**3)
+    )
+
+    lower_bd = 1 - (
+        norm.cdf(np.sqrt(n) * (t_lb - ksd) / (2 * m2**0.5)) +
+        m2 / (n*(n - 1) * (t_lb - ksd)**2) +
+        M2**0.5 * m2 / (n**(3/2) * (n - 1)**0.5 * np.abs(t_lb - ksd)**3) +
+        m3 / (n**2 * np.abs(  - ksd)**3)
+    )
+
+    return lower_bd, upper_bd
+
 def power_experiment(
     ksd_res,
     res_analytical,
     ns,
     dims,
-    gamma,
+    eta,
     t_ratio,
 ):
     """
@@ -182,16 +230,14 @@ def power_experiment(
         "t_l": [],
     }
     
-    for i, d in enumerate(tqdm(dims)):
-        # print(f"dim: {d}")
-        
+    for i, d in enumerate(tqdm(dims)):        
         n = ns[i]
         
         # compute analytical bounds
         l_bd, u_bd = compute_analytical_power_bounds(
             n,
             d,
-            gamma,
+            eta,
             ksd=res_analytical["ksd"][i],
             cond_var=res_analytical["cond_var"][i],
             full_var=res_analytical["full_var"][i],
@@ -201,8 +247,8 @@ def power_experiment(
         res["u_bd"].append(u_bd)
         
         # choose t
-        t_l = (1 - n**(-gamma)) * res_analytical["ksd"][i] * t_ratio
-        t_u = (1 + n**(-gamma)) * res_analytical["ksd"][i]
+        t_l = (1 - n**(-eta)) * res_analytical["ksd"][i] * t_ratio
+        t_u = (1 + n**(-eta)) * res_analytical["ksd"][i]
 
         res["t_l"].append(t_l)
         res["t_u"].append(t_u)
@@ -211,5 +257,65 @@ def power_experiment(
         ksd_vals = ksd_res[d]
         res["probs_l"].append(np.mean(ksd_vals >= t_l))
         res["probs_u"].append(np.mean(ksd_vals >= t_u))
+
+    return res
+
+
+def power_experiment_t(
+    ksd_vals,
+    res_analytical,
+    n,
+    ts_lb,
+    ts_ub,
+    bound: str="markov",
+):
+    """
+    Plot power and bounds as a function of decision threshold t.
+    """    
+    res = {
+        "bound": [bound] * len(ts_lb),
+        "n": [n] * len(ts_lb),
+        "probs_u": [],
+        "probs_l": [],
+        "u_bd": [],
+        "l_bd": [],
+        "t_u": [],
+        "t_l": [],
+    }
+    
+    for i, t_lb in enumerate(tqdm(ts_lb)):
+        t_ub = ts_ub[i]
+        
+        if bound == "markov":
+            l_bd, u_bd = compute_analytical_markov_bounds(
+                n,
+                t_lb,
+                t_ub,
+                ksd=res_analytical["ksd"],
+                m2=res_analytical["cond_var"],
+                M2=res_analytical["full_var"],
+            )
+
+        elif bound == "be":
+            l_bd, u_bd = compute_analytical_BE_bounds(
+                n,
+                t_lb,
+                t_ub,
+                ksd=res_analytical["ksd"],
+                m2=res_analytical["cond_var"],
+                m3=res_analytical["m3"],
+                M2=res_analytical["full_var"],
+            )
+        
+        res["l_bd"].append(l_bd)
+        res["u_bd"].append(u_bd)
+        
+        # save t
+        res["t_l"].append(t_lb)
+        res["t_u"].append(t_ub)
+
+        # compute empirical probs
+        res["probs_l"].append(np.mean(ksd_vals >= t_lb))
+        res["probs_u"].append(np.mean(ksd_vals >= t_ub))
 
     return res
