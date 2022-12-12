@@ -1,5 +1,6 @@
 
 from src.ksd.ksd import KSD
+from src.ksd.bootstrap import Bootstrap
 
 import numpy as np
 import tensorflow as tf
@@ -203,13 +204,33 @@ def compute_analytical_BE_bounds(
 
     return lower_bd, upper_bd
 
+def compute_analytical_new_bounds(
+    n,
+    t_lb,
+    t_ub,
+    ksd,
+    m2,
+    m3,
+    M2,
+):
+    upper_bd = (
+        norm.cdf(np.sqrt(n) * (ksd - t_ub) / (M2**0.5))
+    )
+
+    lower_bd = 1 - (
+        norm.cdf(np.sqrt(n) * (t_lb - ksd) / (M2**0.5))
+    )
+
+    return lower_bd, upper_bd
+
 def power_experiment(
     ksd_res,
     res_analytical,
     ns,
     dims,
-    eta,
-    t_ratio,
+    ts_lb,
+    ts_ub,
+    bound: str="markov",
 ):
     """
     Args:
@@ -232,31 +253,43 @@ def power_experiment(
     
     for i, d in enumerate(tqdm(dims)):        
         n = ns[i]
+        t_lb = ts_lb[i]
+        t_ub = ts_ub[i]
         
         # compute analytical bounds
-        l_bd, u_bd = compute_analytical_power_bounds(
-            n,
-            d,
-            eta,
-            ksd=res_analytical["ksd"][i],
-            cond_var=res_analytical["cond_var"][i],
-            full_var=res_analytical["full_var"][i],
-        )
+        if bound == "markov":
+            l_bd, u_bd = compute_analytical_markov_bounds(
+                n,
+                t_lb,
+                t_ub,
+                ksd=res_analytical["ksd"][i],
+                m2=res_analytical["cond_var"][i],
+                M2=res_analytical["full_var"][i],
+            )
+
+        elif bound == "be":
+            l_bd, u_bd = compute_analytical_BE_bounds(
+                n,
+                t_lb,
+                t_ub,
+                ksd=res_analytical["ksd"][i],
+                m2=res_analytical["cond_var"][i],
+                m3=res_analytical["m3"][i],
+                M2=res_analytical["full_var"][i],
+            )
+        
         
         res["l_bd"].append(l_bd)
         res["u_bd"].append(u_bd)
         
         # choose t
-        t_l = (1 - n**(-eta)) * res_analytical["ksd"][i] * t_ratio
-        t_u = (1 + n**(-eta)) * res_analytical["ksd"][i]
-
-        res["t_l"].append(t_l)
-        res["t_u"].append(t_u)
+        res["t_l"].append(t_lb)
+        res["t_u"].append(t_ub)
 
         # compute empirical probs
         ksd_vals = ksd_res[d]
-        res["probs_l"].append(np.mean(ksd_vals >= t_l))
-        res["probs_u"].append(np.mean(ksd_vals >= t_u))
+        res["probs_l"].append(np.mean(ksd_vals >= t_lb))
+        res["probs_u"].append(np.mean(ksd_vals >= t_ub))
 
     return res
 
@@ -306,7 +339,18 @@ def power_experiment_t(
                 m3=res_analytical["m3"],
                 M2=res_analytical["full_var"],
             )
-        
+
+        elif bound == "new":
+            l_bd, u_bd = compute_analytical_new_bounds(
+                n,
+                t_lb,
+                t_ub,
+                ksd=res_analytical["ksd"],
+                m2=res_analytical["cond_var"],
+                m3=res_analytical["m3"],
+                M2=res_analytical["full_var"],
+            )
+
         res["l_bd"].append(l_bd)
         res["u_bd"].append(u_bd)
         
@@ -319,3 +363,47 @@ def power_experiment_t(
         res["probs_u"].append(np.mean(ksd_vals >= t_ub))
 
     return res
+
+def bootstrap_quantile(
+    dims,
+    ns,
+    num_boot,
+    nreps,
+    kernel_class,
+    bandwidth_order,
+    delta: float=2.,
+):
+    res = {d: [] for d in dims}
+
+    iterator = trange(len(ns))
+    for i in iterator:
+        n = ns[i]
+        d = dims[i]
+
+        target_dist, sample_dist = generate_target_proposal(d, delta)
+        X = sample_dist.sample((nreps, n))
+        
+        # initialise KSD
+        kernel = kernel_class(sigma_sq=2.*d**bandwidth_order)
+        ksd = KSD(kernel=kernel, log_prob=target_dist.log_prob)
+        
+        bootstrap = Bootstrap(ksd, n)
+        # (num_boot - 1) because the test statistic is also included 
+        multinom_samples = bootstrap.multinom.sample((nreps, num_boot-1,)) # num_boot x ntest
+        
+        for j in range(nreps):
+            iterator.set_description(f"[{j+1} / {nreps}]")
+
+            multinom_sample_j = multinom_samples[j]
+            X_j = X[j]
+
+            u_p = bootstrap.compute_test_statistic(X_j, None, None)
+
+            bootstrap.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_sample_j)
+
+            _, q, _ = bootstrap._test_once(alpha=0.05)
+
+            res[d].append(q)
+
+    return res
+    
