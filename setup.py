@@ -8,12 +8,12 @@ setup(
     install_requires=[
         'numpy',
         'tensorflow',
+        'tensorflow_probability',
         'pandas',
         'matplotlib',
         'jupyter',
         'sklearn',
-        "tqdm",
-        "matplotlib",
-        "seaborn"
+        'tqdm',
+        'seaborn'
     ]
 )
