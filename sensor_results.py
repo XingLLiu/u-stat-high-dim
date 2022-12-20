@@ -1,7 +1,7 @@
 from src.ksd.find_modes import find_modes, pairwise_directions
 from src.ksd.langevin import RandomWalkMH, RandomWalkBarker
 import src.ksd.langevin as mcmc
-from src.ksd.ksd import KSD
+from src.ksd.ksd import KSD, MPKSD, SPKSD
 from src.ksd.kernel import IMQ
 from src.ksd.bootstrap import Bootstrap
 from src.ksd.find_modes import find_modes, pairwise_directions
@@ -33,8 +33,8 @@ args = parser.parse_args()
 MODEL = "modified" # "original"
 T = 1000
 NSAMPLE = 1000
-# ram_scale = args.RAM_SCALE
-RAM_SCALE_LIST = [0.1, 0.3, 0.5, 0.7, 0.9, 1.08, 1.3]
+ram_scale = args.RAM_SCALE
+# RAM_SCALE_LIST = [0.1, 0.3, 0.5, 0.7, 0.9, 1.08, 1.3]
 method = args.METHOD
 RAM_SEED = 9
 REP = 10
@@ -96,7 +96,7 @@ print("loading data from", path)
 target = ModelClass(Ob, Os, Xb, Xs, Yb, Ys)
 log_prob_fn = target.log_prob
 
-if method == "fssd":
+if method == "all" or method == "fssd":
     target_np = ModelClassNumpy(Ob, Os, Xb, Xs, Yb, Ys)
     log_prob_fn_np = target_np.log_prob
     log_prob_fn_np_den = kgof_density.from_log_den(dim, log_prob_fn_np)
@@ -119,8 +119,9 @@ def load_preprocess_sensors(path, n, ntrain):
 
 
 def experiment(T, n, target_dist):
-    jump_ls = tf.linspace(0.8, 1.2, 51)
-    
+    # jump_ls = tf.linspace(0.8, 1.2, 51)
+    jump_ls = tf.linspace(0.8, 1.2, 21)
+
     ntrain = n // 2
     threshold = 1e-4
     nrep = 1
@@ -128,144 +129,147 @@ def experiment(T, n, target_dist):
     num_boot = 800
     alpha = 0.05
     
+    # generate multinomial samples for bootstrap
     kernel = IMQ(med_heuristic=True)
     ksd = KSD(target=target_dist, kernel=kernel)
     bootstrap = Bootstrap(ksd, n-ntrain)
 
+    bootstrap_nopert = Bootstrap(ksd, n)
+
     res = []
-    iterator = tqdm(RAM_SCALE_LIST)
-    res_samples = {}
-    for ram_scale in iterator:
-        for i, seed in enumerate(range(REP)):
-            tf.random.set_seed(seed)
-            iterator.set_description(f"seed [{i+1} / {REP}]")
+    # iterator = tqdm(RAM_SCALE_LIST)
+    iterator = trange(REP)
+    # res_samples = {}
+    # for ram_scale in iterator:
+    for i in iterator:
+        seed = i
+        tf.random.set_seed(seed)
+        iterator.set_description(f"seed [{i+1} / {REP}]")
 
-            ## get multinom sample for bootstrap
-            multinom_samples = bootstrap.multinom.sample((nrep, num_boot))
+        ## get multinom sample for bootstrap
+        multinom_samples = bootstrap.multinom.sample((nrep, num_boot))
+        multinom_samples_notrain = bootstrap_nopert.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
 
-            ## load, schuffle, and split data
-            sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{seed+1}.csv", n, ntrain) #! use RAM_SEED
+        ## load, schuffle, and split data
+        sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{seed+1}.csv", n, ntrain) #! use RAM_SEED
+        sample_init = tf.concat([sample_train, sample_test], axis=0)
 
-            ## KSD and pKSD 
-            # TODO: if condition is hacked
-            if method == "ksd" or method == "pksd":
+        ## KSD and pKSD 
+        start_pts = tf.random.uniform(
+            shape=(ntrain//2, dim), minval=-1.5, maxval=1.5,
+        ) # nrep x ntrain//2 x dim
 
-                ## sample initial points for finding modes
-                start_pts = tf.concat([
-                    sample_train[:(ntrain//2)], 
-                    tf.random.uniform(shape=(ntrain-ntrain//2, dim), minval=0., maxval=1.)], axis=0) # ntrain x dim
-                
-                ## find modes
-                tic = time.perf_counter()
-                mode_list, inv_hess_list = find_modes(start_pts, log_prob_fn, grad_log=None, threshold=threshold, max_iterations=1000)
-                toc = time.perf_counter()
-                print(f"Optimisation finished in {toc - tic:0.4f} seconds")
-                print(f"Num. modes found: {len(mode_list)}")
+        # 1. KSD
+        if method == "all" or method == "ksd":
+            iterator.set_description("Running KSD")
+            multinom_t = multinom_samples_notrain[0] # num_boost x n
 
-                proposal_dict = mcmc.prepare_proposal_input_all(mode_list=mode_list, inv_hess_list=inv_hess_list)
-                _, ind_pair_list = pairwise_directions(mode_list, return_index=True)
+            ksd_rej, ksd_pval = bootstrap.test_once(
+                alpha=alpha, num_boot=num_boot, X=sample_init, multinom_samples=multinom_t,
+            )
 
-                ## run perturbation kernel
-                print("running in parallel ...")
-                tic = time.perf_counter()
-                mh_jumps = MCMCKernel(log_prob=log_prob_fn)
-                mh_jumps.run(steps=T, std=jump_ls, x_init=sample_train, ind_pair_list=ind_pair_list, **proposal_dict)
-                toc = time.perf_counter()
-                print(f"... done in {toc - tic:0.4f} seconds")
+            res.append(["KSD", ram_scale, ksd_rej, ksd_pval, seed])
 
-                ## compute approximate power
-                scaled_ksd_vals = []
-                for j in range(jump_ls.shape[0]):
-                    x_t = mh_jumps.x[j, -1, :, :]
-                    _, ksd_val = ksd.h1_var(X=x_t, Y=tf.identity(x_t), return_scaled_ksd=True)
-                    scaled_ksd_vals.append(ksd_val)
-                    
-                ## find best jump scale
-                best_jump = jump_ls[tf.math.argmax(scaled_ksd_vals)]
+        # 2. ospKSD
+        if method == "all" or method == "ospksd" or method == "test":
+            iterator.set_description("Running ospKSD")
 
-                ## perturb test sample
-                mh = MCMCKernel(log_prob=log_prob_fn)
-                mh.run(steps=T, std=best_jump, x_init=sample_test, 
-                    ind_pair_list=ind_pair_list, **proposal_dict)
-                x_0 = mh.x[0, :, :]
-                x_t = mh.x[-1, :, :]
+            # instantiate ospKSD class
+            ospksd = MPKSD(kernel=kernel, pert_kernel=MCMCKernel, log_prob=log_prob_fn)
 
-                ## compute p-value
-                kernel = IMQ(med_heuristic=True)
-                ksd = KSD(target=target_dist, kernel=kernel)
-                bootstrap = Bootstrap(ksd, n-ntrain)
+            # find modes and Hessians
+            tic = time.perf_counter()
+            ospksd.find_modes(start_pts, threshold=threshold, max_iterations=1000)
+            toc = time.perf_counter()
+            print(f"Optimisation finished in {toc - tic:0.4f} seconds")
+            nmodes = len(ospksd.proposal_dict["modes"])
+            print(f"Num. modes found: {nmodes}")
+        
+            # compute test statistic and p-value
+            multinom_t = multinom_samples[0]
+            _, ospksd_pval = ospksd.test(
+                xtrain=sample_train, 
+                xtest=sample_test, 
+                T=T,
+                jump_ls=jump_ls, 
+                num_boot=num_boot,
+                multinom_samples=multinom_t,
+            )
+            ospksd_rej = float(ospksd_pval <= alpha)
 
-                multinom_one_sample = multinom_samples[0, :]
+            res.append(["ospksd", ram_scale, ospksd_rej, ospksd_pval, seed])
 
-                # before perturbation
-                _, p_val0 = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_0, multinom_samples=multinom_one_sample)
-                ksd0 = bootstrap.ksd_hat
+        # 3. spKSD
+        if method == "all" or method == "spksd" or method == "test":
+            iterator.set_description("Running spKSD")
+        
+            # instantiate pKSD class
+            pksd = SPKSD(kernel=kernel, pert_kernel=MCMCKernel, log_prob=log_prob_fn)
+            
+            # use previously found modes and Hessians for computational speed
+            pksd.ind_pair_list = ospksd.ind_pair_list
+            pksd.proposal_dict = ospksd.proposal_dict
 
-                # TODO: change what needs to be saved
-                res.append(["KSD", ram_scale, p_val0, seed, best_jump.numpy(), ksd0])
+            # compute test statistic and p-value 
+            multinom_t = multinom_samples_notrain[0] # num_boost x n
+            _, pksd_pval = pksd.test(
+                x=sample_init, 
+                T=T,
+                jump_ls=jump_ls, 
+                num_boot=num_boot,
+                multinom_samples=multinom_t, 
+            )
+            pksd_rej = float(pksd_pval <= alpha)
 
-                # after perturbation
-                _, p_valt = bootstrap.test_once(alpha=alpha, num_boot=num_boot, X=x_t, multinom_samples=multinom_one_sample)
-                ksdt = bootstrap.ksd_hat
+            res.append(["spksd", ram_scale, pksd_rej, pksd_pval, seed])
 
-                # TODO: change what needs to be saved
-                res.append(["pKSD", ram_scale, p_valt, seed, best_jump.numpy(), ksdt])
+        ## 4. KSDAGG
+        if method == "all" or method == "ksdagg":
+            iterator.set_description("Running KSDAGG")
+            ksdagg_rej = ksdagg_wild_test(
+                seed=seed,
+                X=sample_init,
+                log_prob_fn=log_prob_fn,
+                alpha=alpha,
+                beta_imq=0.5,
+                kernel_type="imq",
+                weights_type="uniform",
+                l_minus=0,
+                l_plus=10,
+                B1=num_boot,
+                B2=500, # num of samples to estimate level
+                B3=50, # num of bisections to estimate quantile
+            )
+            res.append(["KSDAGG", ram_scale, ksdagg_rej, None, iter])
 
-                res_samples[seed] = {"perturbed": mh, "sample_train": sample_train, "sample_test": sample_test}
+        ## 5. FSSD
+        if method == "all" or method == "fssd" :
+            dat = anp.array(sample_init, dtype=anp.float64)
+            dat = kgof.data.Data(dat)
+            tr, te = dat.split_tr_te(tr_proportion=0.2, seed=seed)
+            opts = {
+                'reg': 1e-2, # regularization parameter in the optimization objective
+                'max_iter': 200, # maximum number of gradient ascent iterations
+                'tol_fun':1e-7, # termination tolerance of the objective
+            }
 
-            ## KSDAGG
-            if method == "KSDAGG":
-                sample_init = tf.concat([sample_train, sample_test], axis=0)
-                ksdagg_rej = ksdagg_wild_test(
-                    seed=seed,
-                    X=sample_init,
-                    log_prob_fn=log_prob_fn,
-                    alpha=alpha,
-                    beta_imq=0.5,
-                    kernel_type="imq",
-                    weights_type="uniform",
-                    l_minus=0,
-                    l_plus=10,
-                    B1=num_boot,
-                    B2=500, # num of samples to estimate level
-                    B3=50, # num of bisections to estimate quantile
-                )
-                res.append([method, ram_scale, ksdagg_rej, seed])
+            # J is the number of test locations (or features). Typically not larger than 10.
+            J = 1
 
-            # FSSD
-            if method == "fssd":
-                sample_init = tf.concat([sample_train, sample_test], axis=0)
-                dat = anp.array(sample_init, dtype=anp.float64)
-                dat = kgof.data.Data(dat)
-                tr, te = dat.split_tr_te(tr_proportion=0.2, seed=seed)
-                opts = {
-                    'reg': 1e-2, # regularization parameter in the optimization objective
-                    'max_iter': 200, # maximum number of gradient ascent iterations
-                    'tol_fun':1e-7, # termination tolerance of the objective
-                }
+            # make sure to give tr (NOT te).
+            # do the optimization with the options in opts.
+            V_opt, gw_opt, opt_info = kgof_gof.GaussFSSD.optimize_auto_init(
+                log_prob_fn_np_den, tr, J, **opts)
 
-                # J is the number of test locations (or features). Typically not larger than 10.
-                J = 1
+            fssd_opt = kgof_gof.GaussFSSD(log_prob_fn_np_den, gw_opt, V_opt, alpha)
+            test_result = fssd_opt.perform_test(te)
+            fssd_pval = test_result["pvalue"]
+            fssd_rej = float(fssd_pval <= alpha)
+            res.append([method, ram_scale, fssd_rej, fssd_pval, seed])
 
-                # make sure to give tr (NOT te).
-                # do the optimization with the options in opts.
-                V_opt, gw_opt, opt_info = kgof_gof.GaussFSSD.optimize_auto_init(
-                    log_prob_fn_np_den, tr, J, **opts)
-
-                fssd_opt = kgof_gof.GaussFSSD(log_prob_fn_np_den, gw_opt, V_opt, alpha)
-                test_result = fssd_opt.perform_test(te)
-                fssd_pval = test_result["pvalue"]
-                res.append([method, ram_scale, fssd_pval, seed])
-
-        pickle.dump(res_samples,
-            open(f"res/sensors/sample_{model_name}_{ram_scale}.pkl", "wb"))
-
-    # TODO: change what needs to be saved
-    if len(res[0]) == 6:
-        res_df = pd.DataFrame(res, columns=["method", "ram_scale", "pval", "seed", "best_jump", "statistic"])
-    else:
-        res_df = pd.DataFrame(res, columns=["method", "ram_scale", "pval", "seed"])
-    res_df.to_csv(f"res/sensors/res_{model_name}_{method}.csv", index=False)
+    # save results
+    res_df = pd.DataFrame(res, columns=["method", "ram_scale", "rej", "pval", "seed"])
+    res_df.to_csv(f"res/sensors/res_{model_name}_{ram_scale}_{method}.csv", index=False)
 
 if __name__ == "__main__":
     tf.random.set_seed(1)

@@ -22,6 +22,24 @@
 # CUDA_VISIBLE_DEVICES="" taskset -c 12-13 python3 src/sensor_results_ramscale.py --RAM_SCALE=1.3 &
 # wait
 
-method=fssd
+# method=fssd
 
-CUDA_VISIBLE_DEVICES="" taskset -c 0-10 python3 sensor_results.py --METHOD=$method
+# CUDA_VISIBLE_DEVICES="" taskset -c 0-10 python3 sensor_results.py --METHOD=$method
+
+method=all
+
+hist_file="./res/sensors/_hist.txt"
+echo "$(date +"%T") run history" > $hist_file
+
+CUDA_VISIBLE_DEVICES="" taskset -c 11-15 python3 sensor_results.py --METHOD=$method --RAM_SCALE=0.1 &
+CUDA_VISIBLE_DEVICES="" taskset -c 16-20 python3 sensor_results.py --METHOD=$method --RAM_SCALE=0.3 &
+CUDA_VISIBLE_DEVICES="" taskset -c 21-25 python3 sensor_results.py --METHOD=$method --RAM_SCALE=0.5 &
+wait
+echo "$(date +"%T") finished 1/2" >> $hist_file
+
+CUDA_VISIBLE_DEVICES="" taskset -c 11-15 python3 sensor_results.py --METHOD=$method --RAM_SCALE=0.7 &
+CUDA_VISIBLE_DEVICES="" taskset -c 16-20 python3 sensor_results.py --METHOD=$method --RAM_SCALE=0.9 &
+CUDA_VISIBLE_DEVICES="" taskset -c 21-25 python3 sensor_results.py --METHOD=$method --RAM_SCALE=1.08 &
+CUDA_VISIBLE_DEVICES="" taskset -c 26-30 python3 sensor_results.py --METHOD=$method --RAM_SCALE=1.3 &
+wait
+echo "$(date +"%T") finished 2/2" >> $hist_file
