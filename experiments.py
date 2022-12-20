@@ -308,6 +308,16 @@ if __name__ == "__main__":
         # numpy version
         log_prob_fn_np = models_np.create_rbm(B_scale=6., c=0., dx=dim, dh=dh)
 
+    elif model == "laplace":
+        model_name = f"{method}_steps{T}_seed{seed}_dim{dim}_n{n}"
+        normal_dist = tfd.MultivariateNormalDiag(tf.zeros(dim))
+        
+        create_target_model = models.create_laplace(dim=dim, return_logprob=True) 
+        create_sample_model = normal_dist, normal_dist.log_prob
+        
+        # numpy version
+        log_prob_fn_np = models_np.create_laplace()
+
     print(f"Running {model_name}")
 
     # target distribution

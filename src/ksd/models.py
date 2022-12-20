@@ -324,3 +324,38 @@ def create_mixture_t(dim: int, ratio: tf.Tensor, loc: tf.Tensor,
     return mixture_dist, mixture_dist.log_prob
 
 # end mixture of t-distributions
+
+class MultivariateLaplace:
+  def __init__(self, dim, loc, scale):
+    self.dim = dim
+    self.event_shape = [self.dim]
+    self.loc = loc
+    self.scale = scale
+    self.dist = tfd.Laplace(loc=self.loc, scale=self.scale)
+
+  def sample(self, shape):
+    shape = [shape] if isinstance(shape, int) else shape
+    x = self.dist.sample(list(shape) + [self.dim])
+    return x
+
+  def log_prob(self, x):
+    lp = self.dist.log_prob(x)
+    # lp = - tf.abs(x - self.loc) / self.scale
+    lp = tf.reduce_sum(lp, axis=-1)
+    return lp
+
+def create_laplace(dim: int, return_logprob: bool=False):
+  """Create a Laplace ditributions with mean and var matched 
+  to the standard Gaussian.
+  """
+
+  lap_dist = MultivariateLaplace(
+    dim=dim, loc=0., scale=1/tf.math.sqrt(2.)
+  )
+
+  if not return_logprob:
+    return lap_dist
+  else:
+    return lap_dist, lap_dist.log_prob
+
+# end laplace

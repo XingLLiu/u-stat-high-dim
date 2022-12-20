@@ -127,7 +127,9 @@ def assert_equal_log_prob(dist, log_prob, log_prob_np):
   """Check if log_prob == dist.log_prob + const."""
   x = dist.sample(10)
 
-  res = anp.allclose(log_prob(x), log_prob_np(anp.array(x)), atol=1e-5)
+#   res = anp.allclose(log_prob(x), log_prob_np(anp.array(x)), atol=1e-5)
+  diff = log_prob(x) - log_prob_np(anp.array(x))
+  res = anp.allclose(diff, diff[0], atol=1e-5)
   assert res, "log_prob and log_prob_np yield different values"
 
 # end checker for log_prob_np implementation
@@ -199,8 +201,8 @@ def banana_logprob(x, loc, b, df, dim, scale: float=10.):
 
 
 def create_mixture_t_banana_logprob(dim, ratio, loc, nbanana, std, b):
-  '''
-  '''
+  """
+  """
   nmodes = len(ratio)
   assert nmodes >= nbanana, f"number of mixtures {nmodes} must be >= {nbanana}"
   
@@ -247,7 +249,7 @@ def create_rbm(
   c: anp.array=0.,
   dx: int=50,
   dh: int=40,
-  ):
+):
   """
   Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
   The entries of the matrix B are perturbed.
@@ -269,3 +271,19 @@ def create_rbm(
   dist.log_prob = dist.log_den
 
   return dist.log_prob
+
+
+def create_laplace():
+  """Create a Laplace ditributions with mean and var matched 
+  to the standard Gaussian.
+  """
+  # loc = 0. and scale = 1/sqrt(2) match the 
+  # moments of the standard gaussian
+  scale = 1 / anp.sqrt(2.)
+
+  def log_prob(x):
+    lp = - anp.abs(x) / scale
+    lp = anp.sum(lp, axis=-1)
+    return lp
+
+  return log_prob
