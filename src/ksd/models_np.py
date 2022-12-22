@@ -129,7 +129,7 @@ def assert_equal_log_prob(dist, log_prob, log_prob_np):
 
 #   res = anp.allclose(log_prob(x), log_prob_np(anp.array(x)), atol=1e-5)
   diff = log_prob(x) - log_prob_np(anp.array(x))
-  res = anp.allclose(diff, diff[0], atol=1e-5)
+  res = anp.allclose(diff, diff[0], atol=5e-5)
   assert res, "log_prob and log_prob_np yield different values"
 
 # end checker for log_prob_np implementation
@@ -266,6 +266,35 @@ def create_rbm(
   B = anp.eye(anp.max((dx, dh)))[:dx, :dh] * B_scale
   b = anp.zeros(dx)
   c = c if isinstance(c, anp.ndarray) else anp.zeros(dh)
+
+  dist = kgof_density.GaussBernRBM(B, b, c)
+  dist.log_prob = dist.log_den
+
+  return dist.log_prob
+
+
+def create_rbm_std(
+  B: anp.array=8.,
+  c: anp.array=0.,
+  dx: int=50,
+  dh: int=40,
+):
+  """
+  Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
+  The entries of the matrix B are perturbed.
+  This experiment was first proposed by Liu et al., 2016 (Section 6)
+  Args:
+    m: number of samples
+    c: (dh,) either tf.Tensor or set to tf.zeros((dh,)) by default
+    sigma: standard deviation of Gaussian noise
+    dx: dimension of observed output variable
+    dh: dimension of binary latent variable
+    burnin_number: number of burn-in iterations for Gibbs sampler
+  """
+  # Model p
+  B = anp.array(B, dtype=anp.float64)
+  b = anp.zeros(dx)
+  c = anp.array(c, dtype=anp.float64)
 
   dist = kgof_density.GaussBernRBM(B, b, c)
   dist.log_prob = dist.log_den

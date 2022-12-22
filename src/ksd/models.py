@@ -294,7 +294,39 @@ def create_rbm(
     return dist, dist.log_prob
 
 # end RBM
- 
+
+def create_rbm_std(
+  B: tf.Tensor=8.,
+  c: tf.Tensor=0.,
+  dx: int=50,
+  dh: int=40,
+  burnin_number: int=2000,
+  return_logprob: bool=False):
+  """
+  Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
+  The entries of the matrix B are perturbed.
+  This experiment was first proposed by Liu et al., 2016 (Section 6)
+  Args:
+    m: number of samples
+    c: (dh,) either tf.Tensor or set to tf.zeros((dh,)) by default
+    sigma: standard deviation of Gaussian noise
+    dx: dimension of observed output variable
+    dh: dimension of binary latent variable
+    burnin_number: number of burn-in iterations for Gibbs sampler
+  """
+  # Model p
+  b = tf.zeros(dx)
+
+  dist = density.GaussBernRBM(B, b, c, burnin_number)
+  dist.log_prob = dist.log_den
+
+  if not return_logprob:
+    return dist
+  else:
+    return dist, dist.log_prob
+
+# end RBM
+
 def create_mixture_t(dim: int, ratio: tf.Tensor, loc: tf.Tensor, 
   std: float=0.01, return_logprob=False):
   """Create a mixture of t distributions. 
