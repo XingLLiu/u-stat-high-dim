@@ -96,22 +96,33 @@ class RBF(tf.Module):
         diff = Yp - Xp # n x m x dim
         # compute grad_K
         grad_K_XY = - 2 * sigma2_inv * diff * K # n x m x dim
-        
-        # dim = X.shape[-1]
-        # if dim <= 10000:
+        return grad_K_XY
 
-        # else:
-        #     sigma2_inv = 1 / (1e-9 + self.sigma_sq)
-        #     K = tf.expand_dims(tf.math.exp(- l2norm(X, Y) * sigma2_inv), -1) # n x m x 1
-        #     # diff_{ijk} = y^i_j - x^i_k
-        #     diff = tf.Variable(
-        #         tf.zeros((Y.shape[-2], X.shape[-2], dim)),
-        #     ) # n x m x dim
-        #     for i in range(Y.shape[-2]):
-        #         diff[i].assign(X - Y[..., i, :])
-        #     # compute grad_K
-        #     grad_K_XY = - 2 * sigma2_inv * diff * K # n x m x dim
+    def grad_first_prod(self, X, Y, V):
+        """Compute grad_K in wrt first argument in matrix form 
+        """
+        return -self.grad_second_prod(X, Y, V, Vp_axis=-3)
 
+    def grad_second_prod(self, X, Y, V, Vp_axis: int=-2):
+        """Compute V^T grad_K in wrt second argument in matrix form.
+        Args:
+            Xr: tf.Tensor of shape (..., n, dim)
+            Yr: tf.Tensor of shape (..., m, dim)
+            V: tf.Tensor of shape (..., n, dim)
+            Vp_axis: -2 for grad_second; -3 for grad_first
+        Output:
+            tf.Tensor of shape (..., n, m)
+        """
+        sigma2_inv = 1 / (1e-9 + self.sigma_sq)
+        K = tf.math.exp(- l2norm(X, Y) * sigma2_inv) # n x m
+        # diff_{ijk} = y^i_j - x^i_k
+        Yp = tf.expand_dims(Y, -3) # 1 x m x dim
+        Xp = tf.expand_dims(X, -2) # n x 1 x dim
+        diff = Yp - Xp # n x m x dim
+        # compute grad_K
+        Vp = tf.expand_dims(V, Vp_axis) # n x 1 x dim
+        grad_K_XY = tf.math.reduce_sum(diff * Vp, axis=-1) # n x m
+        grad_K_XY = - 2 * sigma2_inv * grad_K_XY * K
         return grad_K_XY
 
     def gradgrad(self, X, Y):

@@ -58,19 +58,26 @@ class KSD:
 
     # kernel
     K_XY = self.k(X, Y) # n x m
+    dim = X.shape[-1]
 
-    # kernel grad
-    grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
-    grad_K_X = self.k.grad_first(X, Y) # n x m x dim
-    
     # term 1
     term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
     # term 2
-    term2_mat = tf.expand_dims(score_X, -2) * grad_K_Y # n x m x dim
-    term2_mat = tf.reduce_sum(term2_mat, axis=-1)
+    if dim <= 4000: # TODO use grad_second_prod for all cases
+      grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
+      term2_mat = tf.expand_dims(score_X, -2) * grad_K_Y # n x m x dim
+      term2_mat = tf.reduce_sum(term2_mat, axis=-1)
+    else:  
+      term2_mat = self.k.grad_second_prod(X, Y, score_X)
+
     # term3
-    term3_mat = tf.expand_dims(score_Y, -3) * grad_K_X # n x m x dim
-    term3_mat = tf.reduce_sum(term3_mat, axis=-1)
+    if dim <= 4000:
+      grad_K_X = self.k.grad_first(X, Y) # n x m x dim
+      term3_mat = tf.expand_dims(score_Y, -3) * grad_K_X # n x m x dim
+      term3_mat = tf.reduce_sum(term3_mat, axis=-1)
+    else:
+      term3_mat = self.k.grad_first_prod(X, Y, score_Y)
+
     # term4
     term4_mat = self.k.gradgrad(X, Y) # n x m
 
