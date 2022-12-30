@@ -183,9 +183,9 @@ def run_bootstrap_experiment(
             V_opt, gw_opt, _ = kgof_gof.GaussFSSD.optimize_auto_init(
                 log_prob_fn_np_den,
                 tr,
-                J=1, # number of test locations (or features). Typically not larger than 10.
+                J=10, # number of test locations (or features). Typically not larger than 10.
                 reg=1e-2, # regularization parameter in the optimization objective
-                max_iter=200, # maximum number of gradient ascent iterations
+                max_iter=2000, # maximum number of gradient ascent iterations
                 tol_fun=1e-7, # termination tolerance of the objective
             )
 
@@ -223,6 +223,8 @@ if __name__ == "__main__":
     parser.add_argument("--nbanana", type=int, default=2)
     parser.add_argument("--shift", type=float, default=0.)
     parser.add_argument("--dh", type=int, default=10, help="dim of h for RBM")
+    parser.add_argument("--B_scale", type=float, default=6.)
+    parser.add_argument("--noise_std", type=float, default=6.)
     parser.add_argument("--ratio_s_var", type=float, default=0.)
     parser.add_argument("--rand_start", type=float, default=None)
     parser.add_argument("--t_std", type=float, default=0.1)
@@ -299,14 +301,33 @@ if __name__ == "__main__":
     elif model == "rbm":
         dh = args.dh
         c_shift = args.shift
+        B_scale = args.B_scale
         c_off = tf.concat([tf.ones(2) * c_shift, tf.zeros(dh-2)], axis=0)
 
-        model_name = f"{method}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}_n{n}"
-        create_target_model = models.create_rbm(B_scale=6., c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
-        create_sample_model = models.create_rbm(B_scale=6., c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
+        model_name = f"{method}_steps{T}_seed{seed}_dim{dim}_dh{dh}_shift{c_shift}_n{n}_B{B_scale}"
+        create_target_model = models.create_rbm(B_scale=B_scale, c=0., dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
+        create_sample_model = models.create_rbm(B_scale=B_scale, c=c_off, dx=dim, dh=dh, burnin_number=2000, return_logprob=True)
 
         # numpy version
-        log_prob_fn_np = models_np.create_rbm(B_scale=6., c=0., dx=dim, dh=dh)
+        log_prob_fn_np = models_np.create_rbm(B_scale=B_scale, c=0., dx=dim, dh=dh)
+
+    elif model == "rbmStd":
+        dh = args.dh
+        noise_std = args.noise_std
+        
+        B_target = tf.cast(
+            tf.random.normal([dim, dh]) > 0.,
+            dtype=tf.float32,
+        ) * 2. - 1
+        B_sample = B_target + tf.random.normal([dim, dh]) * noise_std
+        c = tf.random.normal((dh,))
+
+        model_name = f"{method}_steps{T}_seed{seed}_dim{dim}_dh{dh}_n{n}_noise{noise_std}"
+        create_target_model = models.create_rbm_std(B=B_target, c=c, dx=dim, dh=dh, burnin_number=4000, return_logprob=True)
+        create_sample_model = models.create_rbm_std(B=B_sample, c=c, dx=dim, dh=dh, burnin_number=4000, return_logprob=True)
+
+        # numpy version
+        log_prob_fn_np = models_np.create_rbm_std(B=B_target, c=c, dx=dim, dh=dh)
 
     elif model == "laplace":
         model_name = f"{method}_steps{T}_seed{seed}_dim{dim}_n{n}"

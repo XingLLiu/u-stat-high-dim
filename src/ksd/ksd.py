@@ -296,6 +296,7 @@ class MPKSD(PKSD):
     X: tf.Tensor,
     Y: tf.Tensor,
     output_dim: int=1,
+    optim_mode: bool=False,
   ):
     """
     Compute estimate of m-pKSD(Q, P) = pKSD(Q, P) + KSD(Q, P).
@@ -304,11 +305,16 @@ class MPKSD(PKSD):
       X, Y: Unperturbed data.
       Xp, Yp: Perturbed data.
     """
-    assert X.shape[0] == 2, "X must have batchsize 2"
-    ksd_u_p = self.u_p(X[0], Y[0], output_dim)
-    pksd_u_p = self.u_p(X[1], Y[1], output_dim)
+    if not optim_mode:
+      assert X.shape[0] == 2, "X must have batchsize 2"
+      ksd_u_p = self.u_p(X[0], Y[0], output_dim)
+      pksd_u_p = self.u_p(X[1], Y[1], output_dim)
+      res = ksd_u_p + pksd_u_p
+    
+    else:
+      res = self.u_p(X, Y, output_dim)
 
-    return ksd_u_p + pksd_u_p
+    return res
 
   def find_optimal_param(
     self,
@@ -336,11 +342,19 @@ class MPKSD(PKSD):
           x_t = tf.expand_dims(x_t, -1)
 
       # compute scaled ksd
-      x_t = tf.stack([xtrain, x_t], axis=0) # 2 x n x dim
+      # x_t = tf.stack([xtrain, x_t], axis=0) # 2 x n x dim
+      # _, ksd_val = self.h1_var(
+      #   X=x_t,
+      #   Y=tf.identity(x_t),
+      #   return_scaled_ksd=True,
+      # )
+      
+      # TODO use pKSD to select jump scale
       _, ksd_val = self.h1_var(
         X=x_t,
         Y=tf.identity(x_t),
         return_scaled_ksd=True,
+        optim_mode=True,
       )
 
       scaled_ksd_vals.append(ksd_val)
@@ -370,7 +384,8 @@ class MPKSD(PKSD):
       xtrain=xtrain, 
       T=T, 
       jump_ls=jump_ls,
-  )
+    )
+    self.best_jump = best_jump
 
     # run dynamic for T steps with test data and optimal params
     mh = self.pert_kernel(log_prob=self.log_prob)
@@ -384,6 +399,8 @@ class MPKSD(PKSD):
         x_t = tf.expand_dims(x_t, -1)
 
     x_t = tf.stack([x_0, x_t], axis=0) # 2 x n x dim
+    # TODO
+    self.x_t = x_t
 
     # get multinomial sample
     # Sampling can be slow. initialise separately for faster implementation
@@ -402,7 +419,6 @@ class MPKSD(PKSD):
       num_boot=num_boot,
       X=x_t,
       multinom_samples=multinom_samples,
-      X_unperturbed=x_0,
     )
     
     return bootstrap.ksd_hat, p_val
@@ -479,7 +495,6 @@ class SPKSD(PKSD):
       num_boot=num_boot,
       X=x_t,
       multinom_samples=multinom_samples,
-      statistic="pksd",
     )
     
     return bootstrap.ksd_hat, p_val

@@ -17,7 +17,7 @@ class Bootstrap:
     self.multinom = tfp.distributions.Multinomial(float(n), probs=tf.ones(n)/n)
   
   def compute_test_statistic(
-    self, X: tf.Tensor, statistic: str, X_unperturbed: tf.Tensor=None, **kwargs,
+    self, X: tf.Tensor, **kwargs,
   ):
     n = X.shape[-2]
 
@@ -83,8 +83,6 @@ class Bootstrap:
     alpha: float=None, 
     X: tf.Tensor=None,
     multinom_samples: tf.Tensor=None,
-    statistic: str="pksd",
-    X_unperturbed: tf.Tensor=None,
     **kwargs
   ):
     """
@@ -95,7 +93,7 @@ class Bootstrap:
     Returns:
       reject: 1 if test is rejected; 0 otherwise
     """
-    u_p = self.compute_test_statistic(X, statistic, X_unperturbed, **kwargs)
+    u_p = self.compute_test_statistic(X, **kwargs)
 
     self.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_samples)
 
