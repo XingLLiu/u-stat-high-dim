@@ -58,6 +58,25 @@ def generate_target_proposal(dim, delta):
     
     return target, proposal_off
 
+def generate_target_proposal_t(dim, delta, df=5):
+    # single gaussians
+    
+    mean1 = tf.eye(dim)[:, 0] * delta
+    mean2 = tf.zeros(dim)
+
+    target = tfd.MultivariateStudentTLinearOperator(
+        df=df,
+        loc=mean1,
+        scale=tf.linalg.LinearOperatorLowerTriangular(tf.eye(dim)),
+    )
+    proposal_off = tfd.MultivariateStudentTLinearOperator(
+        df=df,
+        loc=mean2,
+        scale=tf.linalg.LinearOperatorLowerTriangular(tf.eye(dim)),
+    )
+
+    return target, proposal_off
+
 def compute_population_quantities(
     dims: int,
     bandwidth_order: float,
@@ -74,7 +93,9 @@ def compute_population_quantities(
     
     for d in tqdm(dims):
         # sample data
-        target_dist, sample_dist = generate_target_proposal(d, delta)
+        # TODO
+        # target_dist, sample_dist = generate_target_proposal(d, delta)
+        target_dist, sample_dist = generate_target_proposal_t(d, delta)
         X = sample_dist.sample((npop,))
         
         # initialise KSD
@@ -87,13 +108,13 @@ def compute_population_quantities(
         # 2. var_cond
         cond_var = ksd.h1_var(X=X, Y=tf.identity(X)).numpy()
         # cond_var = h1_var_gaussians(d, bandwidth=kernel.sigma_sq, delta=delta)
-        # cond_var = ksd.u_p_abs_cond_central_moment(X=X, Y=tf.identity(X), k=2).numpy()
+        # cond_var = ksd.abs_cond_central_moment(X=X, Y=tf.identity(X), k=2).numpy()
         # 3. var_full
         up_sq = ksd.u_p_moment(X, tf.identity(X), k=2).numpy()
         # up_sq = up_sq_gaussians(d, bandwidth=kernel.sigma_sq, delta=delta)
         full_var = up_sq - ksd_val**2
         # 4. m3
-        m3 = ksd.u_p_abs_cond_central_moment(X, tf.identity(X), k=3).numpy()
+        m3 = ksd.abs_cond_central_moment(X, tf.identity(X), k=3).numpy()
 
         # store
         res["ksd"].append(ksd_val)
@@ -204,7 +225,7 @@ def compute_analytical_BE_bounds(
 
     return lower_bd, upper_bd
 
-def compute_analytical_new_bounds(
+def compute_analytical_new_full_bounds(
     n,
     t_lb,
     t_ub,
@@ -214,11 +235,49 @@ def compute_analytical_new_bounds(
     M2,
 ):
     upper_bd = (
-        norm.cdf(np.sqrt(n) * (ksd - t_ub) / (M2**0.5))
+        norm.cdf(n * (ksd - t_ub) / (2 * M2)**0.5)
     )
 
     lower_bd = 1 - (
-        norm.cdf(np.sqrt(n) * (t_lb - ksd) / (M2**0.5))
+        norm.cdf(n * (t_lb - ksd) / (2 * M2)**0.5)
+    )
+
+    return lower_bd, upper_bd
+
+def compute_analytical_new_cond_bounds(
+    n,
+    t_lb,
+    t_ub,
+    ksd,
+    m2,
+    m3,
+    M2,
+):
+    upper_bd = (
+        norm.cdf(np.sqrt(n) * (ksd - t_ub) / (2 * m2**0.5))
+    )
+
+    lower_bd = 1 - (
+        norm.cdf(np.sqrt(n) * (t_lb - ksd) / (2 * m2**0.5))
+    )
+
+    return lower_bd, upper_bd
+
+def compute_analytical_new_sum_bounds(
+    n,
+    t_lb,
+    t_ub,
+    ksd,
+    m2,
+    m3,
+    M2,
+):
+    upper_bd = (
+        norm.cdf(np.sqrt(n) * (ksd - t_ub) / np.sqrt(4 * m2 + 2 * M2 / n))
+    )
+
+    lower_bd = 1 - (
+        norm.cdf(np.sqrt(n) * (t_lb - ksd) / np.sqrt(4 * m2 + 2 * M2 / n))
     )
 
     return lower_bd, upper_bd
@@ -340,8 +399,30 @@ def power_experiment_t(
                 M2=res_analytical["full_var"],
             )
 
-        elif bound == "new":
-            l_bd, u_bd = compute_analytical_new_bounds(
+        elif bound == "new_full":
+            l_bd, u_bd = compute_analytical_new_full_bounds(
+                n,
+                t_lb,
+                t_ub,
+                ksd=res_analytical["ksd"],
+                m2=res_analytical["cond_var"],
+                m3=res_analytical["m3"],
+                M2=res_analytical["full_var"],
+            )
+
+        elif bound == "new_cond":
+            l_bd, u_bd = compute_analytical_new_cond_bounds(
+                n,
+                t_lb,
+                t_ub,
+                ksd=res_analytical["ksd"],
+                m2=res_analytical["cond_var"],
+                m3=res_analytical["m3"],
+                M2=res_analytical["full_var"],
+            )
+
+        elif bound == "new_sum":
+            l_bd, u_bd = compute_analytical_new_sum_bounds(
                 n,
                 t_lb,
                 t_ub,

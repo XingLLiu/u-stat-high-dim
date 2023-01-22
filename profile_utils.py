@@ -2,7 +2,7 @@ import pstats
 import io
 
 sio = io.StringIO()
-path = "res/bootstrap/profile"
+path = "profile.o"
 s = pstats.Stats(path, stream=sio)
 s.strip_dirs()
 s.sort_stats("cumulative")

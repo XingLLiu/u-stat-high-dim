@@ -5,9 +5,11 @@
 /src/*/__pycache__/*
 /*/__pycache__/*
 __pycache__/*
+/high_dim/.ipynb_checkpoints/
 
 # vscode
 /.vscode/
+/sh_scripts/pksd.code-workspace
 
 /build
 
