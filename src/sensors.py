@@ -17,19 +17,20 @@ def plot_sensors(x, lims=None, loc_true=None, extra=None, legend=True):
                             "sensor": sensors_ind * n})
     
     g = plt.Figure()
-    sns.scatterplot(data=plot_df, x="x0", y="x1", hue="sensor")
+    # sns.scatterplot(data=plot_df, x="x0", y="x1", hue="sensor", linewidth=0)
+    for s in plot_df.sensor.unique():
+        plot_subdf = plot_df.loc[plot_df.sensor == s]
+        plt.scatter(plot_subdf["x0"], plot_subdf["x1"], label=s, alpha=0.1)
     
     if loc_true is not None:
         loc_true_np = tf.reshape(loc_true, (nsensors, 2)).numpy()
         loc_true_df = pd.DataFrame({"x0": loc_true_np[:, 0], "x1": loc_true_np[:, 1],
                                 "sensor": sensors_ind})
-        # plt.scatter(loc_true_df["x0"], loc_true_df["x1"], color="black", marker="^", s=48, label="true loc")
-        plt.scatter(loc_true_df["x0"], loc_true_df["x1"], color="black", marker="^", s=48)
+        plt.scatter(loc_true_df["x0"], loc_true_df["x1"], color="black", marker="x", s=70)
 
     if extra is not None:
         extra_np = tf.reshape(extra, (-1, 2)).numpy()
-        # plt.scatter(extra_np[:, 0], extra_np[:, 1], color="black", marker="P", s=48, label="extra")
-        plt.scatter(extra_np[:, 0], extra_np[:, 1], color="black", marker="P", s=48)
+        plt.scatter(extra_np[:, 0], extra_np[:, 1], color="black", marker="+", s=90)
     
     if lims is not None:
         _ = plt.axis(xmin=lims[0], xmax=lims[1], ymin=lims[2], ymax=lims[3])

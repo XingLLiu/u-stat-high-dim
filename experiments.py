@@ -109,7 +109,7 @@ def run_bootstrap_experiment(
 
             # find modes and Hessians
             ospksd.find_modes(start_pts, **kwargs)
-            
+                        
             # compute test statistic and p-value
             multinom_t = multinom_samples[iter, :] # nrep x num_boost x ntrain
             _, ospksd_pval = ospksd.test(

@@ -105,15 +105,24 @@ class KSD:
     ) / (X.shape[-2] * (X.shape[-2] - 1))
     return u_p_sq
 
-  def u_p_abs_cond_central_moment(self, X: tf.Tensor, Y: tf.Tensor, k: int):
+  def abs_cond_central_moment(self, X: tf.Tensor, Y: tf.Tensor, k: int):
     u_p = self.u_p(X, Y, output_dim=2)
     g = tf.math.reduce_sum(u_p, axis=-1) / X.shape[-2]
-    ksd = tf.math.reduce_sum(u_p) / (X.shape[-2] * (X.shape[-2]))
+    ksd = tf.math.reduce_sum(u_p) / (X.shape[-2]**2) # /n^2 as diagnal is included
     
     mk = tf.math.reduce_sum(
       tf.math.abs(g - ksd)**k
     ) / X.shape[-2]
     return mk
+
+  def abs_full_central_moment(self, X: tf.Tensor, Y: tf.Tensor, k: int):
+    u_p = self.u_p(X, Y, output_dim=2)
+    ksd = tf.math.reduce_sum(u_p) / (X.shape[-2]**2) # /n^2 as diagnal is included
+
+    Mk = tf.math.reduce_sum(
+      tf.math.abs(u_p - ksd)**k
+    ) / X.shape[-2]
+    return Mk
 
   def beta_k(self, X: tf.Tensor, Y: tf.Tensor, k: int):
     u_mat = self.__call__(X, Y, output_dim=2) # n x n

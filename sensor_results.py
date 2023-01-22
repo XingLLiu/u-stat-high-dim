@@ -28,11 +28,12 @@ MCMCKernel = RandomWalkMH # RandomWalkBarker
 parser = argparse.ArgumentParser()
 parser.add_argument("--RAM_SCALE", type=float)
 parser.add_argument("--METHOD", type=str)
+parser.add_argument("--n", type=int, default=4000) # old: 1000
 args = parser.parse_args()
 
 MODEL = "modified" # "original"
 T = 1000
-NSAMPLE = 4000 #TODO 1000
+NSAMPLE = args.n
 ram_scale = args.RAM_SCALE
 # RAM_SCALE_LIST = [0.1, 0.3, 0.5, 0.7, 0.9, 1.08, 1.3]
 method = args.METHOD
@@ -346,11 +347,12 @@ def experiment(T, n, target_dist):
     # save original and perturbed particles for plots
     # TODO change the name of the saved file
     pickle.dump(res_samples,
-        open(f"res/sensors/sample_{model_name}_{ram_scale}_{method}.pkl", "wb"))
+        open(f"res/sensors/sample_{model_name}_{ram_scale}_{method}_n{NSAMPLE}.pkl", "wb"),
+    )
 
     # save results
     res_df = pd.DataFrame(res, columns=["method", "ram_scale", "rej", "pval", "seed"])
-    res_df.to_csv(f"res/sensors/res_{model_name}_{ram_scale}_{method}.csv", index=False)
+    res_df.to_csv(f"res/sensors/res_{model_name}_{ram_scale}_{method}_n{NSAMPLE}.csv", index=False)
 
 if __name__ == "__main__":
     tf.random.set_seed(1)
