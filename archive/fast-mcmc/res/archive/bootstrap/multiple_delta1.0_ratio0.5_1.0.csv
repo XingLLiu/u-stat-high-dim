@@ -1,0 +1,4001 @@
+n,p_value,var_est,seed,type
+500,0.0,0.0625,0,off-target
+500,0.0,0.0,0,off-target noiseless
+500,0.169,16.0,0,target
+500,0.194,0.0,0,target noiseless
+500,0.0,0.0625,1,off-target
+500,0.0,0.0,1,off-target noiseless
+500,0.967,4.0,1,target
+500,0.779,0.0,1,target noiseless
+500,0.0,0.0625,2,off-target
+500,0.0,0.0,2,off-target noiseless
+500,0.298,1.0,2,target
+500,0.719,0.0,2,target noiseless
+500,0.0,0.0625,3,off-target
+500,0.0,0.0,3,off-target noiseless
+500,0.999,4.0,3,target
+500,0.907,0.0,3,target noiseless
+500,0.0,0.0625,4,off-target
+500,0.0,0.0,4,off-target noiseless
+500,0.992,4.0,4,target
+500,0.704,0.0,4,target noiseless
+500,0.0,0.0625,5,off-target
+500,0.0,0.0,5,off-target noiseless
+500,0.981,1.0,5,target
+500,0.355,0.0,5,target noiseless
+500,0.0,0.0625,6,off-target
+500,0.0,0.0,6,off-target noiseless
+500,0.114,16.0,6,target
+500,0.124,0.0,6,target noiseless
+500,0.0,0.0625,7,off-target
+500,0.0,0.0,7,off-target noiseless
+500,0.505,16.0,7,target
+500,0.035,0.0,7,target noiseless
+500,0.0,0.0625,8,off-target
+500,0.0,0.0,8,off-target noiseless
+500,0.652,4.0,8,target
+500,0.698,0.0,8,target noiseless
+500,0.0,0.0625,9,off-target
+500,0.0,0.0,9,off-target noiseless
+500,0.223,4.0,9,target
+500,0.953,0.0,9,target noiseless
+500,0.0,0.0625,10,off-target
+500,0.0,0.0,10,off-target noiseless
+500,0.952,1.0,10,target
+500,0.234,0.0,10,target noiseless
+500,0.0,0.0625,11,off-target
+500,0.0,0.0,11,off-target noiseless
+500,0.117,1.0,11,target
+500,0.918,0.0,11,target noiseless
+500,0.0,0.0625,12,off-target
+500,0.0,0.0,12,off-target noiseless
+500,0.406,1.0,12,target
+500,0.461,0.0,12,target noiseless
+500,0.0,0.0625,13,off-target
+500,0.0,0.0,13,off-target noiseless
+500,0.099,4.0,13,target
+500,0.988,0.0,13,target noiseless
+500,0.0,0.0625,14,off-target
+500,0.0,0.0,14,off-target noiseless
+500,0.672,0.25,14,target
+500,0.433,0.0,14,target noiseless
+500,0.0,0.0625,15,off-target
+500,0.0,0.0,15,off-target noiseless
+500,0.957,4.0,15,target
+500,0.072,0.0,15,target noiseless
+500,0.0,0.0625,16,off-target
+500,0.0,0.0,16,off-target noiseless
+500,0.147,65536.0,16,target
+500,0.984,0.0,16,target noiseless
+500,0.0,0.0625,17,off-target
+500,0.0,0.0,17,off-target noiseless
+500,0.961,64.0,17,target
+500,0.664,0.0,17,target noiseless
+500,0.0,0.0625,18,off-target
+500,0.0,0.0,18,off-target noiseless
+500,0.022,4.0,18,target
+500,0.403,0.0,18,target noiseless
+500,0.0,0.0625,19,off-target
+500,0.0,0.0,19,off-target noiseless
+500,0.913,4.0,19,target
+500,0.432,0.0,19,target noiseless
+500,0.0,0.0625,20,off-target
+500,0.0,0.0,20,off-target noiseless
+500,0.978,4.0,20,target
+500,0.843,0.0,20,target noiseless
+500,0.0,0.0625,21,off-target
+500,0.0,0.0,21,off-target noiseless
+500,0.26,16.0,21,target
+500,0.11,0.0,21,target noiseless
+500,0.0,0.0625,22,off-target
+500,0.0,0.0,22,off-target noiseless
+500,0.83,65536.0,22,target
+500,0.865,0.0,22,target noiseless
+500,0.0,0.0625,23,off-target
+500,0.0,0.0,23,off-target noiseless
+500,0.957,1.0,23,target
+500,0.126,0.0,23,target noiseless
+500,0.0,0.0625,24,off-target
+500,0.0,0.0,24,off-target noiseless
+500,0.672,1.0,24,target
+500,0.58,0.0,24,target noiseless
+500,0.0,0.0625,25,off-target
+500,0.0,0.0,25,off-target noiseless
+500,0.773,4.0,25,target
+500,0.446,0.0,25,target noiseless
+500,0.0,0.0625,26,off-target
+500,0.0,0.0,26,off-target noiseless
+500,0.632,4.0,26,target
+500,0.896,0.0,26,target noiseless
+500,0.0,0.0625,27,off-target
+500,0.0,0.0,27,off-target noiseless
+500,0.576,4.0,27,target
+500,0.031,0.0,27,target noiseless
+500,0.0,0.0625,28,off-target
+500,0.0,0.0,28,off-target noiseless
+500,0.827,1.0,28,target
+500,0.483,0.0,28,target noiseless
+500,0.0,0.0625,29,off-target
+500,0.0,0.0,29,off-target noiseless
+500,0.894,1.0,29,target
+500,0.615,0.0,29,target noiseless
+500,0.0,0.0625,30,off-target
+500,0.0,0.0,30,off-target noiseless
+500,0.847,1.0,30,target
+500,0.657,0.0,30,target noiseless
+500,0.0,0.0625,31,off-target
+500,0.0,0.0,31,off-target noiseless
+500,0.558,0.0625,31,target
+500,0.363,0.0,31,target noiseless
+500,0.0,0.0625,32,off-target
+500,0.0,0.0,32,off-target noiseless
+500,0.027,1.0,32,target
+500,0.263,0.0,32,target noiseless
+500,0.0,0.0625,33,off-target
+500,0.0,0.0,33,off-target noiseless
+500,0.021,1024.0,33,target
+500,0.358,0.0,33,target noiseless
+500,0.0,0.0625,34,off-target
+500,0.0,0.0,34,off-target noiseless
+500,0.023,16.0,34,target
+500,0.863,0.0,34,target noiseless
+500,0.0,0.0625,35,off-target
+500,0.0,0.0,35,off-target noiseless
+500,0.807,16.0,35,target
+500,0.054,0.0,35,target noiseless
+500,0.0,0.0625,36,off-target
+500,0.0,0.0,36,off-target noiseless
+500,0.634,4.0,36,target
+500,0.717,0.0,36,target noiseless
+500,0.0,0.0625,37,off-target
+500,0.0,0.0,37,off-target noiseless
+500,0.052,1.0,37,target
+500,0.617,0.0,37,target noiseless
+500,0.0,0.0625,38,off-target
+500,0.0,0.0,38,off-target noiseless
+500,0.808,1.0,38,target
+500,0.848,0.0,38,target noiseless
+500,0.0,0.0625,39,off-target
+500,0.0,0.0,39,off-target noiseless
+500,0.472,0.0625,39,target
+500,0.335,0.0,39,target noiseless
+500,0.0,0.0625,40,off-target
+500,0.0,0.0,40,off-target noiseless
+500,0.226,4.0,40,target
+500,0.511,0.0,40,target noiseless
+500,0.0,0.0625,41,off-target
+500,0.0,0.0,41,off-target noiseless
+500,0.748,16.0,41,target
+500,0.553,0.0,41,target noiseless
+500,0.0,0.0625,42,off-target
+500,0.0,0.0,42,off-target noiseless
+500,0.447,16.0,42,target
+500,0.832,0.0,42,target noiseless
+500,0.0,0.0625,43,off-target
+500,0.0,0.0,43,off-target noiseless
+500,0.784,1.0,43,target
+500,0.721,0.0,43,target noiseless
+500,0.0,0.0625,44,off-target
+500,0.0,0.0,44,off-target noiseless
+500,0.867,64.0,44,target
+500,0.432,0.0,44,target noiseless
+500,0.0,0.0625,45,off-target
+500,0.0,0.0,45,off-target noiseless
+500,0.948,16.0,45,target
+500,0.571,0.0,45,target noiseless
+500,0.0,0.0625,46,off-target
+500,0.0,0.0,46,off-target noiseless
+500,0.396,16.0,46,target
+500,0.633,0.0,46,target noiseless
+500,0.0,0.0625,47,off-target
+500,0.0,0.0,47,off-target noiseless
+500,0.358,1.0,47,target
+500,0.55,0.0,47,target noiseless
+500,0.0,0.0625,48,off-target
+500,0.0,0.0,48,off-target noiseless
+500,0.388,4.0,48,target
+500,0.909,0.0,48,target noiseless
+500,0.0,0.0625,49,off-target
+500,0.0,0.0,49,off-target noiseless
+500,0.286,1.0,49,target
+500,0.792,0.0,49,target noiseless
+500,0.0,0.0625,50,off-target
+500,0.0,0.0,50,off-target noiseless
+500,0.061,4.0,50,target
+500,0.703,0.0,50,target noiseless
+500,0.0,0.0625,51,off-target
+500,0.0,0.0,51,off-target noiseless
+500,0.966,256.0,51,target
+500,0.167,0.0,51,target noiseless
+500,0.0,0.0625,52,off-target
+500,0.0,0.0,52,off-target noiseless
+500,0.48,16.0,52,target
+500,0.48,0.0,52,target noiseless
+500,0.0,0.0625,53,off-target
+500,0.0,0.0,53,off-target noiseless
+500,0.306,1.0,53,target
+500,0.431,0.0,53,target noiseless
+500,0.0,0.0625,54,off-target
+500,0.0,0.0,54,off-target noiseless
+500,0.27,1.0,54,target
+500,0.008,0.0,54,target noiseless
+500,0.0,0.0625,55,off-target
+500,0.0,0.0,55,off-target noiseless
+500,0.325,1.0,55,target
+500,0.579,0.0,55,target noiseless
+500,0.0,0.0625,56,off-target
+500,0.0,0.0,56,off-target noiseless
+500,0.464,16.0,56,target
+500,0.19,0.0,56,target noiseless
+500,0.0,0.0625,57,off-target
+500,0.0,0.0,57,off-target noiseless
+500,0.179,0.0625,57,target
+500,0.172,0.0,57,target noiseless
+500,0.0,0.0625,58,off-target
+500,0.0,0.0,58,off-target noiseless
+500,0.888,16.0,58,target
+500,0.723,0.0,58,target noiseless
+500,0.0,0.0625,59,off-target
+500,0.0,0.0,59,off-target noiseless
+500,0.337,16.0,59,target
+500,0.032,0.0,59,target noiseless
+500,0.0,0.0625,60,off-target
+500,0.0,0.0,60,off-target noiseless
+500,0.652,4.0,60,target
+500,0.201,0.0,60,target noiseless
+500,0.0,0.0625,61,off-target
+500,0.0,0.0,61,off-target noiseless
+500,0.254,1.0,61,target
+500,0.253,0.0,61,target noiseless
+500,0.0,0.0625,62,off-target
+500,0.0,0.0,62,off-target noiseless
+500,0.614,16384.0,62,target
+500,0.765,0.0,62,target noiseless
+500,0.0,0.0625,63,off-target
+500,0.0,0.0,63,off-target noiseless
+500,0.787,4.0,63,target
+500,0.81,0.0,63,target noiseless
+500,0.0,0.0625,64,off-target
+500,0.0,0.0,64,off-target noiseless
+500,0.472,4.0,64,target
+500,0.585,0.0,64,target noiseless
+500,0.0,0.0625,65,off-target
+500,0.0,0.0,65,off-target noiseless
+500,0.091,16.0,65,target
+500,0.772,0.0,65,target noiseless
+500,0.0,0.0625,66,off-target
+500,0.0,0.0,66,off-target noiseless
+500,0.197,64.0,66,target
+500,0.616,0.0,66,target noiseless
+500,0.0,0.0625,67,off-target
+500,0.0,0.0,67,off-target noiseless
+500,0.64,16.0,67,target
+500,0.825,0.0,67,target noiseless
+500,0.0,0.0625,68,off-target
+500,0.0,0.0,68,off-target noiseless
+500,0.24,0.25,68,target
+500,0.956,0.0,68,target noiseless
+500,0.0,0.0625,69,off-target
+500,0.0,0.0,69,off-target noiseless
+500,0.395,1.0,69,target
+500,0.785,0.0,69,target noiseless
+500,0.0,0.0625,70,off-target
+500,0.0,0.0,70,off-target noiseless
+500,0.267,1.0,70,target
+500,0.943,0.0,70,target noiseless
+500,0.0,0.0625,71,off-target
+500,0.0,0.0,71,off-target noiseless
+500,0.357,4.0,71,target
+500,0.07,0.0,71,target noiseless
+500,0.0,0.0625,72,off-target
+500,0.0,0.0,72,off-target noiseless
+500,0.154,1.0,72,target
+500,0.991,0.0,72,target noiseless
+500,0.0,0.0625,73,off-target
+500,0.0,0.0,73,off-target noiseless
+500,0.089,16.0,73,target
+500,0.767,0.0,73,target noiseless
+500,0.0,0.0625,74,off-target
+500,0.0,0.0,74,off-target noiseless
+500,0.09,4096.0,74,target
+500,0.053,0.0,74,target noiseless
+500,0.0,0.0625,75,off-target
+500,0.0,0.0,75,off-target noiseless
+500,0.629,0.25,75,target
+500,0.475,0.0,75,target noiseless
+500,0.0,0.0625,76,off-target
+500,0.0,0.0,76,off-target noiseless
+500,0.714,1.0,76,target
+500,0.175,0.0,76,target noiseless
+500,0.0,0.0625,77,off-target
+500,0.0,0.0,77,off-target noiseless
+500,0.004,4.0,77,target
+500,0.539,0.0,77,target noiseless
+500,0.0,0.0625,78,off-target
+500,0.0,0.0,78,off-target noiseless
+500,0.576,16384.0,78,target
+500,0.714,0.0,78,target noiseless
+500,0.0,0.0625,79,off-target
+500,0.0,0.0,79,off-target noiseless
+500,0.569,1024.0,79,target
+500,0.746,0.0,79,target noiseless
+500,0.0,0.0625,80,off-target
+500,0.0,0.0,80,off-target noiseless
+500,0.972,0.0625,80,target
+500,0.317,0.0,80,target noiseless
+500,0.0,0.0625,81,off-target
+500,0.0,0.0,81,off-target noiseless
+500,0.022,65536.0,81,target
+500,0.103,0.0,81,target noiseless
+500,0.0,0.0625,82,off-target
+500,0.0,0.0,82,off-target noiseless
+500,0.244,4.0,82,target
+500,0.412,0.0,82,target noiseless
+500,0.0,0.0625,83,off-target
+500,0.0,0.0,83,off-target noiseless
+500,0.146,1.0,83,target
+500,0.606,0.0,83,target noiseless
+500,0.0,0.0625,84,off-target
+500,0.0,0.0,84,off-target noiseless
+500,0.504,4.0,84,target
+500,0.832,0.0,84,target noiseless
+500,0.0,0.0625,85,off-target
+500,0.0,0.0,85,off-target noiseless
+500,0.921,4096.0,85,target
+500,0.695,0.0,85,target noiseless
+500,0.0,0.0625,86,off-target
+500,0.0,0.0,86,off-target noiseless
+500,0.828,0.25,86,target
+500,0.944,0.0,86,target noiseless
+500,0.0,0.0625,87,off-target
+500,0.0,0.0,87,off-target noiseless
+500,0.802,1.0,87,target
+500,0.022,0.0,87,target noiseless
+500,0.0,0.0625,88,off-target
+500,0.0,0.0,88,off-target noiseless
+500,0.499,1.0,88,target
+500,0.21,0.0,88,target noiseless
+500,0.0,0.0625,89,off-target
+500,0.0,0.0,89,off-target noiseless
+500,0.453,256.0,89,target
+500,0.148,0.0,89,target noiseless
+500,0.0,0.0625,90,off-target
+500,0.0,0.0,90,off-target noiseless
+500,0.774,4.0,90,target
+500,0.07,0.0,90,target noiseless
+500,0.0,0.0625,91,off-target
+500,0.0,0.0,91,off-target noiseless
+500,0.386,4.0,91,target
+500,0.742,0.0,91,target noiseless
+500,0.0,0.0625,92,off-target
+500,0.0,0.0,92,off-target noiseless
+500,0.488,16.0,92,target
+500,0.994,0.0,92,target noiseless
+500,0.0,0.0625,93,off-target
+500,0.0,0.0,93,off-target noiseless
+500,0.544,4.0,93,target
+500,0.904,0.0,93,target noiseless
+500,0.0,0.0625,94,off-target
+500,0.0,0.0,94,off-target noiseless
+500,0.718,16.0,94,target
+500,0.184,0.0,94,target noiseless
+500,0.0,0.0625,95,off-target
+500,0.0,0.0,95,off-target noiseless
+500,0.079,256.0,95,target
+500,0.901,0.0,95,target noiseless
+500,0.0,0.0625,96,off-target
+500,0.0,0.0,96,off-target noiseless
+500,0.808,4.0,96,target
+500,0.922,0.0,96,target noiseless
+500,0.0,0.0625,97,off-target
+500,0.0,0.0,97,off-target noiseless
+500,0.088,4.0,97,target
+500,0.322,0.0,97,target noiseless
+500,0.0,0.0625,98,off-target
+500,0.0,0.0,98,off-target noiseless
+500,0.667,64.0,98,target
+500,0.682,0.0,98,target noiseless
+500,0.0,0.0625,99,off-target
+500,0.0,0.0,99,off-target noiseless
+500,0.194,0.0625,99,target
+500,0.255,0.0,99,target noiseless
+500,0.0,0.0625,100,off-target
+500,0.0,0.0,100,off-target noiseless
+500,0.003,16.0,100,target
+500,0.534,0.0,100,target noiseless
+500,0.0,0.0625,101,off-target
+500,0.0,0.0,101,off-target noiseless
+500,0.475,4.0,101,target
+500,0.979,0.0,101,target noiseless
+500,0.0,0.0625,102,off-target
+500,0.0,0.0,102,off-target noiseless
+500,0.871,4.0,102,target
+500,0.721,0.0,102,target noiseless
+500,0.0,0.0625,103,off-target
+500,0.0,0.0,103,off-target noiseless
+500,0.012,16.0,103,target
+500,0.156,0.0,103,target noiseless
+500,0.0,0.0625,104,off-target
+500,0.0,0.0,104,off-target noiseless
+500,0.273,4.0,104,target
+500,0.829,0.0,104,target noiseless
+500,0.0,0.0625,105,off-target
+500,0.0,0.0,105,off-target noiseless
+500,0.244,4.0,105,target
+500,0.795,0.0,105,target noiseless
+500,0.0,0.0625,106,off-target
+500,0.0,0.0,106,off-target noiseless
+500,0.67,4.0,106,target
+500,0.706,0.0,106,target noiseless
+500,0.0,0.0625,107,off-target
+500,0.0,0.0,107,off-target noiseless
+500,0.691,16.0,107,target
+500,0.587,0.0,107,target noiseless
+500,0.0,0.0625,108,off-target
+500,0.0,0.0,108,off-target noiseless
+500,0.291,4.0,108,target
+500,0.955,0.0,108,target noiseless
+500,0.0,0.0625,109,off-target
+500,0.0,0.0,109,off-target noiseless
+500,0.289,4.0,109,target
+500,0.299,0.0,109,target noiseless
+500,0.0,0.0625,110,off-target
+500,0.0,0.0,110,off-target noiseless
+500,0.78,0.0625,110,target
+500,0.456,0.0,110,target noiseless
+500,0.0,0.0625,111,off-target
+500,0.0,0.0,111,off-target noiseless
+500,0.039,1.0,111,target
+500,0.898,0.0,111,target noiseless
+500,0.0,0.0625,112,off-target
+500,0.0,0.0,112,off-target noiseless
+500,0.433,1.0,112,target
+500,0.245,0.0,112,target noiseless
+500,0.0,0.0625,113,off-target
+500,0.0,0.0,113,off-target noiseless
+500,0.44,16.0,113,target
+500,0.59,0.0,113,target noiseless
+500,0.0,0.0625,114,off-target
+500,0.0,0.0,114,off-target noiseless
+500,0.133,4.0,114,target
+500,0.488,0.0,114,target noiseless
+500,0.0,0.0625,115,off-target
+500,0.0,0.0,115,off-target noiseless
+500,0.789,4.0,115,target
+500,0.048,0.0,115,target noiseless
+500,0.0,0.0625,116,off-target
+500,0.0,0.0,116,off-target noiseless
+500,0.663,1.0,116,target
+500,0.502,0.0,116,target noiseless
+500,0.0,0.0625,117,off-target
+500,0.0,0.0,117,off-target noiseless
+500,0.236,16384.0,117,target
+500,0.621,0.0,117,target noiseless
+500,0.0,0.0625,118,off-target
+500,0.0,0.0,118,off-target noiseless
+500,0.446,16.0,118,target
+500,0.95,0.0,118,target noiseless
+500,0.0,0.0625,119,off-target
+500,0.0,0.0,119,off-target noiseless
+500,0.028,4.0,119,target
+500,0.393,0.0,119,target noiseless
+500,0.0,0.0625,120,off-target
+500,0.0,0.0,120,off-target noiseless
+500,0.156,4.0,120,target
+500,0.07,0.0,120,target noiseless
+500,0.0,0.0625,121,off-target
+500,0.0,0.0,121,off-target noiseless
+500,0.335,0.25,121,target
+500,0.349,0.0,121,target noiseless
+500,0.0,0.0625,122,off-target
+500,0.0,0.0,122,off-target noiseless
+500,0.167,64.0,122,target
+500,0.688,0.0,122,target noiseless
+500,0.0,0.0625,123,off-target
+500,0.0,0.0,123,off-target noiseless
+500,0.477,4.0,123,target
+500,0.441,0.0,123,target noiseless
+500,0.0,0.0625,124,off-target
+500,0.0,0.0,124,off-target noiseless
+500,0.786,1.0,124,target
+500,0.421,0.0,124,target noiseless
+500,0.0,0.0625,125,off-target
+500,0.0,0.0,125,off-target noiseless
+500,0.624,0.25,125,target
+500,0.54,0.0,125,target noiseless
+500,0.0,0.0625,126,off-target
+500,0.0,0.0,126,off-target noiseless
+500,0.54,4.0,126,target
+500,0.068,0.0,126,target noiseless
+500,0.0,0.0625,127,off-target
+500,0.0,0.0,127,off-target noiseless
+500,0.675,4.0,127,target
+500,0.348,0.0,127,target noiseless
+500,0.0,0.0625,128,off-target
+500,0.0,0.0,128,off-target noiseless
+500,0.464,16384.0,128,target
+500,0.271,0.0,128,target noiseless
+500,0.0,0.0625,129,off-target
+500,0.0,0.0,129,off-target noiseless
+500,0.989,4096.0,129,target
+500,0.977,0.0,129,target noiseless
+500,0.0,0.0625,130,off-target
+500,0.0,0.0,130,off-target noiseless
+500,0.503,4096.0,130,target
+500,0.027,0.0,130,target noiseless
+500,0.0,0.0625,131,off-target
+500,0.0,0.0,131,off-target noiseless
+500,0.282,0.0625,131,target
+500,0.874,0.0,131,target noiseless
+500,0.0,0.0625,132,off-target
+500,0.0,0.0,132,off-target noiseless
+500,0.679,4.0,132,target
+500,0.761,0.0,132,target noiseless
+500,0.0,0.0625,133,off-target
+500,0.0,0.0,133,off-target noiseless
+500,0.731,0.25,133,target
+500,0.079,0.0,133,target noiseless
+500,0.0,0.0625,134,off-target
+500,0.0,0.0,134,off-target noiseless
+500,0.065,4.0,134,target
+500,0.579,0.0,134,target noiseless
+500,0.0,0.0625,135,off-target
+500,0.0,0.0,135,off-target noiseless
+500,0.931,4.0,135,target
+500,0.085,0.0,135,target noiseless
+500,0.0,0.0625,136,off-target
+500,0.0,0.0,136,off-target noiseless
+500,0.479,1.0,136,target
+500,0.208,0.0,136,target noiseless
+500,0.0,0.0625,137,off-target
+500,0.0,0.0,137,off-target noiseless
+500,0.243,256.0,137,target
+500,0.449,0.0,137,target noiseless
+500,0.0,0.0625,138,off-target
+500,0.0,0.0,138,off-target noiseless
+500,0.665,0.25,138,target
+500,0.904,0.0,138,target noiseless
+500,0.0,0.0625,139,off-target
+500,0.0,0.0,139,off-target noiseless
+500,0.087,1.0,139,target
+500,0.188,0.0,139,target noiseless
+500,0.0,0.0625,140,off-target
+500,0.0,0.0,140,off-target noiseless
+500,0.414,4.0,140,target
+500,0.717,0.0,140,target noiseless
+500,0.0,0.0625,141,off-target
+500,0.0,0.0,141,off-target noiseless
+500,0.465,4.0,141,target
+500,0.925,0.0,141,target noiseless
+500,0.0,0.0625,142,off-target
+500,0.0,0.0,142,off-target noiseless
+500,0.337,4.0,142,target
+500,0.963,0.0,142,target noiseless
+500,0.0,0.0625,143,off-target
+500,0.0,0.0,143,off-target noiseless
+500,0.748,4.0,143,target
+500,0.814,0.0,143,target noiseless
+500,0.0,0.0625,144,off-target
+500,0.0,0.0,144,off-target noiseless
+500,0.589,16.0,144,target
+500,0.067,0.0,144,target noiseless
+500,0.0,0.0625,145,off-target
+500,0.0,0.0,145,off-target noiseless
+500,0.638,0.0625,145,target
+500,0.252,0.0,145,target noiseless
+500,0.0,0.0625,146,off-target
+500,0.0,0.0,146,off-target noiseless
+500,0.135,0.0625,146,target
+500,0.736,0.0,146,target noiseless
+500,0.0,0.0625,147,off-target
+500,0.0,0.0,147,off-target noiseless
+500,0.615,1.0,147,target
+500,0.964,0.0,147,target noiseless
+500,0.0,0.0625,148,off-target
+500,0.0,0.0,148,off-target noiseless
+500,0.525,4.0,148,target
+500,0.199,0.0,148,target noiseless
+500,0.0,0.0625,149,off-target
+500,0.0,0.0,149,off-target noiseless
+500,0.347,16.0,149,target
+500,0.548,0.0,149,target noiseless
+500,0.0,0.0625,150,off-target
+500,0.0,0.0,150,off-target noiseless
+500,0.727,1.0,150,target
+500,0.068,0.0,150,target noiseless
+500,0.0,0.0625,151,off-target
+500,0.0,0.0,151,off-target noiseless
+500,0.424,4.0,151,target
+500,0.22,0.0,151,target noiseless
+500,0.0,0.0625,152,off-target
+500,0.0,0.0,152,off-target noiseless
+500,0.707,64.0,152,target
+500,0.79,0.0,152,target noiseless
+500,0.0,0.0625,153,off-target
+500,0.0,0.0,153,off-target noiseless
+500,0.976,16.0,153,target
+500,0.35,0.0,153,target noiseless
+500,0.0,0.0625,154,off-target
+500,0.0,0.0,154,off-target noiseless
+500,0.836,16.0,154,target
+500,0.564,0.0,154,target noiseless
+500,0.0,0.0625,155,off-target
+500,0.0,0.0,155,off-target noiseless
+500,0.661,1.0,155,target
+500,0.278,0.0,155,target noiseless
+500,0.0,0.0625,156,off-target
+500,0.0,0.0,156,off-target noiseless
+500,0.672,1.0,156,target
+500,0.954,0.0,156,target noiseless
+500,0.0,0.0625,157,off-target
+500,0.0,0.0,157,off-target noiseless
+500,0.872,4.0,157,target
+500,0.79,0.0,157,target noiseless
+500,0.0,0.0625,158,off-target
+500,0.0,0.0,158,off-target noiseless
+500,0.4,0.25,158,target
+500,0.461,0.0,158,target noiseless
+500,0.0,0.0625,159,off-target
+500,0.0,0.0,159,off-target noiseless
+500,0.194,1.0,159,target
+500,0.965,0.0,159,target noiseless
+500,0.0,0.0625,160,off-target
+500,0.0,0.0,160,off-target noiseless
+500,0.331,16.0,160,target
+500,0.712,0.0,160,target noiseless
+500,0.0,0.0625,161,off-target
+500,0.0,0.0,161,off-target noiseless
+500,0.513,4.0,161,target
+500,0.27,0.0,161,target noiseless
+500,0.0,0.0625,162,off-target
+500,0.0,0.0,162,off-target noiseless
+500,0.314,4.0,162,target
+500,0.704,0.0,162,target noiseless
+500,0.0,0.0625,163,off-target
+500,0.0,0.0,163,off-target noiseless
+500,0.832,4.0,163,target
+500,0.802,0.0,163,target noiseless
+500,0.0,0.0625,164,off-target
+500,0.0,0.0,164,off-target noiseless
+500,0.293,4.0,164,target
+500,0.74,0.0,164,target noiseless
+500,0.0,0.0625,165,off-target
+500,0.0,0.0,165,off-target noiseless
+500,0.447,0.0625,165,target
+500,0.66,0.0,165,target noiseless
+500,0.0,0.0625,166,off-target
+500,0.0,0.0,166,off-target noiseless
+500,0.597,1.0,166,target
+500,0.413,0.0,166,target noiseless
+500,0.0,0.0625,167,off-target
+500,0.0,0.0,167,off-target noiseless
+500,0.849,1.0,167,target
+500,0.75,0.0,167,target noiseless
+500,0.0,0.0625,168,off-target
+500,0.0,0.0,168,off-target noiseless
+500,0.473,1.0,168,target
+500,0.164,0.0,168,target noiseless
+500,0.0,0.0625,169,off-target
+500,0.0,0.0,169,off-target noiseless
+500,0.085,4.0,169,target
+500,0.06,0.0,169,target noiseless
+500,0.0,0.0625,170,off-target
+500,0.0,0.0,170,off-target noiseless
+500,0.768,1.0,170,target
+500,0.251,0.0,170,target noiseless
+500,0.0,0.0625,171,off-target
+500,0.0,0.0,171,off-target noiseless
+500,0.756,0.25,171,target
+500,0.922,0.0,171,target noiseless
+500,0.0,0.0625,172,off-target
+500,0.0,0.0,172,off-target noiseless
+500,0.597,16.0,172,target
+500,0.852,0.0,172,target noiseless
+500,0.0,0.0625,173,off-target
+500,0.0,0.0,173,off-target noiseless
+500,0.272,1.0,173,target
+500,0.893,0.0,173,target noiseless
+500,0.0,0.0625,174,off-target
+500,0.0,0.0,174,off-target noiseless
+500,0.627,16.0,174,target
+500,0.206,0.0,174,target noiseless
+500,0.0,0.0625,175,off-target
+500,0.0,0.0,175,off-target noiseless
+500,0.536,16.0,175,target
+500,0.069,0.0,175,target noiseless
+500,0.0,0.0625,176,off-target
+500,0.0,0.0,176,off-target noiseless
+500,0.324,0.25,176,target
+500,0.678,0.0,176,target noiseless
+500,0.0,0.0625,177,off-target
+500,0.0,0.0,177,off-target noiseless
+500,0.786,4.0,177,target
+500,0.661,0.0,177,target noiseless
+500,0.0,0.0625,178,off-target
+500,0.0,0.0,178,off-target noiseless
+500,0.258,4.0,178,target
+500,0.882,0.0,178,target noiseless
+500,0.0,0.0625,179,off-target
+500,0.0,0.0,179,off-target noiseless
+500,0.397,64.0,179,target
+500,0.855,0.0,179,target noiseless
+500,0.0,0.0625,180,off-target
+500,0.0,0.0,180,off-target noiseless
+500,0.672,16.0,180,target
+500,0.13,0.0,180,target noiseless
+500,0.0,0.0625,181,off-target
+500,0.0,0.0,181,off-target noiseless
+500,0.993,4.0,181,target
+500,0.401,0.0,181,target noiseless
+500,0.0,0.0625,182,off-target
+500,0.0,0.0,182,off-target noiseless
+500,0.459,1.0,182,target
+500,0.401,0.0,182,target noiseless
+500,0.0,0.0625,183,off-target
+500,0.0,0.0,183,off-target noiseless
+500,0.634,64.0,183,target
+500,0.723,0.0,183,target noiseless
+500,0.0,0.0625,184,off-target
+500,0.0,0.0,184,off-target noiseless
+500,0.464,1048576.0,184,target
+500,0.301,0.0,184,target noiseless
+500,0.0,0.0625,185,off-target
+500,0.0,0.0,185,off-target noiseless
+500,0.848,4.0,185,target
+500,0.134,0.0,185,target noiseless
+500,0.0,0.0625,186,off-target
+500,0.0,0.0,186,off-target noiseless
+500,0.92,1.0,186,target
+500,0.717,0.0,186,target noiseless
+500,0.0,0.0625,187,off-target
+500,0.0,0.0,187,off-target noiseless
+500,0.346,4.0,187,target
+500,0.168,0.0,187,target noiseless
+500,0.0,0.0625,188,off-target
+500,0.0,0.0,188,off-target noiseless
+500,0.442,64.0,188,target
+500,0.492,0.0,188,target noiseless
+500,0.0,0.0625,189,off-target
+500,0.0,0.0,189,off-target noiseless
+500,0.167,1.0,189,target
+500,0.208,0.0,189,target noiseless
+500,0.0,0.0625,190,off-target
+500,0.0,0.0,190,off-target noiseless
+500,0.817,1.0,190,target
+500,0.677,0.0,190,target noiseless
+500,0.0,0.0625,191,off-target
+500,0.0,0.0,191,off-target noiseless
+500,0.977,16384.0,191,target
+500,0.69,0.0,191,target noiseless
+500,0.0,0.0625,192,off-target
+500,0.0,0.0,192,off-target noiseless
+500,0.738,1.0,192,target
+500,0.174,0.0,192,target noiseless
+500,0.0,0.0625,193,off-target
+500,0.0,0.0,193,off-target noiseless
+500,0.697,4.0,193,target
+500,0.058,0.0,193,target noiseless
+500,0.0,0.0625,194,off-target
+500,0.0,0.0,194,off-target noiseless
+500,0.469,4.0,194,target
+500,0.839,0.0,194,target noiseless
+500,0.0,0.0625,195,off-target
+500,0.0,0.0,195,off-target noiseless
+500,0.269,4.0,195,target
+500,0.396,0.0,195,target noiseless
+500,0.0,0.0625,196,off-target
+500,0.0,0.0,196,off-target noiseless
+500,0.551,4.0,196,target
+500,0.695,0.0,196,target noiseless
+500,0.0,0.0625,197,off-target
+500,0.0,0.0,197,off-target noiseless
+500,0.207,0.0625,197,target
+500,0.081,0.0,197,target noiseless
+500,0.0,0.0625,198,off-target
+500,0.0,0.0,198,off-target noiseless
+500,0.071,4.0,198,target
+500,0.24,0.0,198,target noiseless
+500,0.0,0.0625,199,off-target
+500,0.0,0.0,199,off-target noiseless
+500,0.632,4.0,199,target
+500,0.957,0.0,199,target noiseless
+500,0.0,0.0625,200,off-target
+500,0.0,0.0,200,off-target noiseless
+500,0.875,4.0,200,target
+500,0.965,0.0,200,target noiseless
+500,0.0,0.0625,201,off-target
+500,0.0,0.0,201,off-target noiseless
+500,0.512,1.0,201,target
+500,0.449,0.0,201,target noiseless
+500,0.0,0.0625,202,off-target
+500,0.0,0.0,202,off-target noiseless
+500,0.967,4.0,202,target
+500,0.404,0.0,202,target noiseless
+500,0.0,0.0625,203,off-target
+500,0.0,0.0,203,off-target noiseless
+500,0.674,1024.0,203,target
+500,0.005,0.0,203,target noiseless
+500,0.0,0.0625,204,off-target
+500,0.0,0.0,204,off-target noiseless
+500,0.305,1.0,204,target
+500,0.45,0.0,204,target noiseless
+500,0.0,0.0625,205,off-target
+500,0.0,0.0,205,off-target noiseless
+500,0.079,1.0,205,target
+500,0.031,0.0,205,target noiseless
+500,0.0,0.0625,206,off-target
+500,0.0,0.0,206,off-target noiseless
+500,0.934,1.0,206,target
+500,0.714,0.0,206,target noiseless
+500,0.0,0.0625,207,off-target
+500,0.0,0.0,207,off-target noiseless
+500,0.141,1.0,207,target
+500,0.123,0.0,207,target noiseless
+500,0.0,0.0625,208,off-target
+500,0.0,0.0,208,off-target noiseless
+500,0.015,64.0,208,target
+500,0.315,0.0,208,target noiseless
+500,0.0,0.0625,209,off-target
+500,0.0,0.0,209,off-target noiseless
+500,0.581,64.0,209,target
+500,0.549,0.0,209,target noiseless
+500,0.0,0.0625,210,off-target
+500,0.0,0.0,210,off-target noiseless
+500,0.997,16.0,210,target
+500,0.071,0.0,210,target noiseless
+500,0.0,0.0625,211,off-target
+500,0.0,0.0,211,off-target noiseless
+500,0.039,0.0625,211,target
+500,0.265,0.0,211,target noiseless
+500,0.0,0.0625,212,off-target
+500,0.0,0.0,212,off-target noiseless
+500,0.554,1048576.0,212,target
+500,0.419,0.0,212,target noiseless
+500,0.0,0.0625,213,off-target
+500,0.0,0.0,213,off-target noiseless
+500,0.128,1.0,213,target
+500,0.585,0.0,213,target noiseless
+500,0.0,0.0625,214,off-target
+500,0.0,0.0,214,off-target noiseless
+500,0.073,0.0625,214,target
+500,0.293,0.0,214,target noiseless
+500,0.0,0.0625,215,off-target
+500,0.0,0.0,215,off-target noiseless
+500,0.057,1024.0,215,target
+500,0.485,0.0,215,target noiseless
+500,0.0,0.0625,216,off-target
+500,0.0,0.0,216,off-target noiseless
+500,0.004,4.0,216,target
+500,0.827,0.0,216,target noiseless
+500,0.0,0.0625,217,off-target
+500,0.0,0.0,217,off-target noiseless
+500,0.735,1.0,217,target
+500,0.896,0.0,217,target noiseless
+500,0.0,0.0625,218,off-target
+500,0.0,0.0,218,off-target noiseless
+500,0.842,4.0,218,target
+500,0.746,0.0,218,target noiseless
+500,0.0,0.0625,219,off-target
+500,0.0,0.0,219,off-target noiseless
+500,0.703,4.0,219,target
+500,0.108,0.0,219,target noiseless
+500,0.0,0.0625,220,off-target
+500,0.0,0.0,220,off-target noiseless
+500,0.941,0.25,220,target
+500,0.8,0.0,220,target noiseless
+500,0.0,0.0625,221,off-target
+500,0.0,0.0,221,off-target noiseless
+500,0.912,256.0,221,target
+500,0.257,0.0,221,target noiseless
+500,0.0,0.0625,222,off-target
+500,0.0,0.0,222,off-target noiseless
+500,0.798,0.25,222,target
+500,0.12,0.0,222,target noiseless
+500,0.0,0.0625,223,off-target
+500,0.0,0.0,223,off-target noiseless
+500,0.876,16.0,223,target
+500,0.873,0.0,223,target noiseless
+500,0.0,0.0625,224,off-target
+500,0.0,0.0,224,off-target noiseless
+500,0.458,0.25,224,target
+500,0.329,0.0,224,target noiseless
+500,0.0,0.0625,225,off-target
+500,0.0,0.0,225,off-target noiseless
+500,0.476,1.0,225,target
+500,0.622,0.0,225,target noiseless
+500,0.0,0.0625,226,off-target
+500,0.0,0.0,226,off-target noiseless
+500,0.939,4.0,226,target
+500,0.396,0.0,226,target noiseless
+500,0.0,0.0625,227,off-target
+500,0.0,0.0,227,off-target noiseless
+500,0.042,1.0,227,target
+500,0.847,0.0,227,target noiseless
+500,0.0,0.0625,228,off-target
+500,0.0,0.0,228,off-target noiseless
+500,0.07,0.25,228,target
+500,0.549,0.0,228,target noiseless
+500,0.0,0.0625,229,off-target
+500,0.0,0.0,229,off-target noiseless
+500,0.623,0.0625,229,target
+500,0.058,0.0,229,target noiseless
+500,0.0,0.0625,230,off-target
+500,0.0,0.0,230,off-target noiseless
+500,0.7,0.0625,230,target
+500,0.614,0.0,230,target noiseless
+500,0.0,0.0625,231,off-target
+500,0.0,0.0,231,off-target noiseless
+500,0.558,4.0,231,target
+500,0.348,0.0,231,target noiseless
+500,0.0,0.0625,232,off-target
+500,0.0,0.0,232,off-target noiseless
+500,0.129,4.0,232,target
+500,0.11,0.0,232,target noiseless
+500,0.0,0.0625,233,off-target
+500,0.0,0.0,233,off-target noiseless
+500,0.668,16.0,233,target
+500,0.012,0.0,233,target noiseless
+500,0.0,0.0625,234,off-target
+500,0.0,0.0,234,off-target noiseless
+500,0.333,0.25,234,target
+500,0.008,0.0,234,target noiseless
+500,0.0,0.0625,235,off-target
+500,0.0,0.0,235,off-target noiseless
+500,0.713,1.0,235,target
+500,0.683,0.0,235,target noiseless
+500,0.0,0.0625,236,off-target
+500,0.0,0.0,236,off-target noiseless
+500,0.77,16.0,236,target
+500,0.688,0.0,236,target noiseless
+500,0.0,0.0625,237,off-target
+500,0.0,0.0,237,off-target noiseless
+500,0.217,0.25,237,target
+500,0.836,0.0,237,target noiseless
+500,0.0,0.0625,238,off-target
+500,0.0,0.0,238,off-target noiseless
+500,0.03,4.0,238,target
+500,0.902,0.0,238,target noiseless
+500,0.0,0.0625,239,off-target
+500,0.0,0.0,239,off-target noiseless
+500,0.501,0.25,239,target
+500,0.232,0.0,239,target noiseless
+500,0.0,0.0625,240,off-target
+500,0.0,0.0,240,off-target noiseless
+500,0.003,0.25,240,target
+500,0.461,0.0,240,target noiseless
+500,0.0,0.0625,241,off-target
+500,0.0,0.0,241,off-target noiseless
+500,0.914,1.0,241,target
+500,0.557,0.0,241,target noiseless
+500,0.0,0.0625,242,off-target
+500,0.0,0.0,242,off-target noiseless
+500,0.165,1.0,242,target
+500,0.175,0.0,242,target noiseless
+500,0.0,0.0625,243,off-target
+500,0.0,0.0,243,off-target noiseless
+500,0.897,16.0,243,target
+500,0.753,0.0,243,target noiseless
+500,0.0,0.0625,244,off-target
+500,0.0,0.0,244,off-target noiseless
+500,0.79,4.0,244,target
+500,0.84,0.0,244,target noiseless
+500,0.0,0.0625,245,off-target
+500,0.0,0.0,245,off-target noiseless
+500,0.569,4.0,245,target
+500,0.184,0.0,245,target noiseless
+500,0.0,0.0625,246,off-target
+500,0.0,0.0,246,off-target noiseless
+500,0.414,16.0,246,target
+500,0.318,0.0,246,target noiseless
+500,0.0,0.0625,247,off-target
+500,0.0,0.0,247,off-target noiseless
+500,0.771,1.0,247,target
+500,0.113,0.0,247,target noiseless
+500,0.0,0.0625,248,off-target
+500,0.0,0.0,248,off-target noiseless
+500,0.893,4096.0,248,target
+500,0.066,0.0,248,target noiseless
+500,0.0,0.0625,249,off-target
+500,0.0,0.0,249,off-target noiseless
+500,0.377,16.0,249,target
+500,0.022,0.0,249,target noiseless
+500,0.0,0.0625,250,off-target
+500,0.0,0.0,250,off-target noiseless
+500,0.281,4.0,250,target
+500,0.02,0.0,250,target noiseless
+500,0.0,0.0625,251,off-target
+500,0.0,0.0,251,off-target noiseless
+500,0.929,16.0,251,target
+500,0.332,0.0,251,target noiseless
+500,0.0,0.0625,252,off-target
+500,0.0,0.0,252,off-target noiseless
+500,0.562,16.0,252,target
+500,0.78,0.0,252,target noiseless
+500,0.0,0.0625,253,off-target
+500,0.0,0.0,253,off-target noiseless
+500,0.69,4096.0,253,target
+500,0.991,0.0,253,target noiseless
+500,0.0,0.0625,254,off-target
+500,0.0,0.0,254,off-target noiseless
+500,0.647,4.0,254,target
+500,0.683,0.0,254,target noiseless
+500,0.0,0.0625,255,off-target
+500,0.0,0.0,255,off-target noiseless
+500,0.947,4.0,255,target
+500,0.921,0.0,255,target noiseless
+500,0.0,0.0625,256,off-target
+500,0.0,0.0,256,off-target noiseless
+500,0.693,1.0,256,target
+500,0.563,0.0,256,target noiseless
+500,0.0,0.0625,257,off-target
+500,0.0,0.0,257,off-target noiseless
+500,0.953,16.0,257,target
+500,0.247,0.0,257,target noiseless
+500,0.0,0.0625,258,off-target
+500,0.0,0.0,258,off-target noiseless
+500,0.876,1.0,258,target
+500,0.265,0.0,258,target noiseless
+500,0.0,0.0625,259,off-target
+500,0.0,0.0,259,off-target noiseless
+500,0.073,0.0625,259,target
+500,0.024,0.0,259,target noiseless
+500,0.0,0.0625,260,off-target
+500,0.0,0.0,260,off-target noiseless
+500,0.827,0.0625,260,target
+500,0.808,0.0,260,target noiseless
+500,0.0,0.0625,261,off-target
+500,0.0,0.0,261,off-target noiseless
+500,0.298,16.0,261,target
+500,0.626,0.0,261,target noiseless
+500,0.0,0.0625,262,off-target
+500,0.0,0.0,262,off-target noiseless
+500,0.031,4.0,262,target
+500,0.006,0.0,262,target noiseless
+500,0.0,0.0625,263,off-target
+500,0.0,0.0,263,off-target noiseless
+500,0.058,16.0,263,target
+500,0.622,0.0,263,target noiseless
+500,0.0,0.0625,264,off-target
+500,0.0,0.0,264,off-target noiseless
+500,0.814,4.0,264,target
+500,0.479,0.0,264,target noiseless
+500,0.0,0.0625,265,off-target
+500,0.0,0.0,265,off-target noiseless
+500,0.28,4.0,265,target
+500,0.179,0.0,265,target noiseless
+500,0.0,0.0625,266,off-target
+500,0.0,0.0,266,off-target noiseless
+500,0.623,4.0,266,target
+500,0.621,0.0,266,target noiseless
+500,0.0,0.0625,267,off-target
+500,0.0,0.0,267,off-target noiseless
+500,0.9,16.0,267,target
+500,0.63,0.0,267,target noiseless
+500,0.0,0.0625,268,off-target
+500,0.0,0.0,268,off-target noiseless
+500,0.777,1.0,268,target
+500,0.185,0.0,268,target noiseless
+500,0.0,0.0625,269,off-target
+500,0.0,0.0,269,off-target noiseless
+500,0.798,64.0,269,target
+500,0.423,0.0,269,target noiseless
+500,0.0,0.0625,270,off-target
+500,0.0,0.0,270,off-target noiseless
+500,0.437,16.0,270,target
+500,0.836,0.0,270,target noiseless
+500,0.0,0.0625,271,off-target
+500,0.0,0.0,271,off-target noiseless
+500,0.858,4.0,271,target
+500,0.886,0.0,271,target noiseless
+500,0.0,0.0625,272,off-target
+500,0.0,0.0,272,off-target noiseless
+500,0.144,16.0,272,target
+500,0.232,0.0,272,target noiseless
+500,0.0,0.0625,273,off-target
+500,0.0,0.0,273,off-target noiseless
+500,0.549,4.0,273,target
+500,0.369,0.0,273,target noiseless
+500,0.0,0.0625,274,off-target
+500,0.0,0.0,274,off-target noiseless
+500,0.449,0.0625,274,target
+500,0.1,0.0,274,target noiseless
+500,0.0,0.0625,275,off-target
+500,0.0,0.0,275,off-target noiseless
+500,0.291,1.0,275,target
+500,0.179,0.0,275,target noiseless
+500,0.0,0.0625,276,off-target
+500,0.0,0.0,276,off-target noiseless
+500,0.018,4.0,276,target
+500,0.256,0.0,276,target noiseless
+500,0.0,0.0625,277,off-target
+500,0.0,0.0,277,off-target noiseless
+500,0.747,1024.0,277,target
+500,0.847,0.0,277,target noiseless
+500,0.0,0.0625,278,off-target
+500,0.0,0.0,278,off-target noiseless
+500,0.062,0.25,278,target
+500,0.716,0.0,278,target noiseless
+500,0.0,0.0625,279,off-target
+500,0.0,0.0,279,off-target noiseless
+500,0.693,16.0,279,target
+500,0.921,0.0,279,target noiseless
+500,0.0,0.0625,280,off-target
+500,0.0,0.0,280,off-target noiseless
+500,0.722,4.0,280,target
+500,0.595,0.0,280,target noiseless
+500,0.0,0.0625,281,off-target
+500,0.0,0.0,281,off-target noiseless
+500,0.11,16.0,281,target
+500,0.526,0.0,281,target noiseless
+500,0.0,0.0625,282,off-target
+500,0.0,0.0,282,off-target noiseless
+500,0.772,1024.0,282,target
+500,0.309,0.0,282,target noiseless
+500,0.0,0.0625,283,off-target
+500,0.0,0.0,283,off-target noiseless
+500,0.42,16.0,283,target
+500,0.156,0.0,283,target noiseless
+500,0.0,0.0625,284,off-target
+500,0.0,0.0,284,off-target noiseless
+500,0.197,16.0,284,target
+500,0.426,0.0,284,target noiseless
+500,0.0,0.0625,285,off-target
+500,0.0,0.0,285,off-target noiseless
+500,0.185,4096.0,285,target
+500,0.035,0.0,285,target noiseless
+500,0.0,0.0625,286,off-target
+500,0.0,0.0,286,off-target noiseless
+500,0.748,0.25,286,target
+500,0.97,0.0,286,target noiseless
+500,0.0,0.0625,287,off-target
+500,0.0,0.0,287,off-target noiseless
+500,0.424,4.0,287,target
+500,0.303,0.0,287,target noiseless
+500,0.0,0.0625,288,off-target
+500,0.0,0.0,288,off-target noiseless
+500,0.277,1.0,288,target
+500,0.713,0.0,288,target noiseless
+500,0.0,0.0625,289,off-target
+500,0.0,0.0,289,off-target noiseless
+500,0.959,65536.0,289,target
+500,0.73,0.0,289,target noiseless
+500,0.0,0.0625,290,off-target
+500,0.0,0.0,290,off-target noiseless
+500,0.862,1.0,290,target
+500,0.336,0.0,290,target noiseless
+500,0.0,0.0625,291,off-target
+500,0.0,0.0,291,off-target noiseless
+500,0.499,4.0,291,target
+500,0.421,0.0,291,target noiseless
+500,0.0,0.0625,292,off-target
+500,0.0,0.0,292,off-target noiseless
+500,0.756,64.0,292,target
+500,0.834,0.0,292,target noiseless
+500,0.0,0.0625,293,off-target
+500,0.0,0.0,293,off-target noiseless
+500,0.669,4.0,293,target
+500,0.895,0.0,293,target noiseless
+500,0.0,0.0625,294,off-target
+500,0.0,0.0,294,off-target noiseless
+500,0.4,1.0,294,target
+500,0.43,0.0,294,target noiseless
+500,0.0,0.0625,295,off-target
+500,0.0,0.0,295,off-target noiseless
+500,0.886,1.0,295,target
+500,0.167,0.0,295,target noiseless
+500,0.0,0.0625,296,off-target
+500,0.0,0.0,296,off-target noiseless
+500,0.588,0.0625,296,target
+500,0.087,0.0,296,target noiseless
+500,0.0,0.0625,297,off-target
+500,0.0,0.0,297,off-target noiseless
+500,0.196,4.0,297,target
+500,0.35,0.0,297,target noiseless
+500,0.0,0.0625,298,off-target
+500,0.0,0.0,298,off-target noiseless
+500,0.85,4.0,298,target
+500,0.069,0.0,298,target noiseless
+500,0.0,0.0625,299,off-target
+500,0.0,0.0,299,off-target noiseless
+500,0.601,0.0625,299,target
+500,0.33,0.0,299,target noiseless
+500,0.0,0.0625,300,off-target
+500,0.0,0.0,300,off-target noiseless
+500,0.018,1.0,300,target
+500,0.848,0.0,300,target noiseless
+500,0.0,0.0625,301,off-target
+500,0.0,0.0,301,off-target noiseless
+500,0.356,16.0,301,target
+500,0.789,0.0,301,target noiseless
+500,0.0,0.0625,302,off-target
+500,0.0,0.0,302,off-target noiseless
+500,0.429,4.0,302,target
+500,0.828,0.0,302,target noiseless
+500,0.0,0.0625,303,off-target
+500,0.0,0.0,303,off-target noiseless
+500,0.972,16.0,303,target
+500,0.346,0.0,303,target noiseless
+500,0.0,0.0625,304,off-target
+500,0.0,0.0,304,off-target noiseless
+500,0.697,1.0,304,target
+500,0.086,0.0,304,target noiseless
+500,0.0,0.0625,305,off-target
+500,0.0,0.0,305,off-target noiseless
+500,0.526,4.0,305,target
+500,0.947,0.0,305,target noiseless
+500,0.0,0.0625,306,off-target
+500,0.0,0.0,306,off-target noiseless
+500,0.359,64.0,306,target
+500,0.559,0.0,306,target noiseless
+500,0.0,0.0625,307,off-target
+500,0.0,0.0,307,off-target noiseless
+500,0.564,1.0,307,target
+500,0.953,0.0,307,target noiseless
+500,0.0,0.0625,308,off-target
+500,0.0,0.0,308,off-target noiseless
+500,0.953,4.0,308,target
+500,0.942,0.0,308,target noiseless
+500,0.0,0.0625,309,off-target
+500,0.0,0.0,309,off-target noiseless
+500,0.328,4.0,309,target
+500,0.666,0.0,309,target noiseless
+500,0.0,0.0625,310,off-target
+500,0.0,0.0,310,off-target noiseless
+500,0.679,1.0,310,target
+500,0.609,0.0,310,target noiseless
+500,0.0,0.0625,311,off-target
+500,0.0,0.0,311,off-target noiseless
+500,0.626,0.0625,311,target
+500,0.986,0.0,311,target noiseless
+500,0.0,0.0625,312,off-target
+500,0.0,0.0,312,off-target noiseless
+500,0.153,64.0,312,target
+500,0.092,0.0,312,target noiseless
+500,0.0,0.0625,313,off-target
+500,0.0,0.0,313,off-target noiseless
+500,0.225,16384.0,313,target
+500,0.434,0.0,313,target noiseless
+500,0.0,0.0625,314,off-target
+500,0.0,0.0,314,off-target noiseless
+500,0.153,4.0,314,target
+500,0.863,0.0,314,target noiseless
+500,0.0,0.0625,315,off-target
+500,0.0,0.0,315,off-target noiseless
+500,0.825,1.0,315,target
+500,0.675,0.0,315,target noiseless
+500,0.0,0.0625,316,off-target
+500,0.0,0.0,316,off-target noiseless
+500,0.026,1.0,316,target
+500,0.936,0.0,316,target noiseless
+500,0.0,0.0625,317,off-target
+500,0.0,0.0,317,off-target noiseless
+500,0.826,1.0,317,target
+500,0.172,0.0,317,target noiseless
+500,0.0,0.0625,318,off-target
+500,0.0,0.0,318,off-target noiseless
+500,0.529,4.0,318,target
+500,0.739,0.0,318,target noiseless
+500,0.0,0.0625,319,off-target
+500,0.0,0.0,319,off-target noiseless
+500,0.482,1.0,319,target
+500,0.345,0.0,319,target noiseless
+500,0.0,0.0625,320,off-target
+500,0.0,0.0,320,off-target noiseless
+500,0.27,0.0625,320,target
+500,0.256,0.0,320,target noiseless
+500,0.0,0.0625,321,off-target
+500,0.0,0.0,321,off-target noiseless
+500,0.905,0.25,321,target
+500,0.286,0.0,321,target noiseless
+500,0.0,0.0625,322,off-target
+500,0.0,0.0,322,off-target noiseless
+500,0.689,1.0,322,target
+500,0.382,0.0,322,target noiseless
+500,0.0,0.0625,323,off-target
+500,0.0,0.0,323,off-target noiseless
+500,0.106,1.0,323,target
+500,0.996,0.0,323,target noiseless
+500,0.0,0.0625,324,off-target
+500,0.0,0.0,324,off-target noiseless
+500,0.298,16.0,324,target
+500,0.426,0.0,324,target noiseless
+500,0.0,0.0625,325,off-target
+500,0.0,0.0,325,off-target noiseless
+500,0.954,1.0,325,target
+500,0.989,0.0,325,target noiseless
+500,0.0,0.0625,326,off-target
+500,0.0,0.0,326,off-target noiseless
+500,0.269,0.0625,326,target
+500,0.23,0.0,326,target noiseless
+500,0.0,0.0625,327,off-target
+500,0.0,0.0,327,off-target noiseless
+500,0.57,1.0,327,target
+500,0.475,0.0,327,target noiseless
+500,0.0,0.0625,328,off-target
+500,0.0,0.0,328,off-target noiseless
+500,0.701,0.0625,328,target
+500,0.686,0.0,328,target noiseless
+500,0.0,0.0625,329,off-target
+500,0.0,0.0,329,off-target noiseless
+500,0.015,1.0,329,target
+500,0.711,0.0,329,target noiseless
+500,0.0,0.0625,330,off-target
+500,0.0,0.0,330,off-target noiseless
+500,0.091,4096.0,330,target
+500,0.642,0.0,330,target noiseless
+500,0.0,0.0625,331,off-target
+500,0.0,0.0,331,off-target noiseless
+500,0.144,1.0,331,target
+500,0.15,0.0,331,target noiseless
+500,0.0,0.0625,332,off-target
+500,0.0,0.0,332,off-target noiseless
+500,0.452,4.0,332,target
+500,0.917,0.0,332,target noiseless
+500,0.0,0.0625,333,off-target
+500,0.0,0.0,333,off-target noiseless
+500,0.983,1.0,333,target
+500,0.959,0.0,333,target noiseless
+500,0.0,0.0625,334,off-target
+500,0.0,0.0,334,off-target noiseless
+500,0.508,1.0,334,target
+500,0.872,0.0,334,target noiseless
+500,0.0,0.0625,335,off-target
+500,0.0,0.0,335,off-target noiseless
+500,0.583,4.0,335,target
+500,0.026,0.0,335,target noiseless
+500,0.0,0.0625,336,off-target
+500,0.0,0.0,336,off-target noiseless
+500,0.147,1.0,336,target
+500,0.677,0.0,336,target noiseless
+500,0.0,0.0625,337,off-target
+500,0.0,0.0,337,off-target noiseless
+500,0.233,1.0,337,target
+500,0.446,0.0,337,target noiseless
+500,0.0,0.0625,338,off-target
+500,0.0,0.0,338,off-target noiseless
+500,0.078,4.0,338,target
+500,0.237,0.0,338,target noiseless
+500,0.0,0.0625,339,off-target
+500,0.0,0.0,339,off-target noiseless
+500,0.605,1.0,339,target
+500,0.189,0.0,339,target noiseless
+500,0.0,0.0625,340,off-target
+500,0.0,0.0,340,off-target noiseless
+500,0.288,1.0,340,target
+500,0.714,0.0,340,target noiseless
+500,0.0,0.0625,341,off-target
+500,0.0,0.0,341,off-target noiseless
+500,0.564,1.0,341,target
+500,0.321,0.0,341,target noiseless
+500,0.0,0.0625,342,off-target
+500,0.0,0.0,342,off-target noiseless
+500,0.39,16384.0,342,target
+500,0.18,0.0,342,target noiseless
+500,0.0,0.0625,343,off-target
+500,0.0,0.0,343,off-target noiseless
+500,0.393,4.0,343,target
+500,0.274,0.0,343,target noiseless
+500,0.0,0.0625,344,off-target
+500,0.0,0.0,344,off-target noiseless
+500,0.663,1.0,344,target
+500,0.92,0.0,344,target noiseless
+500,0.0,0.0625,345,off-target
+500,0.0,0.0,345,off-target noiseless
+500,0.074,4.0,345,target
+500,0.519,0.0,345,target noiseless
+500,0.0,0.0625,346,off-target
+500,0.0,0.0,346,off-target noiseless
+500,0.275,16.0,346,target
+500,0.725,0.0,346,target noiseless
+500,0.0,0.0625,347,off-target
+500,0.0,0.0,347,off-target noiseless
+500,0.823,16.0,347,target
+500,0.19,0.0,347,target noiseless
+500,0.0,0.0625,348,off-target
+500,0.0,0.0,348,off-target noiseless
+500,0.785,4.0,348,target
+500,0.569,0.0,348,target noiseless
+500,0.0,0.0625,349,off-target
+500,0.0,0.0,349,off-target noiseless
+500,0.304,4.0,349,target
+500,0.199,0.0,349,target noiseless
+500,0.0,0.0625,350,off-target
+500,0.0,0.0,350,off-target noiseless
+500,0.234,4.0,350,target
+500,0.743,0.0,350,target noiseless
+500,0.0,0.0625,351,off-target
+500,0.0,0.0,351,off-target noiseless
+500,0.739,16.0,351,target
+500,0.347,0.0,351,target noiseless
+500,0.0,0.0625,352,off-target
+500,0.0,0.0,352,off-target noiseless
+500,0.662,1.0,352,target
+500,0.392,0.0,352,target noiseless
+500,0.0,0.0625,353,off-target
+500,0.0,0.0,353,off-target noiseless
+500,0.593,4.0,353,target
+500,0.509,0.0,353,target noiseless
+500,0.0,0.0625,354,off-target
+500,0.0,0.0,354,off-target noiseless
+500,0.05,1.0,354,target
+500,0.514,0.0,354,target noiseless
+500,0.0,0.0625,355,off-target
+500,0.0,0.0,355,off-target noiseless
+500,0.909,16.0,355,target
+500,0.679,0.0,355,target noiseless
+500,0.0,0.0625,356,off-target
+500,0.0,0.0,356,off-target noiseless
+500,0.252,16.0,356,target
+500,0.389,0.0,356,target noiseless
+500,0.0,0.0625,357,off-target
+500,0.0,0.0,357,off-target noiseless
+500,0.88,4.0,357,target
+500,0.214,0.0,357,target noiseless
+500,0.0,0.0625,358,off-target
+500,0.0,0.0,358,off-target noiseless
+500,0.633,16.0,358,target
+500,0.127,0.0,358,target noiseless
+500,0.0,0.0625,359,off-target
+500,0.0,0.0,359,off-target noiseless
+500,0.622,16.0,359,target
+500,0.431,0.0,359,target noiseless
+500,0.0,0.0625,360,off-target
+500,0.0,0.0,360,off-target noiseless
+500,0.247,0.0625,360,target
+500,0.29,0.0,360,target noiseless
+500,0.0,0.0625,361,off-target
+500,0.0,0.0,361,off-target noiseless
+500,0.626,4.0,361,target
+500,0.625,0.0,361,target noiseless
+500,0.0,0.0625,362,off-target
+500,0.0,0.0,362,off-target noiseless
+500,0.528,16.0,362,target
+500,0.186,0.0,362,target noiseless
+500,0.0,0.0625,363,off-target
+500,0.0,0.0,363,off-target noiseless
+500,0.962,4.0,363,target
+500,0.988,0.0,363,target noiseless
+500,0.0,0.0625,364,off-target
+500,0.0,0.0,364,off-target noiseless
+500,0.232,16.0,364,target
+500,0.08,0.0,364,target noiseless
+500,0.0,0.0625,365,off-target
+500,0.0,0.0,365,off-target noiseless
+500,0.706,4.0,365,target
+500,0.648,0.0,365,target noiseless
+500,0.0,0.0625,366,off-target
+500,0.0,0.0,366,off-target noiseless
+500,0.667,16.0,366,target
+500,0.823,0.0,366,target noiseless
+500,0.0,0.0625,367,off-target
+500,0.0,0.0,367,off-target noiseless
+500,0.018,1.0,367,target
+500,0.657,0.0,367,target noiseless
+500,0.0,0.0625,368,off-target
+500,0.0,0.0,368,off-target noiseless
+500,0.453,1.0,368,target
+500,0.831,0.0,368,target noiseless
+500,0.0,0.0625,369,off-target
+500,0.0,0.0,369,off-target noiseless
+500,0.764,1.0,369,target
+500,0.378,0.0,369,target noiseless
+500,0.0,0.0625,370,off-target
+500,0.0,0.0,370,off-target noiseless
+500,0.057,16.0,370,target
+500,0.445,0.0,370,target noiseless
+500,0.0,0.0625,371,off-target
+500,0.0,0.0,371,off-target noiseless
+500,0.896,1.0,371,target
+500,0.601,0.0,371,target noiseless
+500,0.0,0.0625,372,off-target
+500,0.0,0.0,372,off-target noiseless
+500,0.965,0.25,372,target
+500,0.83,0.0,372,target noiseless
+500,0.0,0.0625,373,off-target
+500,0.0,0.0,373,off-target noiseless
+500,0.13,16.0,373,target
+500,0.377,0.0,373,target noiseless
+500,0.0,0.0625,374,off-target
+500,0.0,0.0,374,off-target noiseless
+500,0.602,16.0,374,target
+500,0.537,0.0,374,target noiseless
+500,0.0,0.0625,375,off-target
+500,0.0,0.0,375,off-target noiseless
+500,0.391,0.25,375,target
+500,0.999,0.0,375,target noiseless
+500,0.0,0.0625,376,off-target
+500,0.0,0.0,376,off-target noiseless
+500,0.554,4.0,376,target
+500,0.485,0.0,376,target noiseless
+500,0.0,0.0625,377,off-target
+500,0.0,0.0,377,off-target noiseless
+500,0.823,16.0,377,target
+500,0.887,0.0,377,target noiseless
+500,0.0,0.0625,378,off-target
+500,0.0,0.0,378,off-target noiseless
+500,0.699,4.0,378,target
+500,0.406,0.0,378,target noiseless
+500,0.0,0.0625,379,off-target
+500,0.0,0.0,379,off-target noiseless
+500,0.905,16.0,379,target
+500,0.109,0.0,379,target noiseless
+500,0.0,0.0625,380,off-target
+500,0.0,0.0,380,off-target noiseless
+500,0.647,16.0,380,target
+500,0.536,0.0,380,target noiseless
+500,0.0,0.0625,381,off-target
+500,0.0,0.0,381,off-target noiseless
+500,0.793,16.0,381,target
+500,0.538,0.0,381,target noiseless
+500,0.0,0.0625,382,off-target
+500,0.0,0.0,382,off-target noiseless
+500,0.222,4.0,382,target
+500,0.39,0.0,382,target noiseless
+500,0.0,0.0625,383,off-target
+500,0.0,0.0,383,off-target noiseless
+500,0.453,16.0,383,target
+500,0.022,0.0,383,target noiseless
+500,0.0,0.0625,384,off-target
+500,0.0,0.0,384,off-target noiseless
+500,0.643,65536.0,384,target
+500,0.259,0.0,384,target noiseless
+500,0.0,0.0625,385,off-target
+500,0.0,0.0,385,off-target noiseless
+500,0.755,16.0,385,target
+500,0.326,0.0,385,target noiseless
+500,0.0,0.0625,386,off-target
+500,0.0,0.0,386,off-target noiseless
+500,0.903,16384.0,386,target
+500,0.837,0.0,386,target noiseless
+500,0.0,0.0625,387,off-target
+500,0.0,0.0,387,off-target noiseless
+500,0.48,16.0,387,target
+500,0.499,0.0,387,target noiseless
+500,0.0,0.0625,388,off-target
+500,0.0,0.0,388,off-target noiseless
+500,0.892,4.0,388,target
+500,0.254,0.0,388,target noiseless
+500,0.0,0.0625,389,off-target
+500,0.0,0.0,389,off-target noiseless
+500,0.204,1.0,389,target
+500,0.897,0.0,389,target noiseless
+500,0.0,0.0625,390,off-target
+500,0.0,0.0,390,off-target noiseless
+500,0.019,64.0,390,target
+500,0.627,0.0,390,target noiseless
+500,0.0,0.0625,391,off-target
+500,0.0,0.0,391,off-target noiseless
+500,0.322,4.0,391,target
+500,0.488,0.0,391,target noiseless
+500,0.0,0.0625,392,off-target
+500,0.0,0.0,392,off-target noiseless
+500,0.497,4.0,392,target
+500,0.813,0.0,392,target noiseless
+500,0.0,0.0625,393,off-target
+500,0.0,0.0,393,off-target noiseless
+500,0.08,0.25,393,target
+500,0.459,0.0,393,target noiseless
+500,0.0,0.0625,394,off-target
+500,0.0,0.0,394,off-target noiseless
+500,0.631,4.0,394,target
+500,0.156,0.0,394,target noiseless
+500,0.0,0.0625,395,off-target
+500,0.0,0.0,395,off-target noiseless
+500,0.27,1.0,395,target
+500,0.047,0.0,395,target noiseless
+500,0.0,0.0625,396,off-target
+500,0.0,0.0,396,off-target noiseless
+500,0.268,64.0,396,target
+500,0.214,0.0,396,target noiseless
+500,0.0,0.0625,397,off-target
+500,0.0,0.0,397,off-target noiseless
+500,0.389,16.0,397,target
+500,0.553,0.0,397,target noiseless
+500,0.0,0.0625,398,off-target
+500,0.0,0.0,398,off-target noiseless
+500,0.938,4.0,398,target
+500,0.634,0.0,398,target noiseless
+500,0.0,0.0625,399,off-target
+500,0.0,0.0,399,off-target noiseless
+500,0.753,4.0,399,target
+500,0.331,0.0,399,target noiseless
+500,0.0,0.0625,400,off-target
+500,0.0,0.0,400,off-target noiseless
+500,0.896,1.0,400,target
+500,0.036,0.0,400,target noiseless
+500,0.0,0.0625,401,off-target
+500,0.0,0.0,401,off-target noiseless
+500,0.901,64.0,401,target
+500,0.252,0.0,401,target noiseless
+500,0.0,0.0625,402,off-target
+500,0.0,0.0,402,off-target noiseless
+500,0.35,4.0,402,target
+500,0.82,0.0,402,target noiseless
+500,0.0,0.0625,403,off-target
+500,0.0,0.0,403,off-target noiseless
+500,0.0,1.0,403,target
+500,0.698,0.0,403,target noiseless
+500,0.0,0.0625,404,off-target
+500,0.0,0.0,404,off-target noiseless
+500,0.157,1024.0,404,target
+500,0.56,0.0,404,target noiseless
+500,0.0,0.0625,405,off-target
+500,0.0,0.0,405,off-target noiseless
+500,0.695,16.0,405,target
+500,0.611,0.0,405,target noiseless
+500,0.0,0.0625,406,off-target
+500,0.0,0.0,406,off-target noiseless
+500,0.322,16384.0,406,target
+500,0.133,0.0,406,target noiseless
+500,0.0,0.0625,407,off-target
+500,0.0,0.0,407,off-target noiseless
+500,0.743,4.0,407,target
+500,0.337,0.0,407,target noiseless
+500,0.0,0.0625,408,off-target
+500,0.0,0.0,408,off-target noiseless
+500,0.12,16.0,408,target
+500,0.027,0.0,408,target noiseless
+500,0.0,0.0625,409,off-target
+500,0.0,0.0,409,off-target noiseless
+500,0.601,16.0,409,target
+500,0.798,0.0,409,target noiseless
+500,0.0,0.0625,410,off-target
+500,0.0,0.0,410,off-target noiseless
+500,0.487,16384.0,410,target
+500,0.328,0.0,410,target noiseless
+500,0.0,0.0625,411,off-target
+500,0.0,0.0,411,off-target noiseless
+500,0.061,256.0,411,target
+500,0.093,0.0,411,target noiseless
+500,0.0,0.0625,412,off-target
+500,0.0,0.0,412,off-target noiseless
+500,0.183,0.0625,412,target
+500,0.182,0.0,412,target noiseless
+500,0.0,0.0625,413,off-target
+500,0.0,0.0,413,off-target noiseless
+500,0.934,4.0,413,target
+500,0.957,0.0,413,target noiseless
+500,0.0,0.0625,414,off-target
+500,0.0,0.0,414,off-target noiseless
+500,0.663,4.0,414,target
+500,0.068,0.0,414,target noiseless
+500,0.0,0.0625,415,off-target
+500,0.0,0.0,415,off-target noiseless
+500,0.009,1.0,415,target
+500,0.865,0.0,415,target noiseless
+500,0.0,0.0625,416,off-target
+500,0.0,0.0,416,off-target noiseless
+500,0.787,256.0,416,target
+500,0.98,0.0,416,target noiseless
+500,0.0,0.0625,417,off-target
+500,0.0,0.0,417,off-target noiseless
+500,0.269,65536.0,417,target
+500,0.675,0.0,417,target noiseless
+500,0.0,0.0625,418,off-target
+500,0.0,0.0,418,off-target noiseless
+500,0.156,4.0,418,target
+500,0.022,0.0,418,target noiseless
+500,0.0,0.0625,419,off-target
+500,0.0,0.0,419,off-target noiseless
+500,0.479,16.0,419,target
+500,0.2,0.0,419,target noiseless
+500,0.0,0.0625,420,off-target
+500,0.0,0.0,420,off-target noiseless
+500,0.937,1.0,420,target
+500,0.966,0.0,420,target noiseless
+500,0.0,0.0625,421,off-target
+500,0.0,0.0,421,off-target noiseless
+500,0.116,16.0,421,target
+500,0.455,0.0,421,target noiseless
+500,0.0,0.0625,422,off-target
+500,0.0,0.0,422,off-target noiseless
+500,0.606,4096.0,422,target
+500,0.561,0.0,422,target noiseless
+500,0.0,0.0625,423,off-target
+500,0.0,0.0,423,off-target noiseless
+500,0.912,4.0,423,target
+500,0.747,0.0,423,target noiseless
+500,0.0,0.0625,424,off-target
+500,0.0,0.0,424,off-target noiseless
+500,0.598,1024.0,424,target
+500,0.231,0.0,424,target noiseless
+500,0.0,0.0625,425,off-target
+500,0.0,0.0,425,off-target noiseless
+500,0.246,64.0,425,target
+500,0.623,0.0,425,target noiseless
+500,0.0,0.0625,426,off-target
+500,0.0,0.0,426,off-target noiseless
+500,0.01,64.0,426,target
+500,0.397,0.0,426,target noiseless
+500,0.0,0.0625,427,off-target
+500,0.0,0.0,427,off-target noiseless
+500,0.322,1.0,427,target
+500,0.001,0.0,427,target noiseless
+500,0.0,0.0625,428,off-target
+500,0.0,0.0,428,off-target noiseless
+500,0.373,1.0,428,target
+500,0.461,0.0,428,target noiseless
+500,0.0,0.0625,429,off-target
+500,0.0,0.0,429,off-target noiseless
+500,0.059,4.0,429,target
+500,0.234,0.0,429,target noiseless
+500,0.0,0.0625,430,off-target
+500,0.0,0.0,430,off-target noiseless
+500,0.907,4.0,430,target
+500,0.467,0.0,430,target noiseless
+500,0.0,0.0625,431,off-target
+500,0.0,0.0,431,off-target noiseless
+500,0.485,16.0,431,target
+500,0.342,0.0,431,target noiseless
+500,0.0,0.0625,432,off-target
+500,0.0,0.0,432,off-target noiseless
+500,0.442,1.0,432,target
+500,0.948,0.0,432,target noiseless
+500,0.0,0.0625,433,off-target
+500,0.0,0.0,433,off-target noiseless
+500,0.943,4.0,433,target
+500,0.639,0.0,433,target noiseless
+500,0.0,0.0625,434,off-target
+500,0.0,0.0,434,off-target noiseless
+500,0.155,1.0,434,target
+500,0.428,0.0,434,target noiseless
+500,0.0,0.0625,435,off-target
+500,0.0,0.0,435,off-target noiseless
+500,0.898,16.0,435,target
+500,0.505,0.0,435,target noiseless
+500,0.0,0.0625,436,off-target
+500,0.0,0.0,436,off-target noiseless
+500,0.862,1.0,436,target
+500,0.908,0.0,436,target noiseless
+500,0.0,0.0625,437,off-target
+500,0.0,0.0,437,off-target noiseless
+500,0.37,64.0,437,target
+500,0.932,0.0,437,target noiseless
+500,0.0,0.0625,438,off-target
+500,0.0,0.0,438,off-target noiseless
+500,0.26,0.0625,438,target
+500,0.369,0.0,438,target noiseless
+500,0.0,0.0625,439,off-target
+500,0.0,0.0,439,off-target noiseless
+500,0.656,16384.0,439,target
+500,0.076,0.0,439,target noiseless
+500,0.0,0.0625,440,off-target
+500,0.0,0.0,440,off-target noiseless
+500,0.258,1.0,440,target
+500,0.375,0.0,440,target noiseless
+500,0.0,0.0625,441,off-target
+500,0.0,0.0,441,off-target noiseless
+500,0.793,1.0,441,target
+500,0.155,0.0,441,target noiseless
+500,0.0,0.0625,442,off-target
+500,0.0,0.0,442,off-target noiseless
+500,0.852,4.0,442,target
+500,0.957,0.0,442,target noiseless
+500,0.0,0.0625,443,off-target
+500,0.0,0.0,443,off-target noiseless
+500,0.288,256.0,443,target
+500,0.226,0.0,443,target noiseless
+500,0.0,0.0625,444,off-target
+500,0.0,0.0,444,off-target noiseless
+500,0.324,4.0,444,target
+500,0.097,0.0,444,target noiseless
+500,0.0,0.0625,445,off-target
+500,0.0,0.0,445,off-target noiseless
+500,0.549,1.0,445,target
+500,0.087,0.0,445,target noiseless
+500,0.0,0.0625,446,off-target
+500,0.0,0.0,446,off-target noiseless
+500,0.636,16.0,446,target
+500,0.887,0.0,446,target noiseless
+500,0.0,0.0625,447,off-target
+500,0.0,0.0,447,off-target noiseless
+500,0.106,4.0,447,target
+500,0.556,0.0,447,target noiseless
+500,0.0,0.0625,448,off-target
+500,0.0,0.0,448,off-target noiseless
+500,0.349,4.0,448,target
+500,0.708,0.0,448,target noiseless
+500,0.0,0.0625,449,off-target
+500,0.0,0.0,449,off-target noiseless
+500,0.276,4.0,449,target
+500,0.827,0.0,449,target noiseless
+500,0.0,0.0625,450,off-target
+500,0.0,0.0,450,off-target noiseless
+500,0.273,4.0,450,target
+500,0.788,0.0,450,target noiseless
+500,0.0,0.0625,451,off-target
+500,0.0,0.0,451,off-target noiseless
+500,0.63,64.0,451,target
+500,0.13,0.0,451,target noiseless
+500,0.0,0.0625,452,off-target
+500,0.0,0.0,452,off-target noiseless
+500,0.279,4.0,452,target
+500,0.343,0.0,452,target noiseless
+500,0.0,0.0625,453,off-target
+500,0.0,0.0,453,off-target noiseless
+500,0.972,4.0,453,target
+500,0.247,0.0,453,target noiseless
+500,0.0,0.0625,454,off-target
+500,0.0,0.0,454,off-target noiseless
+500,0.775,4.0,454,target
+500,0.504,0.0,454,target noiseless
+500,0.0,0.0625,455,off-target
+500,0.0,0.0,455,off-target noiseless
+500,0.339,1024.0,455,target
+500,0.642,0.0,455,target noiseless
+500,0.0,0.0625,456,off-target
+500,0.0,0.0,456,off-target noiseless
+500,0.386,0.0625,456,target
+500,0.66,0.0,456,target noiseless
+500,0.0,0.0625,457,off-target
+500,0.0,0.0,457,off-target noiseless
+500,0.639,1.0,457,target
+500,0.934,0.0,457,target noiseless
+500,0.0,0.0625,458,off-target
+500,0.0,0.0,458,off-target noiseless
+500,0.576,1.0,458,target
+500,0.228,0.0,458,target noiseless
+500,0.0,0.0625,459,off-target
+500,0.0,0.0,459,off-target noiseless
+500,0.072,1.0,459,target
+500,0.834,0.0,459,target noiseless
+500,0.0,0.0625,460,off-target
+500,0.0,0.0,460,off-target noiseless
+500,0.02,16.0,460,target
+500,0.717,0.0,460,target noiseless
+500,0.0,0.0625,461,off-target
+500,0.0,0.0,461,off-target noiseless
+500,0.092,1.0,461,target
+500,0.129,0.0,461,target noiseless
+500,0.0,0.0625,462,off-target
+500,0.0,0.0,462,off-target noiseless
+500,0.604,4.0,462,target
+500,0.637,0.0,462,target noiseless
+500,0.0,0.0625,463,off-target
+500,0.0,0.0,463,off-target noiseless
+500,0.1,1.0,463,target
+500,0.029,0.0,463,target noiseless
+500,0.0,0.0625,464,off-target
+500,0.0,0.0,464,off-target noiseless
+500,0.706,1.0,464,target
+500,0.775,0.0,464,target noiseless
+500,0.0,0.0625,465,off-target
+500,0.0,0.0,465,off-target noiseless
+500,0.925,1.0,465,target
+500,0.608,0.0,465,target noiseless
+500,0.0,0.0625,466,off-target
+500,0.0,0.0,466,off-target noiseless
+500,0.205,4.0,466,target
+500,0.218,0.0,466,target noiseless
+500,0.0,0.0625,467,off-target
+500,0.0,0.0,467,off-target noiseless
+500,0.866,1.0,467,target
+500,0.83,0.0,467,target noiseless
+500,0.0,0.0625,468,off-target
+500,0.0,0.0,468,off-target noiseless
+500,0.505,1.0,468,target
+500,0.185,0.0,468,target noiseless
+500,0.0,0.0625,469,off-target
+500,0.0,0.0,469,off-target noiseless
+500,0.993,16.0,469,target
+500,0.709,0.0,469,target noiseless
+500,0.0,0.0625,470,off-target
+500,0.0,0.0,470,off-target noiseless
+500,0.691,256.0,470,target
+500,0.902,0.0,470,target noiseless
+500,0.0,0.0625,471,off-target
+500,0.0,0.0,471,off-target noiseless
+500,0.646,1.0,471,target
+500,0.037,0.0,471,target noiseless
+500,0.0,0.0625,472,off-target
+500,0.0,0.0,472,off-target noiseless
+500,0.734,4.0,472,target
+500,0.434,0.0,472,target noiseless
+500,0.0,0.0625,473,off-target
+500,0.0,0.0,473,off-target noiseless
+500,0.677,16.0,473,target
+500,0.532,0.0,473,target noiseless
+500,0.0,0.0625,474,off-target
+500,0.0,0.0,474,off-target noiseless
+500,0.726,4.0,474,target
+500,0.392,0.0,474,target noiseless
+500,0.0,0.0625,475,off-target
+500,0.0,0.0,475,off-target noiseless
+500,0.014,16.0,475,target
+500,0.532,0.0,475,target noiseless
+500,0.0,0.0625,476,off-target
+500,0.0,0.0,476,off-target noiseless
+500,0.951,4.0,476,target
+500,0.296,0.0,476,target noiseless
+500,0.0,0.0625,477,off-target
+500,0.0,0.0,477,off-target noiseless
+500,0.154,0.25,477,target
+500,0.903,0.0,477,target noiseless
+500,0.0,0.0625,478,off-target
+500,0.0,0.0,478,off-target noiseless
+500,0.668,1024.0,478,target
+500,0.764,0.0,478,target noiseless
+500,0.0,0.0625,479,off-target
+500,0.0,0.0,479,off-target noiseless
+500,0.596,4.0,479,target
+500,0.553,0.0,479,target noiseless
+500,0.0,0.0625,480,off-target
+500,0.0,0.0,480,off-target noiseless
+500,0.295,4.0,480,target
+500,0.014,0.0,480,target noiseless
+500,0.0,0.0625,481,off-target
+500,0.0,0.0,481,off-target noiseless
+500,0.154,0.25,481,target
+500,0.589,0.0,481,target noiseless
+500,0.0,0.0625,482,off-target
+500,0.0,0.0,482,off-target noiseless
+500,0.105,4.0,482,target
+500,0.281,0.0,482,target noiseless
+500,0.0,0.0625,483,off-target
+500,0.0,0.0,483,off-target noiseless
+500,0.099,4.0,483,target
+500,0.291,0.0,483,target noiseless
+500,0.0,0.0625,484,off-target
+500,0.0,0.0,484,off-target noiseless
+500,0.412,16.0,484,target
+500,0.205,0.0,484,target noiseless
+500,0.0,0.0625,485,off-target
+500,0.0,0.0,485,off-target noiseless
+500,0.953,1.0,485,target
+500,0.874,0.0,485,target noiseless
+500,0.0,0.0625,486,off-target
+500,0.0,0.0,486,off-target noiseless
+500,0.34,16.0,486,target
+500,0.745,0.0,486,target noiseless
+500,0.0,0.0625,487,off-target
+500,0.0,0.0,487,off-target noiseless
+500,0.862,1.0,487,target
+500,0.227,0.0,487,target noiseless
+500,0.0,0.0625,488,off-target
+500,0.0,0.0,488,off-target noiseless
+500,0.076,4.0,488,target
+500,0.16,0.0,488,target noiseless
+500,0.0,0.0625,489,off-target
+500,0.0,0.0,489,off-target noiseless
+500,0.896,1.0,489,target
+500,0.87,0.0,489,target noiseless
+500,0.0,0.0625,490,off-target
+500,0.0,0.0,490,off-target noiseless
+500,0.162,4.0,490,target
+500,0.943,0.0,490,target noiseless
+500,0.0,0.0625,491,off-target
+500,0.0,0.0,491,off-target noiseless
+500,0.665,1.0,491,target
+500,0.491,0.0,491,target noiseless
+500,0.0,0.0625,492,off-target
+500,0.0,0.0,492,off-target noiseless
+500,0.127,1024.0,492,target
+500,0.985,0.0,492,target noiseless
+500,0.0,0.0625,493,off-target
+500,0.0,0.0,493,off-target noiseless
+500,0.249,16.0,493,target
+500,0.721,0.0,493,target noiseless
+500,0.0,0.0625,494,off-target
+500,0.0,0.0,494,off-target noiseless
+500,0.927,1.0,494,target
+500,0.824,0.0,494,target noiseless
+500,0.0,0.0625,495,off-target
+500,0.0,0.0,495,off-target noiseless
+500,0.416,4.0,495,target
+500,0.954,0.0,495,target noiseless
+500,0.0,0.0625,496,off-target
+500,0.0,0.0,496,off-target noiseless
+500,0.904,4.0,496,target
+500,0.24,0.0,496,target noiseless
+500,0.0,0.0625,497,off-target
+500,0.0,0.0,497,off-target noiseless
+500,0.863,16.0,497,target
+500,0.726,0.0,497,target noiseless
+500,0.0,0.0625,498,off-target
+500,0.0,0.0,498,off-target noiseless
+500,0.496,4.0,498,target
+500,0.54,0.0,498,target noiseless
+500,0.0,0.0625,499,off-target
+500,0.0,0.0,499,off-target noiseless
+500,0.123,1.0,499,target
+500,0.84,0.0,499,target noiseless
+500,0.0,0.0625,500,off-target
+500,0.0,0.0,500,off-target noiseless
+500,0.417,16.0,500,target
+500,0.985,0.0,500,target noiseless
+500,0.0,0.0625,501,off-target
+500,0.0,0.0,501,off-target noiseless
+500,0.452,0.25,501,target
+500,0.964,0.0,501,target noiseless
+500,0.0,0.0625,502,off-target
+500,0.0,0.0,502,off-target noiseless
+500,0.976,16.0,502,target
+500,0.474,0.0,502,target noiseless
+500,0.0,0.0625,503,off-target
+500,0.0,0.0,503,off-target noiseless
+500,0.409,1.0,503,target
+500,0.016,0.0,503,target noiseless
+500,0.0,0.0625,504,off-target
+500,0.0,0.0,504,off-target noiseless
+500,0.325,1.0,504,target
+500,0.315,0.0,504,target noiseless
+500,0.0,0.0625,505,off-target
+500,0.0,0.0,505,off-target noiseless
+500,0.134,4.0,505,target
+500,0.036,0.0,505,target noiseless
+500,0.0,0.0625,506,off-target
+500,0.0,0.0,506,off-target noiseless
+500,0.07,4.0,506,target
+500,0.327,0.0,506,target noiseless
+500,0.0,0.0625,507,off-target
+500,0.0,0.0,507,off-target noiseless
+500,0.447,64.0,507,target
+500,0.216,0.0,507,target noiseless
+500,0.0,0.0625,508,off-target
+500,0.0,0.0,508,off-target noiseless
+500,0.671,4.0,508,target
+500,0.378,0.0,508,target noiseless
+500,0.0,0.0625,509,off-target
+500,0.0,0.0,509,off-target noiseless
+500,0.082,1.0,509,target
+500,0.168,0.0,509,target noiseless
+500,0.0,0.0625,510,off-target
+500,0.0,0.0,510,off-target noiseless
+500,0.845,16.0,510,target
+500,0.428,0.0,510,target noiseless
+500,0.0,0.0625,511,off-target
+500,0.0,0.0,511,off-target noiseless
+500,0.889,0.0625,511,target
+500,0.46,0.0,511,target noiseless
+500,0.0,0.0625,512,off-target
+500,0.0,0.0,512,off-target noiseless
+500,0.599,4.0,512,target
+500,0.047,0.0,512,target noiseless
+500,0.0,0.0625,513,off-target
+500,0.0,0.0,513,off-target noiseless
+500,0.123,16.0,513,target
+500,0.698,0.0,513,target noiseless
+500,0.0,0.0625,514,off-target
+500,0.0,0.0,514,off-target noiseless
+500,0.277,4.0,514,target
+500,0.516,0.0,514,target noiseless
+500,0.0,0.0625,515,off-target
+500,0.0,0.0,515,off-target noiseless
+500,0.106,1024.0,515,target
+500,0.428,0.0,515,target noiseless
+500,0.0,0.0625,516,off-target
+500,0.0,0.0,516,off-target noiseless
+500,0.149,1.0,516,target
+500,0.696,0.0,516,target noiseless
+500,0.0,0.0625,517,off-target
+500,0.0,0.0,517,off-target noiseless
+500,0.416,4.0,517,target
+500,0.896,0.0,517,target noiseless
+500,0.0,0.0625,518,off-target
+500,0.0,0.0,518,off-target noiseless
+500,0.874,0.25,518,target
+500,0.386,0.0,518,target noiseless
+500,0.0,0.0625,519,off-target
+500,0.0,0.0,519,off-target noiseless
+500,0.56,1.0,519,target
+500,0.43,0.0,519,target noiseless
+500,0.0,0.0625,520,off-target
+500,0.0,0.0,520,off-target noiseless
+500,0.661,0.25,520,target
+500,0.328,0.0,520,target noiseless
+500,0.0,0.0625,521,off-target
+500,0.0,0.0,521,off-target noiseless
+500,0.155,1.0,521,target
+500,0.803,0.0,521,target noiseless
+500,0.0,0.0625,522,off-target
+500,0.0,0.0,522,off-target noiseless
+500,0.886,0.0625,522,target
+500,0.866,0.0,522,target noiseless
+500,0.0,0.0625,523,off-target
+500,0.0,0.0,523,off-target noiseless
+500,0.917,1.0,523,target
+500,0.387,0.0,523,target noiseless
+500,0.0,0.0625,524,off-target
+500,0.0,0.0,524,off-target noiseless
+500,0.406,64.0,524,target
+500,0.965,0.0,524,target noiseless
+500,0.0,0.0625,525,off-target
+500,0.0,0.0,525,off-target noiseless
+500,0.648,1024.0,525,target
+500,0.41,0.0,525,target noiseless
+500,0.0,0.0625,526,off-target
+500,0.0,0.0,526,off-target noiseless
+500,0.806,64.0,526,target
+500,0.788,0.0,526,target noiseless
+500,0.0,0.0625,527,off-target
+500,0.0,0.0,527,off-target noiseless
+500,0.549,4.0,527,target
+500,0.449,0.0,527,target noiseless
+500,0.0,0.0625,528,off-target
+500,0.0,0.0,528,off-target noiseless
+500,0.613,16384.0,528,target
+500,0.995,0.0,528,target noiseless
+500,0.0,0.0625,529,off-target
+500,0.0,0.0,529,off-target noiseless
+500,0.926,4.0,529,target
+500,0.59,0.0,529,target noiseless
+500,0.0,0.0625,530,off-target
+500,0.0,0.0,530,off-target noiseless
+500,0.83,64.0,530,target
+500,0.276,0.0,530,target noiseless
+500,0.0,0.0625,531,off-target
+500,0.0,0.0,531,off-target noiseless
+500,0.885,64.0,531,target
+500,0.379,0.0,531,target noiseless
+500,0.0,0.0625,532,off-target
+500,0.0,0.0,532,off-target noiseless
+500,0.052,16.0,532,target
+500,0.43,0.0,532,target noiseless
+500,0.0,0.0625,533,off-target
+500,0.0,0.0,533,off-target noiseless
+500,0.779,16.0,533,target
+500,0.669,0.0,533,target noiseless
+500,0.0,0.0625,534,off-target
+500,0.0,0.0,534,off-target noiseless
+500,0.456,16.0,534,target
+500,0.717,0.0,534,target noiseless
+500,0.0,0.0625,535,off-target
+500,0.0,0.0,535,off-target noiseless
+500,0.358,1.0,535,target
+500,0.167,0.0,535,target noiseless
+500,0.0,0.0625,536,off-target
+500,0.0,0.0,536,off-target noiseless
+500,0.46,16.0,536,target
+500,0.21,0.0,536,target noiseless
+500,0.0,0.0625,537,off-target
+500,0.0,0.0,537,off-target noiseless
+500,0.876,4.0,537,target
+500,0.095,0.0,537,target noiseless
+500,0.0,0.0625,538,off-target
+500,0.0,0.0,538,off-target noiseless
+500,0.757,16.0,538,target
+500,0.437,0.0,538,target noiseless
+500,0.0,0.0625,539,off-target
+500,0.0,0.0,539,off-target noiseless
+500,0.99,16.0,539,target
+500,0.841,0.0,539,target noiseless
+500,0.0,0.0625,540,off-target
+500,0.0,0.0,540,off-target noiseless
+500,0.78,256.0,540,target
+500,0.187,0.0,540,target noiseless
+500,0.0,0.0625,541,off-target
+500,0.0,0.0,541,off-target noiseless
+500,0.581,64.0,541,target
+500,0.027,0.0,541,target noiseless
+500,0.0,0.0625,542,off-target
+500,0.0,0.0,542,off-target noiseless
+500,0.223,4.0,542,target
+500,0.02,0.0,542,target noiseless
+500,0.0,0.0625,543,off-target
+500,0.0,0.0,543,off-target noiseless
+500,0.074,4.0,543,target
+500,0.177,0.0,543,target noiseless
+500,0.0,0.0625,544,off-target
+500,0.0,0.0,544,off-target noiseless
+500,0.895,16.0,544,target
+500,0.008,0.0,544,target noiseless
+500,0.0,0.0625,545,off-target
+500,0.0,0.0,545,off-target noiseless
+500,0.463,1.0,545,target
+500,0.651,0.0,545,target noiseless
+500,0.0,0.0625,546,off-target
+500,0.0,0.0,546,off-target noiseless
+500,0.659,64.0,546,target
+500,0.587,0.0,546,target noiseless
+500,0.0,0.0625,547,off-target
+500,0.0,0.0,547,off-target noiseless
+500,0.712,1.0,547,target
+500,0.025,0.0,547,target noiseless
+500,0.0,0.0625,548,off-target
+500,0.0,0.0,548,off-target noiseless
+500,0.01,4.0,548,target
+500,0.156,0.0,548,target noiseless
+500,0.0,0.0625,549,off-target
+500,0.0,0.0,549,off-target noiseless
+500,0.589,16.0,549,target
+500,0.172,0.0,549,target noiseless
+500,0.0,0.0625,550,off-target
+500,0.0,0.0,550,off-target noiseless
+500,0.324,4.0,550,target
+500,0.185,0.0,550,target noiseless
+500,0.0,0.0625,551,off-target
+500,0.0,0.0,551,off-target noiseless
+500,0.135,1.0,551,target
+500,0.61,0.0,551,target noiseless
+500,0.0,0.0625,552,off-target
+500,0.0,0.0,552,off-target noiseless
+500,0.877,1.0,552,target
+500,0.659,0.0,552,target noiseless
+500,0.0,0.0625,553,off-target
+500,0.0,0.0,553,off-target noiseless
+500,0.728,262144.0,553,target
+500,0.85,0.0,553,target noiseless
+500,0.0,0.0625,554,off-target
+500,0.0,0.0,554,off-target noiseless
+500,0.378,1.0,554,target
+500,0.268,0.0,554,target noiseless
+500,0.0,0.0625,555,off-target
+500,0.0,0.0,555,off-target noiseless
+500,0.71,1.0,555,target
+500,0.157,0.0,555,target noiseless
+500,0.0,0.0625,556,off-target
+500,0.0,0.0,556,off-target noiseless
+500,0.558,4.0,556,target
+500,0.783,0.0,556,target noiseless
+500,0.0,0.0625,557,off-target
+500,0.0,0.0,557,off-target noiseless
+500,0.742,4.0,557,target
+500,0.294,0.0,557,target noiseless
+500,0.0,0.0625,558,off-target
+500,0.0,0.0,558,off-target noiseless
+500,0.474,4.0,558,target
+500,0.439,0.0,558,target noiseless
+500,0.0,0.0625,559,off-target
+500,0.0,0.0,559,off-target noiseless
+500,0.753,4.0,559,target
+500,0.571,0.0,559,target noiseless
+500,0.0,0.0625,560,off-target
+500,0.0,0.0,560,off-target noiseless
+500,0.327,16.0,560,target
+500,0.21,0.0,560,target noiseless
+500,0.0,0.0625,561,off-target
+500,0.0,0.0,561,off-target noiseless
+500,0.967,0.0625,561,target
+500,0.513,0.0,561,target noiseless
+500,0.0,0.0625,562,off-target
+500,0.0,0.0,562,off-target noiseless
+500,0.068,0.25,562,target
+500,0.557,0.0,562,target noiseless
+500,0.0,0.0625,563,off-target
+500,0.0,0.0,563,off-target noiseless
+500,0.643,1.0,563,target
+500,0.121,0.0,563,target noiseless
+500,0.0,0.0625,564,off-target
+500,0.0,0.0,564,off-target noiseless
+500,0.364,4.0,564,target
+500,0.832,0.0,564,target noiseless
+500,0.0,0.0625,565,off-target
+500,0.0,0.0,565,off-target noiseless
+500,0.986,4.0,565,target
+500,0.754,0.0,565,target noiseless
+500,0.0,0.0625,566,off-target
+500,0.0,0.0,566,off-target noiseless
+500,0.505,4.0,566,target
+500,0.151,0.0,566,target noiseless
+500,0.0,0.0625,567,off-target
+500,0.0,0.0,567,off-target noiseless
+500,0.384,64.0,567,target
+500,0.669,0.0,567,target noiseless
+500,0.0,0.0625,568,off-target
+500,0.0,0.0,568,off-target noiseless
+500,0.362,4.0,568,target
+500,0.561,0.0,568,target noiseless
+500,0.0,0.0625,569,off-target
+500,0.0,0.0,569,off-target noiseless
+500,0.979,16.0,569,target
+500,0.863,0.0,569,target noiseless
+500,0.0,0.0625,570,off-target
+500,0.0,0.0,570,off-target noiseless
+500,0.108,64.0,570,target
+500,0.431,0.0,570,target noiseless
+500,0.0,0.0625,571,off-target
+500,0.0,0.0,571,off-target noiseless
+500,0.254,0.25,571,target
+500,0.684,0.0,571,target noiseless
+500,0.0,0.0625,572,off-target
+500,0.0,0.0,572,off-target noiseless
+500,0.052,4.0,572,target
+500,0.002,0.0,572,target noiseless
+500,0.0,0.0625,573,off-target
+500,0.0,0.0,573,off-target noiseless
+500,0.255,16.0,573,target
+500,0.799,0.0,573,target noiseless
+500,0.0,0.0625,574,off-target
+500,0.0,0.0,574,off-target noiseless
+500,0.819,1.0,574,target
+500,0.111,0.0,574,target noiseless
+500,0.0,0.0625,575,off-target
+500,0.0,0.0,575,off-target noiseless
+500,0.144,1.0,575,target
+500,0.791,0.0,575,target noiseless
+500,0.0,0.0625,576,off-target
+500,0.0,0.0,576,off-target noiseless
+500,0.524,4.0,576,target
+500,0.044,0.0,576,target noiseless
+500,0.0,0.0625,577,off-target
+500,0.0,0.0,577,off-target noiseless
+500,0.317,1.0,577,target
+500,0.992,0.0,577,target noiseless
+500,0.0,0.0625,578,off-target
+500,0.0,0.0,578,off-target noiseless
+500,0.148,1.0,578,target
+500,0.464,0.0,578,target noiseless
+500,0.0,0.0625,579,off-target
+500,0.0,0.0,579,off-target noiseless
+500,0.138,64.0,579,target
+500,0.735,0.0,579,target noiseless
+500,0.0,0.0625,580,off-target
+500,0.0,0.0,580,off-target noiseless
+500,0.868,1.0,580,target
+500,0.644,0.0,580,target noiseless
+500,0.0,0.0625,581,off-target
+500,0.0,0.0,581,off-target noiseless
+500,0.112,64.0,581,target
+500,0.786,0.0,581,target noiseless
+500,0.0,0.0625,582,off-target
+500,0.0,0.0,582,off-target noiseless
+500,0.17,4.0,582,target
+500,0.749,0.0,582,target noiseless
+500,0.0,0.0625,583,off-target
+500,0.0,0.0,583,off-target noiseless
+500,0.772,1.0,583,target
+500,0.73,0.0,583,target noiseless
+500,0.0,0.0625,584,off-target
+500,0.0,0.0,584,off-target noiseless
+500,0.875,4.0,584,target
+500,0.925,0.0,584,target noiseless
+500,0.0,0.0625,585,off-target
+500,0.0,0.0,585,off-target noiseless
+500,0.936,16.0,585,target
+500,0.66,0.0,585,target noiseless
+500,0.0,0.0625,586,off-target
+500,0.0,0.0,586,off-target noiseless
+500,0.154,16384.0,586,target
+500,1.0,0.0,586,target noiseless
+500,0.0,0.0625,587,off-target
+500,0.0,0.0,587,off-target noiseless
+500,0.153,16.0,587,target
+500,0.61,0.0,587,target noiseless
+500,0.0,0.0625,588,off-target
+500,0.0,0.0,588,off-target noiseless
+500,0.288,16.0,588,target
+500,0.752,0.0,588,target noiseless
+500,0.0,0.0625,589,off-target
+500,0.0,0.0,589,off-target noiseless
+500,0.67,0.25,589,target
+500,0.724,0.0,589,target noiseless
+500,0.0,0.0625,590,off-target
+500,0.0,0.0,590,off-target noiseless
+500,0.289,4.0,590,target
+500,0.232,0.0,590,target noiseless
+500,0.0,0.0625,591,off-target
+500,0.0,0.0,591,off-target noiseless
+500,0.833,1024.0,591,target
+500,0.241,0.0,591,target noiseless
+500,0.0,0.0625,592,off-target
+500,0.0,0.0,592,off-target noiseless
+500,0.081,1.0,592,target
+500,0.617,0.0,592,target noiseless
+500,0.0,0.0625,593,off-target
+500,0.0,0.0,593,off-target noiseless
+500,0.898,4.0,593,target
+500,0.348,0.0,593,target noiseless
+500,0.0,0.0625,594,off-target
+500,0.0,0.0,594,off-target noiseless
+500,0.594,1.0,594,target
+500,0.491,0.0,594,target noiseless
+500,0.0,0.0625,595,off-target
+500,0.0,0.0,595,off-target noiseless
+500,0.096,256.0,595,target
+500,0.709,0.0,595,target noiseless
+500,0.0,0.0625,596,off-target
+500,0.0,0.0,596,off-target noiseless
+500,0.993,0.25,596,target
+500,0.633,0.0,596,target noiseless
+500,0.0,0.0625,597,off-target
+500,0.0,0.0,597,off-target noiseless
+500,0.024,1.0,597,target
+500,0.245,0.0,597,target noiseless
+500,0.0,0.0625,598,off-target
+500,0.0,0.0,598,off-target noiseless
+500,0.314,4096.0,598,target
+500,0.982,0.0,598,target noiseless
+500,0.0,0.0625,599,off-target
+500,0.0,0.0,599,off-target noiseless
+500,0.226,4.0,599,target
+500,0.05,0.0,599,target noiseless
+500,0.0,0.0625,600,off-target
+500,0.0,0.0,600,off-target noiseless
+500,0.436,1.0,600,target
+500,0.035,0.0,600,target noiseless
+500,0.0,0.0625,601,off-target
+500,0.0,0.0,601,off-target noiseless
+500,0.308,16.0,601,target
+500,0.46,0.0,601,target noiseless
+500,0.0,0.0625,602,off-target
+500,0.0,0.0,602,off-target noiseless
+500,0.643,16.0,602,target
+500,0.54,0.0,602,target noiseless
+500,0.0,0.0625,603,off-target
+500,0.0,0.0,603,off-target noiseless
+500,0.368,1024.0,603,target
+500,0.592,0.0,603,target noiseless
+500,0.0,0.0625,604,off-target
+500,0.0,0.0,604,off-target noiseless
+500,0.182,1.0,604,target
+500,0.035,0.0,604,target noiseless
+500,0.0,0.0625,605,off-target
+500,0.0,0.0,605,off-target noiseless
+500,0.967,16384.0,605,target
+500,0.277,0.0,605,target noiseless
+500,0.0,0.0625,606,off-target
+500,0.0,0.0,606,off-target noiseless
+500,0.67,0.25,606,target
+500,0.209,0.0,606,target noiseless
+500,0.0,0.0625,607,off-target
+500,0.0,0.0,607,off-target noiseless
+500,0.916,0.0625,607,target
+500,0.128,0.0,607,target noiseless
+500,0.0,0.0625,608,off-target
+500,0.0,0.0,608,off-target noiseless
+500,0.076,0.0625,608,target
+500,0.732,0.0,608,target noiseless
+500,0.0,0.0625,609,off-target
+500,0.0,0.0,609,off-target noiseless
+500,0.853,64.0,609,target
+500,0.179,0.0,609,target noiseless
+500,0.0,0.0625,610,off-target
+500,0.0,0.0,610,off-target noiseless
+500,0.741,64.0,610,target
+500,0.857,0.0,610,target noiseless
+500,0.0,0.0625,611,off-target
+500,0.0,0.0,611,off-target noiseless
+500,0.654,16.0,611,target
+500,0.409,0.0,611,target noiseless
+500,0.0,0.0625,612,off-target
+500,0.0,0.0,612,off-target noiseless
+500,0.386,16.0,612,target
+500,0.904,0.0,612,target noiseless
+500,0.0,0.0625,613,off-target
+500,0.0,0.0,613,off-target noiseless
+500,0.884,4.0,613,target
+500,0.314,0.0,613,target noiseless
+500,0.0,0.0625,614,off-target
+500,0.0,0.0,614,off-target noiseless
+500,0.731,4.0,614,target
+500,0.521,0.0,614,target noiseless
+500,0.0,0.0625,615,off-target
+500,0.0,0.0,615,off-target noiseless
+500,0.785,256.0,615,target
+500,0.191,0.0,615,target noiseless
+500,0.0,0.0625,616,off-target
+500,0.0,0.0,616,off-target noiseless
+500,0.437,4.0,616,target
+500,0.952,0.0,616,target noiseless
+500,0.0,0.0625,617,off-target
+500,0.0,0.0,617,off-target noiseless
+500,0.412,16.0,617,target
+500,0.626,0.0,617,target noiseless
+500,0.0,0.0625,618,off-target
+500,0.0,0.0,618,off-target noiseless
+500,0.409,16.0,618,target
+500,0.057,0.0,618,target noiseless
+500,0.0,0.0625,619,off-target
+500,0.0,0.0,619,off-target noiseless
+500,0.344,64.0,619,target
+500,0.398,0.0,619,target noiseless
+500,0.0,0.0625,620,off-target
+500,0.0,0.0,620,off-target noiseless
+500,0.328,4.0,620,target
+500,0.795,0.0,620,target noiseless
+500,0.0,0.0625,621,off-target
+500,0.0,0.0,621,off-target noiseless
+500,0.743,4096.0,621,target
+500,0.664,0.0,621,target noiseless
+500,0.0,0.0625,622,off-target
+500,0.0,0.0,622,off-target noiseless
+500,0.178,4.0,622,target
+500,0.169,0.0,622,target noiseless
+500,0.0,0.0625,623,off-target
+500,0.0,0.0,623,off-target noiseless
+500,0.498,4.0,623,target
+500,0.935,0.0,623,target noiseless
+500,0.0,0.0625,624,off-target
+500,0.0,0.0,624,off-target noiseless
+500,0.706,1.0,624,target
+500,0.506,0.0,624,target noiseless
+500,0.0,0.0625,625,off-target
+500,0.0,0.0,625,off-target noiseless
+500,0.832,4.0,625,target
+500,0.959,0.0,625,target noiseless
+500,0.0,0.0625,626,off-target
+500,0.0,0.0,626,off-target noiseless
+500,0.807,16.0,626,target
+500,0.125,0.0,626,target noiseless
+500,0.0,0.0625,627,off-target
+500,0.0,0.0,627,off-target noiseless
+500,0.182,4.0,627,target
+500,0.301,0.0,627,target noiseless
+500,0.0,0.0625,628,off-target
+500,0.0,0.0,628,off-target noiseless
+500,0.61,1.0,628,target
+500,0.482,0.0,628,target noiseless
+500,0.0,0.0625,629,off-target
+500,0.0,0.0,629,off-target noiseless
+500,0.311,4.0,629,target
+500,0.593,0.0,629,target noiseless
+500,0.0,0.0625,630,off-target
+500,0.0,0.0,630,off-target noiseless
+500,0.176,64.0,630,target
+500,1.0,0.0,630,target noiseless
+500,0.0,0.0625,631,off-target
+500,0.0,0.0,631,off-target noiseless
+500,0.016,4.0,631,target
+500,0.356,0.0,631,target noiseless
+500,0.0,0.0625,632,off-target
+500,0.0,0.0,632,off-target noiseless
+500,0.984,1.0,632,target
+500,0.13,0.0,632,target noiseless
+500,0.0,0.0625,633,off-target
+500,0.0,0.0,633,off-target noiseless
+500,0.121,16.0,633,target
+500,0.152,0.0,633,target noiseless
+500,0.0,0.0625,634,off-target
+500,0.0,0.0,634,off-target noiseless
+500,0.253,4.0,634,target
+500,0.358,0.0,634,target noiseless
+500,0.0,0.0625,635,off-target
+500,0.0,0.0,635,off-target noiseless
+500,0.775,1.0,635,target
+500,0.824,0.0,635,target noiseless
+500,0.0,0.0625,636,off-target
+500,0.0,0.0,636,off-target noiseless
+500,0.73,4096.0,636,target
+500,0.247,0.0,636,target noiseless
+500,0.0,0.0625,637,off-target
+500,0.0,0.0,637,off-target noiseless
+500,0.215,1.0,637,target
+500,0.431,0.0,637,target noiseless
+500,0.0,0.0625,638,off-target
+500,0.0,0.0,638,off-target noiseless
+500,0.972,16.0,638,target
+500,0.386,0.0,638,target noiseless
+500,0.0,0.0625,639,off-target
+500,0.0,0.0,639,off-target noiseless
+500,0.872,0.0625,639,target
+500,0.705,0.0,639,target noiseless
+500,0.0,0.0625,640,off-target
+500,0.0,0.0,640,off-target noiseless
+500,0.528,4.0,640,target
+500,0.641,0.0,640,target noiseless
+500,0.0,0.0625,641,off-target
+500,0.0,0.0,641,off-target noiseless
+500,0.481,64.0,641,target
+500,0.929,0.0,641,target noiseless
+500,0.0,0.0625,642,off-target
+500,0.0,0.0,642,off-target noiseless
+500,0.064,4.0,642,target
+500,0.099,0.0,642,target noiseless
+500,0.0,0.0625,643,off-target
+500,0.0,0.0,643,off-target noiseless
+500,0.751,4.0,643,target
+500,0.962,0.0,643,target noiseless
+500,0.0,0.0625,644,off-target
+500,0.0,0.0,644,off-target noiseless
+500,0.594,4.0,644,target
+500,0.465,0.0,644,target noiseless
+500,0.0,0.0625,645,off-target
+500,0.0,0.0,645,off-target noiseless
+500,0.02,16.0,645,target
+500,0.957,0.0,645,target noiseless
+500,0.0,0.0625,646,off-target
+500,0.0,0.0,646,off-target noiseless
+500,0.031,16.0,646,target
+500,0.05,0.0,646,target noiseless
+500,0.0,0.0625,647,off-target
+500,0.0,0.0,647,off-target noiseless
+500,0.328,64.0,647,target
+500,0.367,0.0,647,target noiseless
+500,0.0,0.0625,648,off-target
+500,0.0,0.0,648,off-target noiseless
+500,0.822,4.0,648,target
+500,0.092,0.0,648,target noiseless
+500,0.0,0.0625,649,off-target
+500,0.0,0.0,649,off-target noiseless
+500,0.888,4.0,649,target
+500,0.904,0.0,649,target noiseless
+500,0.0,0.0625,650,off-target
+500,0.0,0.0,650,off-target noiseless
+500,0.957,1.0,650,target
+500,0.83,0.0,650,target noiseless
+500,0.0,0.0625,651,off-target
+500,0.0,0.0,651,off-target noiseless
+500,0.703,16384.0,651,target
+500,0.256,0.0,651,target noiseless
+500,0.0,0.0625,652,off-target
+500,0.0,0.0,652,off-target noiseless
+500,0.799,4.0,652,target
+500,0.84,0.0,652,target noiseless
+500,0.0,0.0625,653,off-target
+500,0.0,0.0,653,off-target noiseless
+500,0.938,4096.0,653,target
+500,0.467,0.0,653,target noiseless
+500,0.0,0.0625,654,off-target
+500,0.0,0.0,654,off-target noiseless
+500,0.435,1024.0,654,target
+500,0.643,0.0,654,target noiseless
+500,0.0,0.0625,655,off-target
+500,0.0,0.0,655,off-target noiseless
+500,0.541,1.0,655,target
+500,0.335,0.0,655,target noiseless
+500,0.0,0.0625,656,off-target
+500,0.0,0.0,656,off-target noiseless
+500,0.629,1.0,656,target
+500,0.764,0.0,656,target noiseless
+500,0.0,0.0625,657,off-target
+500,0.0,0.0,657,off-target noiseless
+500,0.346,1048576.0,657,target
+500,0.219,0.0,657,target noiseless
+500,0.0,0.0625,658,off-target
+500,0.0,0.0,658,off-target noiseless
+500,0.06,4.0,658,target
+500,0.526,0.0,658,target noiseless
+500,0.0,0.0625,659,off-target
+500,0.0,0.0,659,off-target noiseless
+500,0.127,1.0,659,target
+500,0.412,0.0,659,target noiseless
+500,0.0,0.0625,660,off-target
+500,0.0,0.0,660,off-target noiseless
+500,0.2,4.0,660,target
+500,0.956,0.0,660,target noiseless
+500,0.0,0.0625,661,off-target
+500,0.0,0.0,661,off-target noiseless
+500,0.749,1.0,661,target
+500,0.218,0.0,661,target noiseless
+500,0.0,0.0625,662,off-target
+500,0.0,0.0,662,off-target noiseless
+500,0.862,16.0,662,target
+500,1.0,0.0,662,target noiseless
+500,0.0,0.0625,663,off-target
+500,0.0,0.0,663,off-target noiseless
+500,0.112,16.0,663,target
+500,0.129,0.0,663,target noiseless
+500,0.0,0.0625,664,off-target
+500,0.0,0.0,664,off-target noiseless
+500,0.147,4.0,664,target
+500,0.475,0.0,664,target noiseless
+500,0.0,0.0625,665,off-target
+500,0.0,0.0,665,off-target noiseless
+500,0.832,1.0,665,target
+500,0.429,0.0,665,target noiseless
+500,0.0,0.0625,666,off-target
+500,0.0,0.0,666,off-target noiseless
+500,0.848,4.0,666,target
+500,0.341,0.0,666,target noiseless
+500,0.0,0.0625,667,off-target
+500,0.0,0.0,667,off-target noiseless
+500,0.812,4.0,667,target
+500,0.113,0.0,667,target noiseless
+500,0.0,0.0625,668,off-target
+500,0.0,0.0,668,off-target noiseless
+500,0.74,64.0,668,target
+500,0.658,0.0,668,target noiseless
+500,0.0,0.0625,669,off-target
+500,0.0,0.0,669,off-target noiseless
+500,0.168,64.0,669,target
+500,0.948,0.0,669,target noiseless
+500,0.0,0.0625,670,off-target
+500,0.0,0.0,670,off-target noiseless
+500,0.051,64.0,670,target
+500,0.392,0.0,670,target noiseless
+500,0.0,0.0625,671,off-target
+500,0.0,0.0,671,off-target noiseless
+500,0.0,4.0,671,target
+500,0.077,0.0,671,target noiseless
+500,0.0,0.0625,672,off-target
+500,0.0,0.0,672,off-target noiseless
+500,0.456,0.25,672,target
+500,0.736,0.0,672,target noiseless
+500,0.0,0.0625,673,off-target
+500,0.0,0.0,673,off-target noiseless
+500,0.257,256.0,673,target
+500,0.044,0.0,673,target noiseless
+500,0.0,0.0625,674,off-target
+500,0.0,0.0,674,off-target noiseless
+500,0.444,1.0,674,target
+500,0.744,0.0,674,target noiseless
+500,0.0,0.0625,675,off-target
+500,0.0,0.0,675,off-target noiseless
+500,0.658,1.0,675,target
+500,0.872,0.0,675,target noiseless
+500,0.0,0.0625,676,off-target
+500,0.0,0.0,676,off-target noiseless
+500,0.686,4.0,676,target
+500,0.667,0.0,676,target noiseless
+500,0.0,0.0625,677,off-target
+500,0.0,0.0,677,off-target noiseless
+500,0.179,4.0,677,target
+500,0.167,0.0,677,target noiseless
+500,0.0,0.0625,678,off-target
+500,0.0,0.0,678,off-target noiseless
+500,0.971,0.0625,678,target
+500,0.781,0.0,678,target noiseless
+500,0.0,0.0625,679,off-target
+500,0.0,0.0,679,off-target noiseless
+500,0.632,1.0,679,target
+500,0.417,0.0,679,target noiseless
+500,0.0,0.0625,680,off-target
+500,0.0,0.0,680,off-target noiseless
+500,0.873,1024.0,680,target
+500,0.724,0.0,680,target noiseless
+500,0.0,0.0625,681,off-target
+500,0.0,0.0,681,off-target noiseless
+500,0.244,16.0,681,target
+500,0.959,0.0,681,target noiseless
+500,0.0,0.0625,682,off-target
+500,0.0,0.0,682,off-target noiseless
+500,0.032,4.0,682,target
+500,0.01,0.0,682,target noiseless
+500,0.0,0.0625,683,off-target
+500,0.0,0.0,683,off-target noiseless
+500,0.45,1.0,683,target
+500,0.663,0.0,683,target noiseless
+500,0.0,0.0625,684,off-target
+500,0.0,0.0,684,off-target noiseless
+500,0.643,16.0,684,target
+500,0.183,0.0,684,target noiseless
+500,0.0,0.0625,685,off-target
+500,0.0,0.0,685,off-target noiseless
+500,0.237,4.0,685,target
+500,0.18,0.0,685,target noiseless
+500,0.0,0.0625,686,off-target
+500,0.0,0.0,686,off-target noiseless
+500,0.689,4.0,686,target
+500,0.082,0.0,686,target noiseless
+500,0.0,0.0625,687,off-target
+500,0.0,0.0,687,off-target noiseless
+500,0.486,64.0,687,target
+500,0.699,0.0,687,target noiseless
+500,0.0,0.0625,688,off-target
+500,0.0,0.0,688,off-target noiseless
+500,0.949,1.0,688,target
+500,0.38,0.0,688,target noiseless
+500,0.0,0.0625,689,off-target
+500,0.0,0.0,689,off-target noiseless
+500,0.589,0.25,689,target
+500,0.235,0.0,689,target noiseless
+500,0.0,0.0625,690,off-target
+500,0.0,0.0,690,off-target noiseless
+500,0.777,1024.0,690,target
+500,0.747,0.0,690,target noiseless
+500,0.0,0.0625,691,off-target
+500,0.0,0.0,691,off-target noiseless
+500,0.632,4.0,691,target
+500,0.391,0.0,691,target noiseless
+500,0.0,0.0625,692,off-target
+500,0.0,0.0,692,off-target noiseless
+500,0.387,0.25,692,target
+500,0.146,0.0,692,target noiseless
+500,0.0,0.0625,693,off-target
+500,0.0,0.0,693,off-target noiseless
+500,0.765,4.0,693,target
+500,0.726,0.0,693,target noiseless
+500,0.0,0.0625,694,off-target
+500,0.0,0.0,694,off-target noiseless
+500,0.695,0.0625,694,target
+500,0.982,0.0,694,target noiseless
+500,0.0,0.0625,695,off-target
+500,0.0,0.0,695,off-target noiseless
+500,0.671,1.0,695,target
+500,0.481,0.0,695,target noiseless
+500,0.0,0.0625,696,off-target
+500,0.0,0.0,696,off-target noiseless
+500,0.879,1.0,696,target
+500,0.527,0.0,696,target noiseless
+500,0.0,0.0625,697,off-target
+500,0.0,0.0,697,off-target noiseless
+500,0.161,4.0,697,target
+500,0.72,0.0,697,target noiseless
+500,0.0,0.0625,698,off-target
+500,0.0,0.0,698,off-target noiseless
+500,0.941,4.0,698,target
+500,0.215,0.0,698,target noiseless
+500,0.0,0.0625,699,off-target
+500,0.0,0.0,699,off-target noiseless
+500,0.711,16384.0,699,target
+500,0.7,0.0,699,target noiseless
+500,0.0,0.0625,700,off-target
+500,0.0,0.0,700,off-target noiseless
+500,0.257,0.25,700,target
+500,0.49,0.0,700,target noiseless
+500,0.0,0.0625,701,off-target
+500,0.0,0.0,701,off-target noiseless
+500,0.662,1.0,701,target
+500,0.475,0.0,701,target noiseless
+500,0.0,0.0625,702,off-target
+500,0.0,0.0,702,off-target noiseless
+500,0.084,1.0,702,target
+500,0.794,0.0,702,target noiseless
+500,0.0,0.0625,703,off-target
+500,0.0,0.0,703,off-target noiseless
+500,0.3,1.0,703,target
+500,0.452,0.0,703,target noiseless
+500,0.0,0.0625,704,off-target
+500,0.0,0.0,704,off-target noiseless
+500,0.639,4.0,704,target
+500,0.4,0.0,704,target noiseless
+500,0.0,0.0625,705,off-target
+500,0.0,0.0,705,off-target noiseless
+500,0.693,1.0,705,target
+500,0.494,0.0,705,target noiseless
+500,0.0,0.0625,706,off-target
+500,0.0,0.0,706,off-target noiseless
+500,0.451,64.0,706,target
+500,0.058,0.0,706,target noiseless
+500,0.0,0.0625,707,off-target
+500,0.0,0.0,707,off-target noiseless
+500,0.961,4.0,707,target
+500,0.418,0.0,707,target noiseless
+500,0.0,0.0625,708,off-target
+500,0.0,0.0,708,off-target noiseless
+500,0.784,0.25,708,target
+500,0.218,0.0,708,target noiseless
+500,0.0,0.0625,709,off-target
+500,0.0,0.0,709,off-target noiseless
+500,0.363,16.0,709,target
+500,0.263,0.0,709,target noiseless
+500,0.0,0.0625,710,off-target
+500,0.0,0.0,710,off-target noiseless
+500,0.413,4.0,710,target
+500,0.543,0.0,710,target noiseless
+500,0.0,0.0625,711,off-target
+500,0.0,0.0,711,off-target noiseless
+500,0.569,1.0,711,target
+500,0.423,0.0,711,target noiseless
+500,0.0,0.0625,712,off-target
+500,0.0,0.0,712,off-target noiseless
+500,0.516,16.0,712,target
+500,0.725,0.0,712,target noiseless
+500,0.0,0.0625,713,off-target
+500,0.0,0.0,713,off-target noiseless
+500,0.973,16384.0,713,target
+500,0.87,0.0,713,target noiseless
+500,0.0,0.0625,714,off-target
+500,0.0,0.0,714,off-target noiseless
+500,0.398,4.0,714,target
+500,0.609,0.0,714,target noiseless
+500,0.0,0.0625,715,off-target
+500,0.0,0.0,715,off-target noiseless
+500,0.669,16.0,715,target
+500,0.242,0.0,715,target noiseless
+500,0.0,0.0625,716,off-target
+500,0.0,0.0,716,off-target noiseless
+500,0.055,4.0,716,target
+500,0.557,0.0,716,target noiseless
+500,0.0,0.0625,717,off-target
+500,0.0,0.0,717,off-target noiseless
+500,0.23,4.0,717,target
+500,0.827,0.0,717,target noiseless
+500,0.0,0.0625,718,off-target
+500,0.0,0.0,718,off-target noiseless
+500,0.562,1.0,718,target
+500,0.053,0.0,718,target noiseless
+500,0.0,0.0625,719,off-target
+500,0.0,0.0,719,off-target noiseless
+500,0.135,4.0,719,target
+500,0.006,0.0,719,target noiseless
+500,0.0,0.0625,720,off-target
+500,0.0,0.0,720,off-target noiseless
+500,0.542,1.0,720,target
+500,0.749,0.0,720,target noiseless
+500,0.0,0.0625,721,off-target
+500,0.0,0.0,721,off-target noiseless
+500,0.031,4.0,721,target
+500,0.94,0.0,721,target noiseless
+500,0.0,0.0625,722,off-target
+500,0.0,0.0,722,off-target noiseless
+500,0.557,1.0,722,target
+500,0.94,0.0,722,target noiseless
+500,0.0,0.0625,723,off-target
+500,0.0,0.0,723,off-target noiseless
+500,0.407,4.0,723,target
+500,0.192,0.0,723,target noiseless
+500,0.0,0.0625,724,off-target
+500,0.0,0.0,724,off-target noiseless
+500,0.016,4.0,724,target
+500,0.495,0.0,724,target noiseless
+500,0.0,0.0625,725,off-target
+500,0.0,0.0,725,off-target noiseless
+500,0.062,64.0,725,target
+500,0.815,0.0,725,target noiseless
+500,0.0,0.0625,726,off-target
+500,0.0,0.0,726,off-target noiseless
+500,0.82,4.0,726,target
+500,0.489,0.0,726,target noiseless
+500,0.0,0.0625,727,off-target
+500,0.0,0.0,727,off-target noiseless
+500,0.4,1.0,727,target
+500,0.609,0.0,727,target noiseless
+500,0.0,0.0625,728,off-target
+500,0.0,0.0,728,off-target noiseless
+500,0.251,4.0,728,target
+500,0.027,0.0,728,target noiseless
+500,0.0,0.0625,729,off-target
+500,0.0,0.0,729,off-target noiseless
+500,0.557,64.0,729,target
+500,0.251,0.0,729,target noiseless
+500,0.0,0.0625,730,off-target
+500,0.0,0.0,730,off-target noiseless
+500,0.708,1.0,730,target
+500,0.905,0.0,730,target noiseless
+500,0.0,0.0625,731,off-target
+500,0.0,0.0,731,off-target noiseless
+500,0.459,4.0,731,target
+500,0.515,0.0,731,target noiseless
+500,0.0,0.0625,732,off-target
+500,0.0,0.0,732,off-target noiseless
+500,0.422,1.0,732,target
+500,0.319,0.0,732,target noiseless
+500,0.0,0.0625,733,off-target
+500,0.0,0.0,733,off-target noiseless
+500,0.466,4096.0,733,target
+500,0.402,0.0,733,target noiseless
+500,0.0,0.0625,734,off-target
+500,0.0,0.0,734,off-target noiseless
+500,0.424,16.0,734,target
+500,0.783,0.0,734,target noiseless
+500,0.0,0.0625,735,off-target
+500,0.0,0.0,735,off-target noiseless
+500,0.982,0.25,735,target
+500,0.939,0.0,735,target noiseless
+500,0.0,0.0625,736,off-target
+500,0.0,0.0,736,off-target noiseless
+500,0.447,4096.0,736,target
+500,0.292,0.0,736,target noiseless
+500,0.0,0.0625,737,off-target
+500,0.0,0.0,737,off-target noiseless
+500,0.363,4.0,737,target
+500,0.844,0.0,737,target noiseless
+500,0.0,0.0625,738,off-target
+500,0.0,0.0,738,off-target noiseless
+500,0.889,4.0,738,target
+500,0.99,0.0,738,target noiseless
+500,0.0,0.0625,739,off-target
+500,0.0,0.0,739,off-target noiseless
+500,0.257,4.0,739,target
+500,0.998,0.0,739,target noiseless
+500,0.0,0.0625,740,off-target
+500,0.0,0.0,740,off-target noiseless
+500,0.575,4.0,740,target
+500,0.517,0.0,740,target noiseless
+500,0.0,0.0625,741,off-target
+500,0.0,0.0,741,off-target noiseless
+500,0.954,4.0,741,target
+500,0.351,0.0,741,target noiseless
+500,0.0,0.0625,742,off-target
+500,0.0,0.0,742,off-target noiseless
+500,0.705,4.0,742,target
+500,0.638,0.0,742,target noiseless
+500,0.0,0.0625,743,off-target
+500,0.0,0.0,743,off-target noiseless
+500,0.109,0.25,743,target
+500,0.048,0.0,743,target noiseless
+500,0.0,0.0625,744,off-target
+500,0.0,0.0,744,off-target noiseless
+500,0.926,16.0,744,target
+500,0.556,0.0,744,target noiseless
+500,0.0,0.0625,745,off-target
+500,0.0,0.0,745,off-target noiseless
+500,0.967,16.0,745,target
+500,0.855,0.0,745,target noiseless
+500,0.0,0.0625,746,off-target
+500,0.0,0.0,746,off-target noiseless
+500,0.43,16.0,746,target
+500,0.199,0.0,746,target noiseless
+500,0.0,0.0625,747,off-target
+500,0.0,0.0,747,off-target noiseless
+500,0.687,0.25,747,target
+500,0.817,0.0,747,target noiseless
+500,0.0,0.0625,748,off-target
+500,0.0,0.0,748,off-target noiseless
+500,0.143,4.0,748,target
+500,0.655,0.0,748,target noiseless
+500,0.0,0.0625,749,off-target
+500,0.0,0.0,749,off-target noiseless
+500,0.678,16.0,749,target
+500,0.601,0.0,749,target noiseless
+500,0.0,0.0625,750,off-target
+500,0.0,0.0,750,off-target noiseless
+500,0.189,1.0,750,target
+500,0.749,0.0,750,target noiseless
+500,0.0,0.0625,751,off-target
+500,0.0,0.0,751,off-target noiseless
+500,0.418,1.0,751,target
+500,0.877,0.0,751,target noiseless
+500,0.0,0.0625,752,off-target
+500,0.0,0.0,752,off-target noiseless
+500,0.468,4.0,752,target
+500,0.191,0.0,752,target noiseless
+500,0.0,0.0625,753,off-target
+500,0.0,0.0,753,off-target noiseless
+500,0.314,16.0,753,target
+500,0.063,0.0,753,target noiseless
+500,0.0,0.0625,754,off-target
+500,0.0,0.0,754,off-target noiseless
+500,0.328,16.0,754,target
+500,0.344,0.0,754,target noiseless
+500,0.0,0.0625,755,off-target
+500,0.0,0.0,755,off-target noiseless
+500,0.629,4.0,755,target
+500,0.241,0.0,755,target noiseless
+500,0.0,0.0625,756,off-target
+500,0.0,0.0,756,off-target noiseless
+500,0.042,16.0,756,target
+500,0.363,0.0,756,target noiseless
+500,0.0,0.0625,757,off-target
+500,0.0,0.0,757,off-target noiseless
+500,0.396,4.0,757,target
+500,0.159,0.0,757,target noiseless
+500,0.0,0.0625,758,off-target
+500,0.0,0.0,758,off-target noiseless
+500,0.389,16.0,758,target
+500,0.71,0.0,758,target noiseless
+500,0.0,0.0625,759,off-target
+500,0.0,0.0,759,off-target noiseless
+500,0.749,1.0,759,target
+500,0.133,0.0,759,target noiseless
+500,0.0,0.0625,760,off-target
+500,0.0,0.0,760,off-target noiseless
+500,0.991,4.0,760,target
+500,0.35,0.0,760,target noiseless
+500,0.0,0.0625,761,off-target
+500,0.0,0.0,761,off-target noiseless
+500,0.505,16.0,761,target
+500,0.682,0.0,761,target noiseless
+500,0.0,0.0625,762,off-target
+500,0.0,0.0,762,off-target noiseless
+500,0.146,0.25,762,target
+500,0.847,0.0,762,target noiseless
+500,0.0,0.0625,763,off-target
+500,0.0,0.0,763,off-target noiseless
+500,0.377,64.0,763,target
+500,0.007,0.0,763,target noiseless
+500,0.0,0.0625,764,off-target
+500,0.0,0.0,764,off-target noiseless
+500,0.951,16.0,764,target
+500,0.621,0.0,764,target noiseless
+500,0.0,0.0625,765,off-target
+500,0.0,0.0,765,off-target noiseless
+500,0.278,16384.0,765,target
+500,0.405,0.0,765,target noiseless
+500,0.0,0.0625,766,off-target
+500,0.0,0.0,766,off-target noiseless
+500,0.738,16.0,766,target
+500,0.838,0.0,766,target noiseless
+500,0.0,0.0625,767,off-target
+500,0.0,0.0,767,off-target noiseless
+500,0.791,64.0,767,target
+500,0.983,0.0,767,target noiseless
+500,0.0,0.0625,768,off-target
+500,0.0,0.0,768,off-target noiseless
+500,0.741,4.0,768,target
+500,0.832,0.0,768,target noiseless
+500,0.0,0.0625,769,off-target
+500,0.0,0.0,769,off-target noiseless
+500,0.898,1.0,769,target
+500,0.257,0.0,769,target noiseless
+500,0.0,0.0625,770,off-target
+500,0.0,0.0,770,off-target noiseless
+500,0.037,4.0,770,target
+500,0.443,0.0,770,target noiseless
+500,0.0,0.0625,771,off-target
+500,0.0,0.0,771,off-target noiseless
+500,0.349,4.0,771,target
+500,0.697,0.0,771,target noiseless
+500,0.0,0.0625,772,off-target
+500,0.0,0.0,772,off-target noiseless
+500,0.947,4.0,772,target
+500,0.741,0.0,772,target noiseless
+500,0.0,0.0625,773,off-target
+500,0.0,0.0,773,off-target noiseless
+500,0.632,1.0,773,target
+500,0.548,0.0,773,target noiseless
+500,0.0,0.0625,774,off-target
+500,0.0,0.0,774,off-target noiseless
+500,0.6,64.0,774,target
+500,0.733,0.0,774,target noiseless
+500,0.0,0.0625,775,off-target
+500,0.0,0.0,775,off-target noiseless
+500,0.835,4.0,775,target
+500,0.094,0.0,775,target noiseless
+500,0.0,0.0625,776,off-target
+500,0.0,0.0,776,off-target noiseless
+500,0.454,1.0,776,target
+500,0.866,0.0,776,target noiseless
+500,0.0,0.0625,777,off-target
+500,0.0,0.0,777,off-target noiseless
+500,0.87,16.0,777,target
+500,0.768,0.0,777,target noiseless
+500,0.0,0.0625,778,off-target
+500,0.0,0.0,778,off-target noiseless
+500,0.308,1.0,778,target
+500,0.844,0.0,778,target noiseless
+500,0.0,0.0625,779,off-target
+500,0.0,0.0,779,off-target noiseless
+500,0.228,1.0,779,target
+500,0.021,0.0,779,target noiseless
+500,0.0,0.0625,780,off-target
+500,0.0,0.0,780,off-target noiseless
+500,0.757,16.0,780,target
+500,0.027,0.0,780,target noiseless
+500,0.0,0.0625,781,off-target
+500,0.0,0.0,781,off-target noiseless
+500,0.288,4.0,781,target
+500,0.393,0.0,781,target noiseless
+500,0.0,0.0625,782,off-target
+500,0.0,0.0,782,off-target noiseless
+500,0.907,1.0,782,target
+500,0.085,0.0,782,target noiseless
+500,0.0,0.0625,783,off-target
+500,0.0,0.0,783,off-target noiseless
+500,0.68,4.0,783,target
+500,0.304,0.0,783,target noiseless
+500,0.0,0.0625,784,off-target
+500,0.0,0.0,784,off-target noiseless
+500,0.782,1.0,784,target
+500,0.91,0.0,784,target noiseless
+500,0.0,0.0625,785,off-target
+500,0.0,0.0,785,off-target noiseless
+500,0.819,4096.0,785,target
+500,0.602,0.0,785,target noiseless
+500,0.0,0.0625,786,off-target
+500,0.0,0.0,786,off-target noiseless
+500,0.375,4.0,786,target
+500,0.938,0.0,786,target noiseless
+500,0.0,0.0625,787,off-target
+500,0.0,0.0,787,off-target noiseless
+500,0.102,1.0,787,target
+500,0.255,0.0,787,target noiseless
+500,0.0,0.0625,788,off-target
+500,0.0,0.0,788,off-target noiseless
+500,0.313,16.0,788,target
+500,0.233,0.0,788,target noiseless
+500,0.0,0.0625,789,off-target
+500,0.0,0.0,789,off-target noiseless
+500,0.586,16.0,789,target
+500,0.101,0.0,789,target noiseless
+500,0.0,0.0625,790,off-target
+500,0.0,0.0,790,off-target noiseless
+500,0.084,4.0,790,target
+500,0.868,0.0,790,target noiseless
+500,0.0,0.0625,791,off-target
+500,0.0,0.0,791,off-target noiseless
+500,0.393,4.0,791,target
+500,0.124,0.0,791,target noiseless
+500,0.0,0.0625,792,off-target
+500,0.0,0.0,792,off-target noiseless
+500,0.754,16.0,792,target
+500,0.819,0.0,792,target noiseless
+500,0.0,0.0625,793,off-target
+500,0.0,0.0,793,off-target noiseless
+500,0.455,4.0,793,target
+500,0.842,0.0,793,target noiseless
+500,0.0,0.0625,794,off-target
+500,0.0,0.0,794,off-target noiseless
+500,0.185,1.0,794,target
+500,0.671,0.0,794,target noiseless
+500,0.0,0.0625,795,off-target
+500,0.0,0.0,795,off-target noiseless
+500,0.547,256.0,795,target
+500,0.279,0.0,795,target noiseless
+500,0.0,0.0625,796,off-target
+500,0.0,0.0,796,off-target noiseless
+500,0.028,4.0,796,target
+500,0.659,0.0,796,target noiseless
+500,0.0,0.0625,797,off-target
+500,0.0,0.0,797,off-target noiseless
+500,0.694,4.0,797,target
+500,0.89,0.0,797,target noiseless
+500,0.0,0.0625,798,off-target
+500,0.0,0.0,798,off-target noiseless
+500,0.861,64.0,798,target
+500,0.622,0.0,798,target noiseless
+500,0.0,0.0625,799,off-target
+500,0.0,0.0,799,off-target noiseless
+500,0.761,16.0,799,target
+500,0.609,0.0,799,target noiseless
+500,0.0,0.0625,800,off-target
+500,0.0,0.0,800,off-target noiseless
+500,0.467,0.0625,800,target
+500,0.171,0.0,800,target noiseless
+500,0.0,0.0625,801,off-target
+500,0.0,0.0,801,off-target noiseless
+500,0.299,65536.0,801,target
+500,0.518,0.0,801,target noiseless
+500,0.0,0.0625,802,off-target
+500,0.0,0.0,802,off-target noiseless
+500,0.744,0.0625,802,target
+500,0.71,0.0,802,target noiseless
+500,0.0,0.0625,803,off-target
+500,0.0,0.0,803,off-target noiseless
+500,0.781,1.0,803,target
+500,0.993,0.0,803,target noiseless
+500,0.0,0.0625,804,off-target
+500,0.0,0.0,804,off-target noiseless
+500,0.704,1.0,804,target
+500,0.775,0.0,804,target noiseless
+500,0.0,0.0625,805,off-target
+500,0.0,0.0,805,off-target noiseless
+500,0.789,1.0,805,target
+500,0.703,0.0,805,target noiseless
+500,0.0,0.0625,806,off-target
+500,0.0,0.0,806,off-target noiseless
+500,0.343,64.0,806,target
+500,0.23,0.0,806,target noiseless
+500,0.0,0.0625,807,off-target
+500,0.0,0.0,807,off-target noiseless
+500,0.995,4.0,807,target
+500,0.208,0.0,807,target noiseless
+500,0.0,0.0625,808,off-target
+500,0.0,0.0,808,off-target noiseless
+500,0.399,16.0,808,target
+500,0.991,0.0,808,target noiseless
+500,0.0,0.0625,809,off-target
+500,0.0,0.0,809,off-target noiseless
+500,0.591,16.0,809,target
+500,0.663,0.0,809,target noiseless
+500,0.0,0.0625,810,off-target
+500,0.0,0.0,810,off-target noiseless
+500,0.412,4.0,810,target
+500,0.568,0.0,810,target noiseless
+500,0.0,0.0625,811,off-target
+500,0.0,0.0,811,off-target noiseless
+500,0.187,4.0,811,target
+500,0.606,0.0,811,target noiseless
+500,0.0,0.0625,812,off-target
+500,0.0,0.0,812,off-target noiseless
+500,0.216,4.0,812,target
+500,0.843,0.0,812,target noiseless
+500,0.0,0.0625,813,off-target
+500,0.0,0.0,813,off-target noiseless
+500,0.943,4.0,813,target
+500,0.393,0.0,813,target noiseless
+500,0.0,0.0625,814,off-target
+500,0.0,0.0,814,off-target noiseless
+500,0.164,16.0,814,target
+500,0.866,0.0,814,target noiseless
+500,0.0,0.0625,815,off-target
+500,0.0,0.0,815,off-target noiseless
+500,0.269,16384.0,815,target
+500,0.481,0.0,815,target noiseless
+500,0.0,0.0625,816,off-target
+500,0.0,0.0,816,off-target noiseless
+500,0.469,1.0,816,target
+500,0.375,0.0,816,target noiseless
+500,0.0,0.0625,817,off-target
+500,0.0,0.0,817,off-target noiseless
+500,0.575,1.0,817,target
+500,0.976,0.0,817,target noiseless
+500,0.0,0.0625,818,off-target
+500,0.0,0.0,818,off-target noiseless
+500,0.389,4.0,818,target
+500,0.163,0.0,818,target noiseless
+500,0.0,0.0625,819,off-target
+500,0.0,0.0,819,off-target noiseless
+500,0.532,0.0625,819,target
+500,0.453,0.0,819,target noiseless
+500,0.0,0.0625,820,off-target
+500,0.0,0.0,820,off-target noiseless
+500,0.61,0.25,820,target
+500,0.272,0.0,820,target noiseless
+500,0.0,0.0625,821,off-target
+500,0.0,0.0,821,off-target noiseless
+500,0.327,16.0,821,target
+500,0.184,0.0,821,target noiseless
+500,0.0,0.0625,822,off-target
+500,0.0,0.0,822,off-target noiseless
+500,0.076,1.0,822,target
+500,0.951,0.0,822,target noiseless
+500,0.0,0.0625,823,off-target
+500,0.0,0.0,823,off-target noiseless
+500,0.121,0.0625,823,target
+500,0.064,0.0,823,target noiseless
+500,0.0,0.0625,824,off-target
+500,0.0,0.0,824,off-target noiseless
+500,0.186,16.0,824,target
+500,0.63,0.0,824,target noiseless
+500,0.0,0.0625,825,off-target
+500,0.0,0.0,825,off-target noiseless
+500,0.119,1.0,825,target
+500,0.925,0.0,825,target noiseless
+500,0.0,0.0625,826,off-target
+500,0.0,0.0,826,off-target noiseless
+500,0.876,4.0,826,target
+500,0.697,0.0,826,target noiseless
+500,0.0,0.0625,827,off-target
+500,0.0,0.0,827,off-target noiseless
+500,0.373,65536.0,827,target
+500,0.477,0.0,827,target noiseless
+500,0.0,0.0625,828,off-target
+500,0.0,0.0,828,off-target noiseless
+500,0.762,0.0625,828,target
+500,0.711,0.0,828,target noiseless
+500,0.0,0.0625,829,off-target
+500,0.0,0.0,829,off-target noiseless
+500,0.05,0.25,829,target
+500,0.051,0.0,829,target noiseless
+500,0.0,0.0625,830,off-target
+500,0.0,0.0,830,off-target noiseless
+500,0.821,1.0,830,target
+500,0.218,0.0,830,target noiseless
+500,0.0,0.0625,831,off-target
+500,0.0,0.0,831,off-target noiseless
+500,0.36,4.0,831,target
+500,0.983,0.0,831,target noiseless
+500,0.0,0.0625,832,off-target
+500,0.0,0.0,832,off-target noiseless
+500,0.15,16.0,832,target
+500,0.9,0.0,832,target noiseless
+500,0.0,0.0625,833,off-target
+500,0.0,0.0,833,off-target noiseless
+500,0.657,4.0,833,target
+500,0.388,0.0,833,target noiseless
+500,0.0,0.0625,834,off-target
+500,0.0,0.0,834,off-target noiseless
+500,0.646,16.0,834,target
+500,0.564,0.0,834,target noiseless
+500,0.0,0.0625,835,off-target
+500,0.0,0.0,835,off-target noiseless
+500,0.688,0.0625,835,target
+500,0.394,0.0,835,target noiseless
+500,0.0,0.0625,836,off-target
+500,0.0,0.0,836,off-target noiseless
+500,0.586,4.0,836,target
+500,0.713,0.0,836,target noiseless
+500,0.0,0.0625,837,off-target
+500,0.0,0.0,837,off-target noiseless
+500,0.105,1.0,837,target
+500,0.969,0.0,837,target noiseless
+500,0.0,0.0625,838,off-target
+500,0.0,0.0,838,off-target noiseless
+500,0.776,1.0,838,target
+500,0.871,0.0,838,target noiseless
+500,0.0,0.0625,839,off-target
+500,0.0,0.0,839,off-target noiseless
+500,0.236,4096.0,839,target
+500,0.967,0.0,839,target noiseless
+500,0.0,0.0625,840,off-target
+500,0.0,0.0,840,off-target noiseless
+500,0.947,64.0,840,target
+500,0.963,0.0,840,target noiseless
+500,0.0,0.0625,841,off-target
+500,0.0,0.0,841,off-target noiseless
+500,0.169,1.0,841,target
+500,0.639,0.0,841,target noiseless
+500,0.0,0.0625,842,off-target
+500,0.0,0.0,842,off-target noiseless
+500,0.437,16.0,842,target
+500,0.95,0.0,842,target noiseless
+500,0.0,0.0625,843,off-target
+500,0.0,0.0,843,off-target noiseless
+500,0.248,1.0,843,target
+500,0.702,0.0,843,target noiseless
+500,0.0,0.0625,844,off-target
+500,0.0,0.0,844,off-target noiseless
+500,0.71,4.0,844,target
+500,0.199,0.0,844,target noiseless
+500,0.0,0.0625,845,off-target
+500,0.0,0.0,845,off-target noiseless
+500,0.674,1.0,845,target
+500,0.124,0.0,845,target noiseless
+500,0.0,0.0625,846,off-target
+500,0.0,0.0,846,off-target noiseless
+500,0.756,1.0,846,target
+500,0.939,0.0,846,target noiseless
+500,0.0,0.0625,847,off-target
+500,0.0,0.0,847,off-target noiseless
+500,0.543,0.25,847,target
+500,0.86,0.0,847,target noiseless
+500,0.0,0.0625,848,off-target
+500,0.0,0.0,848,off-target noiseless
+500,0.78,1024.0,848,target
+500,0.826,0.0,848,target noiseless
+500,0.0,0.0625,849,off-target
+500,0.0,0.0,849,off-target noiseless
+500,0.767,4.0,849,target
+500,0.441,0.0,849,target noiseless
+500,0.0,0.0625,850,off-target
+500,0.0,0.0,850,off-target noiseless
+500,0.102,1.0,850,target
+500,0.649,0.0,850,target noiseless
+500,0.0,0.0625,851,off-target
+500,0.0,0.0,851,off-target noiseless
+500,0.556,16.0,851,target
+500,0.964,0.0,851,target noiseless
+500,0.0,0.0625,852,off-target
+500,0.0,0.0,852,off-target noiseless
+500,0.007,65536.0,852,target
+500,0.722,0.0,852,target noiseless
+500,0.0,0.0625,853,off-target
+500,0.001,0.0,853,off-target noiseless
+500,0.64,1.0,853,target
+500,0.065,0.0,853,target noiseless
+500,0.0,0.0625,854,off-target
+500,0.0,0.0,854,off-target noiseless
+500,0.352,16.0,854,target
+500,0.029,0.0,854,target noiseless
+500,0.0,0.0625,855,off-target
+500,0.0,0.0,855,off-target noiseless
+500,0.125,4.0,855,target
+500,0.58,0.0,855,target noiseless
+500,0.0,0.0625,856,off-target
+500,0.0,0.0,856,off-target noiseless
+500,0.877,1.0,856,target
+500,0.633,0.0,856,target noiseless
+500,0.0,0.0625,857,off-target
+500,0.0,0.0,857,off-target noiseless
+500,0.116,4.0,857,target
+500,0.69,0.0,857,target noiseless
+500,0.0,0.0625,858,off-target
+500,0.001,0.0,858,off-target noiseless
+500,0.2,16.0,858,target
+500,0.022,0.0,858,target noiseless
+500,0.0,0.0625,859,off-target
+500,0.0,0.0,859,off-target noiseless
+500,0.571,4.0,859,target
+500,0.07,0.0,859,target noiseless
+500,0.0,0.0625,860,off-target
+500,0.0,0.0,860,off-target noiseless
+500,0.169,4.0,860,target
+500,0.615,0.0,860,target noiseless
+500,0.0,0.0625,861,off-target
+500,0.0,0.0,861,off-target noiseless
+500,0.981,4.0,861,target
+500,0.112,0.0,861,target noiseless
+500,0.0,0.0625,862,off-target
+500,0.0,0.0,862,off-target noiseless
+500,0.062,64.0,862,target
+500,0.703,0.0,862,target noiseless
+500,0.0,0.0625,863,off-target
+500,0.0,0.0,863,off-target noiseless
+500,0.599,4.0,863,target
+500,0.96,0.0,863,target noiseless
+500,0.0,0.0625,864,off-target
+500,0.0,0.0,864,off-target noiseless
+500,0.389,0.25,864,target
+500,0.158,0.0,864,target noiseless
+500,0.0,0.0625,865,off-target
+500,0.0,0.0,865,off-target noiseless
+500,0.692,4.0,865,target
+500,0.096,0.0,865,target noiseless
+500,0.0,0.0625,866,off-target
+500,0.0,0.0,866,off-target noiseless
+500,0.049,0.25,866,target
+500,0.336,0.0,866,target noiseless
+500,0.0,0.0625,867,off-target
+500,0.0,0.0,867,off-target noiseless
+500,0.317,0.0625,867,target
+500,0.774,0.0,867,target noiseless
+500,0.0,0.0625,868,off-target
+500,0.0,0.0,868,off-target noiseless
+500,0.179,16.0,868,target
+500,0.371,0.0,868,target noiseless
+500,0.0,0.0625,869,off-target
+500,0.0,0.0,869,off-target noiseless
+500,0.309,16.0,869,target
+500,0.59,0.0,869,target noiseless
+500,0.0,0.0625,870,off-target
+500,0.0,0.0,870,off-target noiseless
+500,0.002,4.0,870,target
+500,0.797,0.0,870,target noiseless
+500,0.0,0.0625,871,off-target
+500,0.0,0.0,871,off-target noiseless
+500,0.416,1024.0,871,target
+500,0.233,0.0,871,target noiseless
+500,0.0,0.0625,872,off-target
+500,0.0,0.0,872,off-target noiseless
+500,0.994,16.0,872,target
+500,0.962,0.0,872,target noiseless
+500,0.0,0.0625,873,off-target
+500,0.0,0.0,873,off-target noiseless
+500,0.349,0.25,873,target
+500,0.128,0.0,873,target noiseless
+500,0.0,0.0625,874,off-target
+500,0.0,0.0,874,off-target noiseless
+500,0.637,4.0,874,target
+500,0.232,0.0,874,target noiseless
+500,0.0,0.0625,875,off-target
+500,0.0,0.0,875,off-target noiseless
+500,0.513,1.0,875,target
+500,0.249,0.0,875,target noiseless
+500,0.0,0.0625,876,off-target
+500,0.0,0.0,876,off-target noiseless
+500,0.502,1.0,876,target
+500,0.406,0.0,876,target noiseless
+500,0.0,0.0625,877,off-target
+500,0.0,0.0,877,off-target noiseless
+500,0.182,4.0,877,target
+500,0.974,0.0,877,target noiseless
+500,0.0,0.0625,878,off-target
+500,0.0,0.0,878,off-target noiseless
+500,0.176,1.0,878,target
+500,0.181,0.0,878,target noiseless
+500,0.0,0.0625,879,off-target
+500,0.0,0.0,879,off-target noiseless
+500,0.265,1.0,879,target
+500,0.914,0.0,879,target noiseless
+500,0.0,0.0625,880,off-target
+500,0.0,0.0,880,off-target noiseless
+500,0.951,1.0,880,target
+500,0.448,0.0,880,target noiseless
+500,0.0,0.0625,881,off-target
+500,0.0,0.0,881,off-target noiseless
+500,0.075,64.0,881,target
+500,0.916,0.0,881,target noiseless
+500,0.0,0.0625,882,off-target
+500,0.0,0.0,882,off-target noiseless
+500,0.77,16.0,882,target
+500,0.026,0.0,882,target noiseless
+500,0.0,0.0625,883,off-target
+500,0.0,0.0,883,off-target noiseless
+500,0.617,4.0,883,target
+500,0.467,0.0,883,target noiseless
+500,0.0,0.0625,884,off-target
+500,0.0,0.0,884,off-target noiseless
+500,0.751,64.0,884,target
+500,0.409,0.0,884,target noiseless
+500,0.0,0.0625,885,off-target
+500,0.0,0.0,885,off-target noiseless
+500,0.541,64.0,885,target
+500,0.622,0.0,885,target noiseless
+500,0.0,0.0625,886,off-target
+500,0.0,0.0,886,off-target noiseless
+500,0.488,4.0,886,target
+500,0.428,0.0,886,target noiseless
+500,0.0,0.0625,887,off-target
+500,0.0,0.0,887,off-target noiseless
+500,0.122,16384.0,887,target
+500,0.061,0.0,887,target noiseless
+500,0.0,0.0625,888,off-target
+500,0.0,0.0,888,off-target noiseless
+500,0.92,0.25,888,target
+500,0.884,0.0,888,target noiseless
+500,0.0,0.0625,889,off-target
+500,0.0,0.0,889,off-target noiseless
+500,0.72,16.0,889,target
+500,0.283,0.0,889,target noiseless
+500,0.0,0.0625,890,off-target
+500,0.0,0.0,890,off-target noiseless
+500,0.601,64.0,890,target
+500,0.756,0.0,890,target noiseless
+500,0.0,0.0625,891,off-target
+500,0.0,0.0,891,off-target noiseless
+500,0.047,0.25,891,target
+500,0.389,0.0,891,target noiseless
+500,0.0,0.0625,892,off-target
+500,0.0,0.0,892,off-target noiseless
+500,0.554,4.0,892,target
+500,0.945,0.0,892,target noiseless
+500,0.0,0.0625,893,off-target
+500,0.0,0.0,893,off-target noiseless
+500,0.948,1.0,893,target
+500,0.839,0.0,893,target noiseless
+500,0.0,0.0625,894,off-target
+500,0.0,0.0,894,off-target noiseless
+500,0.947,16.0,894,target
+500,0.273,0.0,894,target noiseless
+500,0.0,0.0625,895,off-target
+500,0.0,0.0,895,off-target noiseless
+500,0.121,4.0,895,target
+500,0.895,0.0,895,target noiseless
+500,0.0,0.0625,896,off-target
+500,0.0,0.0,896,off-target noiseless
+500,0.13,16.0,896,target
+500,0.913,0.0,896,target noiseless
+500,0.0,0.0625,897,off-target
+500,0.0,0.0,897,off-target noiseless
+500,0.555,0.25,897,target
+500,0.358,0.0,897,target noiseless
+500,0.0,0.0625,898,off-target
+500,0.0,0.0,898,off-target noiseless
+500,0.217,0.25,898,target
+500,0.266,0.0,898,target noiseless
+500,0.0,0.0625,899,off-target
+500,0.0,0.0,899,off-target noiseless
+500,0.337,1.0,899,target
+500,0.782,0.0,899,target noiseless
+500,0.0,0.0625,900,off-target
+500,0.0,0.0,900,off-target noiseless
+500,0.197,16.0,900,target
+500,0.657,0.0,900,target noiseless
+500,0.0,0.0625,901,off-target
+500,0.0,0.0,901,off-target noiseless
+500,0.596,1.0,901,target
+500,0.258,0.0,901,target noiseless
+500,0.0,0.0625,902,off-target
+500,0.0,0.0,902,off-target noiseless
+500,0.132,4.0,902,target
+500,0.499,0.0,902,target noiseless
+500,0.0,0.0625,903,off-target
+500,0.0,0.0,903,off-target noiseless
+500,0.88,0.0625,903,target
+500,0.526,0.0,903,target noiseless
+500,0.0,0.0625,904,off-target
+500,0.0,0.0,904,off-target noiseless
+500,0.452,4.0,904,target
+500,0.982,0.0,904,target noiseless
+500,0.0,0.0625,905,off-target
+500,0.0,0.0,905,off-target noiseless
+500,0.146,4.0,905,target
+500,0.288,0.0,905,target noiseless
+500,0.0,0.0625,906,off-target
+500,0.0,0.0,906,off-target noiseless
+500,0.472,4.0,906,target
+500,0.013,0.0,906,target noiseless
+500,0.0,0.0625,907,off-target
+500,0.0,0.0,907,off-target noiseless
+500,0.135,4.0,907,target
+500,0.725,0.0,907,target noiseless
+500,0.0,0.0625,908,off-target
+500,0.0,0.0,908,off-target noiseless
+500,0.746,64.0,908,target
+500,0.215,0.0,908,target noiseless
+500,0.0,0.0625,909,off-target
+500,0.0,0.0,909,off-target noiseless
+500,0.413,4.0,909,target
+500,0.86,0.0,909,target noiseless
+500,0.0,0.0625,910,off-target
+500,0.0,0.0,910,off-target noiseless
+500,0.874,256.0,910,target
+500,0.708,0.0,910,target noiseless
+500,0.0,0.0625,911,off-target
+500,0.0,0.0,911,off-target noiseless
+500,0.814,262144.0,911,target
+500,0.447,0.0,911,target noiseless
+500,0.0,0.0625,912,off-target
+500,0.0,0.0,912,off-target noiseless
+500,0.22,1.0,912,target
+500,0.914,0.0,912,target noiseless
+500,0.0,0.0625,913,off-target
+500,0.0,0.0,913,off-target noiseless
+500,0.727,1.0,913,target
+500,0.643,0.0,913,target noiseless
+500,0.0,0.0625,914,off-target
+500,0.0,0.0,914,off-target noiseless
+500,0.739,64.0,914,target
+500,0.232,0.0,914,target noiseless
+500,0.0,0.0625,915,off-target
+500,0.0,0.0,915,off-target noiseless
+500,0.585,1.0,915,target
+500,0.659,0.0,915,target noiseless
+500,0.0,0.0625,916,off-target
+500,0.0,0.0,916,off-target noiseless
+500,0.822,4.0,916,target
+500,0.991,0.0,916,target noiseless
+500,0.0,0.0625,917,off-target
+500,0.0,0.0,917,off-target noiseless
+500,0.618,4.0,917,target
+500,0.032,0.0,917,target noiseless
+500,0.0,0.0625,918,off-target
+500,0.0,0.0,918,off-target noiseless
+500,0.11,0.25,918,target
+500,0.544,0.0,918,target noiseless
+500,0.0,0.0625,919,off-target
+500,0.0,0.0,919,off-target noiseless
+500,0.506,1.0,919,target
+500,0.129,0.0,919,target noiseless
+500,0.0,0.0625,920,off-target
+500,0.0,0.0,920,off-target noiseless
+500,0.934,4.0,920,target
+500,0.694,0.0,920,target noiseless
+500,0.0,0.0625,921,off-target
+500,0.0,0.0,921,off-target noiseless
+500,0.8,64.0,921,target
+500,0.044,0.0,921,target noiseless
+500,0.0,0.0625,922,off-target
+500,0.0,0.0,922,off-target noiseless
+500,0.52,4.0,922,target
+500,0.168,0.0,922,target noiseless
+500,0.0,0.0625,923,off-target
+500,0.0,0.0,923,off-target noiseless
+500,0.874,4.0,923,target
+500,0.881,0.0,923,target noiseless
+500,0.0,0.0625,924,off-target
+500,0.0,0.0,924,off-target noiseless
+500,0.988,16.0,924,target
+500,0.034,0.0,924,target noiseless
+500,0.0,0.0625,925,off-target
+500,0.0,0.0,925,off-target noiseless
+500,0.106,4.0,925,target
+500,0.392,0.0,925,target noiseless
+500,0.0,0.0625,926,off-target
+500,0.0,0.0,926,off-target noiseless
+500,0.356,16.0,926,target
+500,0.881,0.0,926,target noiseless
+500,0.0,0.0625,927,off-target
+500,0.0,0.0,927,off-target noiseless
+500,0.36,4.0,927,target
+500,0.112,0.0,927,target noiseless
+500,0.0,0.0625,928,off-target
+500,0.001,0.0,928,off-target noiseless
+500,0.392,64.0,928,target
+500,0.561,0.0,928,target noiseless
+500,0.0,0.0625,929,off-target
+500,0.0,0.0,929,off-target noiseless
+500,0.305,1.0,929,target
+500,0.234,0.0,929,target noiseless
+500,0.0,0.0625,930,off-target
+500,0.0,0.0,930,off-target noiseless
+500,0.042,1.0,930,target
+500,0.479,0.0,930,target noiseless
+500,0.0,0.0625,931,off-target
+500,0.0,0.0,931,off-target noiseless
+500,0.926,64.0,931,target
+500,0.903,0.0,931,target noiseless
+500,0.0,0.0625,932,off-target
+500,0.0,0.0,932,off-target noiseless
+500,0.815,4.0,932,target
+500,0.305,0.0,932,target noiseless
+500,0.0,0.0625,933,off-target
+500,0.0,0.0,933,off-target noiseless
+500,0.172,0.25,933,target
+500,0.375,0.0,933,target noiseless
+500,0.0,0.0625,934,off-target
+500,0.0,0.0,934,off-target noiseless
+500,0.235,16.0,934,target
+500,0.519,0.0,934,target noiseless
+500,0.0,0.0625,935,off-target
+500,0.0,0.0,935,off-target noiseless
+500,0.809,1.0,935,target
+500,0.493,0.0,935,target noiseless
+500,0.0,0.0625,936,off-target
+500,0.0,0.0,936,off-target noiseless
+500,0.369,16.0,936,target
+500,0.035,0.0,936,target noiseless
+500,0.0,0.0625,937,off-target
+500,0.0,0.0,937,off-target noiseless
+500,0.881,0.25,937,target
+500,0.778,0.0,937,target noiseless
+500,0.0,0.0625,938,off-target
+500,0.0,0.0,938,off-target noiseless
+500,0.206,65536.0,938,target
+500,0.177,0.0,938,target noiseless
+500,0.0,0.0625,939,off-target
+500,0.0,0.0,939,off-target noiseless
+500,0.116,4.0,939,target
+500,0.718,0.0,939,target noiseless
+500,0.0,0.0625,940,off-target
+500,0.0,0.0,940,off-target noiseless
+500,0.246,4.0,940,target
+500,0.553,0.0,940,target noiseless
+500,0.0,0.0625,941,off-target
+500,0.0,0.0,941,off-target noiseless
+500,0.519,0.25,941,target
+500,0.425,0.0,941,target noiseless
+500,0.0,0.0625,942,off-target
+500,0.0,0.0,942,off-target noiseless
+500,0.583,4.0,942,target
+500,0.238,0.0,942,target noiseless
+500,0.0,0.0625,943,off-target
+500,0.0,0.0,943,off-target noiseless
+500,0.51,16.0,943,target
+500,0.335,0.0,943,target noiseless
+500,0.0,0.0625,944,off-target
+500,0.0,0.0,944,off-target noiseless
+500,0.119,0.0625,944,target
+500,0.439,0.0,944,target noiseless
+500,0.0,0.0625,945,off-target
+500,0.0,0.0,945,off-target noiseless
+500,0.021,1.0,945,target
+500,0.989,0.0,945,target noiseless
+500,0.0,0.0625,946,off-target
+500,0.0,0.0,946,off-target noiseless
+500,0.371,64.0,946,target
+500,0.666,0.0,946,target noiseless
+500,0.0,0.0625,947,off-target
+500,0.0,0.0,947,off-target noiseless
+500,0.33,0.0625,947,target
+500,0.85,0.0,947,target noiseless
+500,0.0,0.0625,948,off-target
+500,0.0,0.0,948,off-target noiseless
+500,0.971,1.0,948,target
+500,0.715,0.0,948,target noiseless
+500,0.0,0.0625,949,off-target
+500,0.0,0.0,949,off-target noiseless
+500,0.473,1.0,949,target
+500,0.993,0.0,949,target noiseless
+500,0.0,0.0625,950,off-target
+500,0.0,0.0,950,off-target noiseless
+500,0.495,0.25,950,target
+500,0.078,0.0,950,target noiseless
+500,0.0,0.0625,951,off-target
+500,0.0,0.0,951,off-target noiseless
+500,0.422,64.0,951,target
+500,0.764,0.0,951,target noiseless
+500,0.0,0.0625,952,off-target
+500,0.0,0.0,952,off-target noiseless
+500,0.936,16.0,952,target
+500,0.417,0.0,952,target noiseless
+500,0.0,0.0625,953,off-target
+500,0.0,0.0,953,off-target noiseless
+500,0.102,64.0,953,target
+500,0.959,0.0,953,target noiseless
+500,0.0,0.0625,954,off-target
+500,0.0,0.0,954,off-target noiseless
+500,0.101,1.0,954,target
+500,0.896,0.0,954,target noiseless
+500,0.0,0.0625,955,off-target
+500,0.0,0.0,955,off-target noiseless
+500,0.76,4.0,955,target
+500,0.111,0.0,955,target noiseless
+500,0.0,0.0625,956,off-target
+500,0.0,0.0,956,off-target noiseless
+500,0.696,4.0,956,target
+500,0.427,0.0,956,target noiseless
+500,0.0,0.0625,957,off-target
+500,0.0,0.0,957,off-target noiseless
+500,0.206,1.0,957,target
+500,0.905,0.0,957,target noiseless
+500,0.0,0.0625,958,off-target
+500,0.0,0.0,958,off-target noiseless
+500,0.997,16.0,958,target
+500,0.914,0.0,958,target noiseless
+500,0.0,0.0625,959,off-target
+500,0.0,0.0,959,off-target noiseless
+500,0.048,0.0625,959,target
+500,0.639,0.0,959,target noiseless
+500,0.0,0.0625,960,off-target
+500,0.0,0.0,960,off-target noiseless
+500,0.886,4.0,960,target
+500,0.767,0.0,960,target noiseless
+500,0.0,0.0625,961,off-target
+500,0.0,0.0,961,off-target noiseless
+500,0.341,256.0,961,target
+500,0.071,0.0,961,target noiseless
+500,0.0,0.0625,962,off-target
+500,0.0,0.0,962,off-target noiseless
+500,0.588,1.0,962,target
+500,0.654,0.0,962,target noiseless
+500,0.0,0.0625,963,off-target
+500,0.0,0.0,963,off-target noiseless
+500,0.971,16384.0,963,target
+500,0.967,0.0,963,target noiseless
+500,0.0,0.0625,964,off-target
+500,0.0,0.0,964,off-target noiseless
+500,0.418,64.0,964,target
+500,0.611,0.0,964,target noiseless
+500,0.0,0.0625,965,off-target
+500,0.0,0.0,965,off-target noiseless
+500,0.964,4096.0,965,target
+500,0.634,0.0,965,target noiseless
+500,0.0,0.0625,966,off-target
+500,0.0,0.0,966,off-target noiseless
+500,0.193,16.0,966,target
+500,0.932,0.0,966,target noiseless
+500,0.0,0.0625,967,off-target
+500,0.0,0.0,967,off-target noiseless
+500,0.189,1.0,967,target
+500,0.778,0.0,967,target noiseless
+500,0.0,0.0625,968,off-target
+500,0.0,0.0,968,off-target noiseless
+500,0.874,1.0,968,target
+500,0.152,0.0,968,target noiseless
+500,0.0,0.0625,969,off-target
+500,0.0,0.0,969,off-target noiseless
+500,0.889,1.0,969,target
+500,0.035,0.0,969,target noiseless
+500,0.0,0.0625,970,off-target
+500,0.0,0.0,970,off-target noiseless
+500,0.253,1.0,970,target
+500,0.55,0.0,970,target noiseless
+500,0.0,0.0625,971,off-target
+500,0.0,0.0,971,off-target noiseless
+500,0.497,1.0,971,target
+500,0.876,0.0,971,target noiseless
+500,0.0,0.0625,972,off-target
+500,0.0,0.0,972,off-target noiseless
+500,0.613,4.0,972,target
+500,0.62,0.0,972,target noiseless
+500,0.0,0.0625,973,off-target
+500,0.0,0.0,973,off-target noiseless
+500,0.677,1.0,973,target
+500,0.479,0.0,973,target noiseless
+500,0.0,0.0625,974,off-target
+500,0.0,0.0,974,off-target noiseless
+500,0.772,1.0,974,target
+500,0.884,0.0,974,target noiseless
+500,0.0,0.0625,975,off-target
+500,0.0,0.0,975,off-target noiseless
+500,0.394,16.0,975,target
+500,0.283,0.0,975,target noiseless
+500,0.0,0.0625,976,off-target
+500,0.0,0.0,976,off-target noiseless
+500,0.992,4.0,976,target
+500,0.683,0.0,976,target noiseless
+500,0.0,0.0625,977,off-target
+500,0.0,0.0,977,off-target noiseless
+500,0.32,4.0,977,target
+500,0.398,0.0,977,target noiseless
+500,0.0,0.0625,978,off-target
+500,0.0,0.0,978,off-target noiseless
+500,0.503,16.0,978,target
+500,0.364,0.0,978,target noiseless
+500,0.0,0.0625,979,off-target
+500,0.0,0.0,979,off-target noiseless
+500,0.56,0.0625,979,target
+500,0.795,0.0,979,target noiseless
+500,0.0,0.0625,980,off-target
+500,0.0,0.0,980,off-target noiseless
+500,0.361,16.0,980,target
+500,0.872,0.0,980,target noiseless
+500,0.0,0.0625,981,off-target
+500,0.0,0.0,981,off-target noiseless
+500,0.833,1.0,981,target
+500,0.709,0.0,981,target noiseless
+500,0.0,0.0625,982,off-target
+500,0.0,0.0,982,off-target noiseless
+500,0.943,16.0,982,target
+500,0.622,0.0,982,target noiseless
+500,0.0,0.0625,983,off-target
+500,0.0,0.0,983,off-target noiseless
+500,0.52,1.0,983,target
+500,0.33,0.0,983,target noiseless
+500,0.0,0.0625,984,off-target
+500,0.0,0.0,984,off-target noiseless
+500,0.602,1.0,984,target
+500,0.329,0.0,984,target noiseless
+500,0.0,0.0625,985,off-target
+500,0.0,0.0,985,off-target noiseless
+500,0.94,16.0,985,target
+500,0.189,0.0,985,target noiseless
+500,0.0,0.0625,986,off-target
+500,0.0,0.0,986,off-target noiseless
+500,0.402,4.0,986,target
+500,0.098,0.0,986,target noiseless
+500,0.0,0.0625,987,off-target
+500,0.0,0.0,987,off-target noiseless
+500,0.284,4.0,987,target
+500,0.268,0.0,987,target noiseless
+500,0.0,0.0625,988,off-target
+500,0.0,0.0,988,off-target noiseless
+500,0.097,4.0,988,target
+500,0.473,0.0,988,target noiseless
+500,0.0,0.0625,989,off-target
+500,0.0,0.0,989,off-target noiseless
+500,0.924,1.0,989,target
+500,0.417,0.0,989,target noiseless
+500,0.0,0.0625,990,off-target
+500,0.0,0.0,990,off-target noiseless
+500,0.426,4.0,990,target
+500,0.215,0.0,990,target noiseless
+500,0.0,0.0625,991,off-target
+500,0.0,0.0,991,off-target noiseless
+500,0.805,4.0,991,target
+500,0.923,0.0,991,target noiseless
+500,0.0,0.0625,992,off-target
+500,0.0,0.0,992,off-target noiseless
+500,0.315,4.0,992,target
+500,0.325,0.0,992,target noiseless
+500,0.0,0.0625,993,off-target
+500,0.0,0.0,993,off-target noiseless
+500,0.229,1.0,993,target
+500,0.512,0.0,993,target noiseless
+500,0.0,0.0625,994,off-target
+500,0.0,0.0,994,off-target noiseless
+500,0.389,4096.0,994,target
+500,0.709,0.0,994,target noiseless
+500,0.0,0.0625,995,off-target
+500,0.0,0.0,995,off-target noiseless
+500,0.525,4.0,995,target
+500,0.125,0.0,995,target noiseless
+500,0.0,0.0625,996,off-target
+500,0.0,0.0,996,off-target noiseless
+500,0.146,0.25,996,target
+500,0.669,0.0,996,target noiseless
+500,0.0,0.0625,997,off-target
+500,0.0,0.0,997,off-target noiseless
+500,0.737,64.0,997,target
+500,0.97,0.0,997,target noiseless
+500,0.0,0.0625,998,off-target
+500,0.0,0.0,998,off-target noiseless
+500,0.722,16.0,998,target
+500,0.302,0.0,998,target noiseless
+500,0.0,0.0625,999,off-target
+500,0.0,0.0,999,off-target noiseless
+500,0.395,4.0,999,target
+500,0.414,0.0,999,target noiseless

@@ -204,31 +204,31 @@ class RandomWalkMH(MCMC):
     """
     theta = tf.expand_dims(tf.expand_dims(theta, axis=-1), axis=-1) # njumps x 1 x 1
 
-    if "ind_pair_list" in kwargs: # use all modes for proposal #TODO new proposal
-      ind_pair_ind = self.ind_pair_sample[self.t, :] # n x 1
-      ind_pair = tf.gather(self.ind_pairs, ind_pair_ind) # n x 2
-      
-      # inverse hessian = covariance matrix
-      mode1 = tf.gather(kwargs["modes"], ind_pair[:, 0]) # n x dim
-      mode2 = tf.gather(kwargs["modes"], ind_pair[:, 1]) # n x dim
-      inv_root_cov_1 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
-      root_cov_2 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
-      inv_root_cov_1_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 0]) # n
-      root_cov_2_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 1]) # n
-
-      # construct proposals
-      x_current_c = x_current - theta * mode1 # njumps x n x dim
-      x_current_c = tf.expand_dims(x_current_c, axis=-2) # njumps x n x 1 x dim
-      x_current_c_scaled = x_current_c @ inv_root_cov_1 @ root_cov_2 # njumpx x n x 1 x dim
-      assert x_current_c_scaled.shape == (theta.shape[0], x_current.shape[-2], 1, x_current.shape[-1]), \
-        (x_current_c_scaled.shape, (theta.shape[0], x_current.shape[-2], 1, x_current.shape[-1]))
-      xp_next = tf.squeeze(x_current_c_scaled, axis=-2) + theta * mode2 # njumps x n x dim
-      
-      det_jacobian = inv_root_cov_1_det * root_cov_2_det # n
-      log_det_jacobian = tf.math.log(det_jacobian) # n
-    
-    else:
+    if not "ind_pair_list" in kwargs:
       raise ValueError("ind_pair_list not found in the args")
+
+    # use all modes for proposal
+    ind_pair_ind = self.ind_pair_sample[self.t, :] # n x 1
+    ind_pair = tf.gather(self.ind_pairs, ind_pair_ind) # n x 2
+    
+    # inverse hessian = covariance matrix
+    mode1 = tf.gather(kwargs["modes"], ind_pair[:, 0]) # n x dim
+    mode2 = tf.gather(kwargs["modes"], ind_pair[:, 1]) # n x dim
+    inv_root_cov_1 = tf.gather(kwargs["hess_sqrt"], ind_pair[:, 0]) # n x dim x dim
+    root_cov_2 = tf.gather(kwargs["inv_hess_sqrt"], ind_pair[:, 1]) # n x dim x dim
+    inv_root_cov_1_det = tf.gather(kwargs["hess_sqrt_det"], ind_pair[:, 0]) # n
+    root_cov_2_det = tf.gather(kwargs["inv_hess_sqrt_det"], ind_pair[:, 1]) # n
+
+    # construct proposals
+    x_current_c = x_current - theta * mode1 # njumps x n x dim
+    x_current_c = tf.expand_dims(x_current_c, axis=-2) # njumps x n x 1 x dim
+    x_current_c_scaled = x_current_c @ inv_root_cov_1 @ root_cov_2 # njumpx x n x 1 x dim
+    assert x_current_c_scaled.shape == (theta.shape[0], x_current.shape[-2], 1, x_current.shape[-1]), \
+      (x_current_c_scaled.shape, (theta.shape[0], x_current.shape[-2], 1, x_current.shape[-1]))
+    xp_next = tf.squeeze(x_current_c_scaled, axis=-2) + theta * mode2 # njumps x n x dim
+    
+    det_jacobian = inv_root_cov_1_det * root_cov_2_det # n
+    log_det_jacobian = tf.math.log(det_jacobian) # n
 
     return xp_next, log_det_jacobian
 

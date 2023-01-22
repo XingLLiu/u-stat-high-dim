@@ -1,0 +1,2001 @@
+n,best_std,p_value,seed,type
+500,0.54,0.0,0,off-target
+500,1.46,0.666,0,target
+500,1.46,0.0,0,off-target no pert
+500,1.46,0.843,0,target no pert
+500,0.54,0.0,1,off-target
+500,1.02,0.996,1,target
+500,1.02,0.0,1,off-target no pert
+500,1.02,0.453,1,target no pert
+500,1.06,0.0,2,off-target
+500,1.3,0.244,2,target
+500,1.3,0.0,2,off-target no pert
+500,1.3,0.54,2,target no pert
+500,0.54,0.0,3,off-target
+500,1.3,0.563,3,target
+500,1.3,0.0,3,off-target no pert
+500,1.3,0.673,3,target no pert
+500,0.58,0.0,4,off-target
+500,0.86,0.063,4,target
+500,0.86,0.0,4,off-target no pert
+500,0.86,0.562,4,target no pert
+500,0.54,0.0,5,off-target
+500,1.42,0.562,5,target
+500,1.42,0.0,5,off-target no pert
+500,1.42,0.271,5,target no pert
+500,0.66,0.0,6,off-target
+500,1.06,0.18,6,target
+500,1.06,0.0,6,off-target no pert
+500,1.06,0.791,6,target no pert
+500,0.5,0.0,7,off-target
+500,0.66,0.068,7,target
+500,0.66,0.0,7,off-target no pert
+500,0.66,0.882,7,target no pert
+500,0.5,0.0,8,off-target
+500,1.26,0.121,8,target
+500,1.26,0.0,8,off-target no pert
+500,1.26,0.56,8,target no pert
+500,0.94,0.0,9,off-target
+500,1.06,0.063,9,target
+500,1.06,0.0,9,off-target no pert
+500,1.06,0.055,9,target no pert
+500,0.58,0.0,10,off-target
+500,0.98,0.241,10,target
+500,0.98,0.0,10,off-target no pert
+500,0.98,0.826,10,target no pert
+500,0.54,0.0,11,off-target
+500,1.3,0.255,11,target
+500,1.3,0.0,11,off-target no pert
+500,1.3,0.781,11,target no pert
+500,0.7,0.0,12,off-target
+500,1.1800000000000002,0.038,12,target
+500,1.1800000000000002,0.0,12,off-target no pert
+500,1.1800000000000002,0.949,12,target no pert
+500,0.58,0.0,13,off-target
+500,1.46,0.923,13,target
+500,1.46,0.0,13,off-target no pert
+500,1.46,0.199,13,target no pert
+500,0.54,0.0,14,off-target
+500,1.42,0.278,14,target
+500,1.42,0.0,14,off-target no pert
+500,1.42,0.75,14,target no pert
+500,0.5,0.0,15,off-target
+500,0.98,0.713,15,target
+500,0.98,0.0,15,off-target no pert
+500,0.98,0.436,15,target no pert
+500,0.54,0.0,16,off-target
+500,1.1400000000000001,0.911,16,target
+500,1.1400000000000001,0.0,16,off-target no pert
+500,1.1400000000000001,0.917,16,target no pert
+500,0.54,0.0,17,off-target
+500,1.42,0.844,17,target
+500,1.42,0.0,17,off-target no pert
+500,1.42,0.606,17,target no pert
+500,0.78,0.0,18,off-target
+500,0.66,0.514,18,target
+500,0.66,0.0,18,off-target no pert
+500,0.66,0.12,18,target no pert
+500,0.62,0.0,19,off-target
+500,1.42,0.969,19,target
+500,1.42,0.0,19,off-target no pert
+500,1.42,0.275,19,target no pert
+500,0.5,0.0,20,off-target
+500,1.1,0.158,20,target
+500,1.1,0.0,20,off-target no pert
+500,1.1,0.786,20,target no pert
+500,0.74,0.0,21,off-target
+500,1.5,0.899,21,target
+500,1.5,0.0,21,off-target no pert
+500,1.5,0.051,21,target no pert
+500,0.62,0.0,22,off-target
+500,0.94,0.307,22,target
+500,0.94,0.0,22,off-target no pert
+500,0.94,0.034,22,target no pert
+500,0.58,0.0,23,off-target
+500,1.3,0.872,23,target
+500,1.3,0.0,23,off-target no pert
+500,1.3,0.621,23,target no pert
+500,0.54,0.0,24,off-target
+500,1.1400000000000001,0.515,24,target
+500,1.1400000000000001,0.0,24,off-target no pert
+500,1.1400000000000001,0.006,24,target no pert
+500,0.7,0.0,25,off-target
+500,1.46,0.484,25,target
+500,1.46,0.0,25,off-target no pert
+500,1.46,0.803,25,target no pert
+500,0.74,0.0,26,off-target
+500,1.5,0.843,26,target
+500,1.5,0.0,26,off-target no pert
+500,1.5,0.844,26,target no pert
+500,0.7,0.0,27,off-target
+500,0.78,0.936,27,target
+500,0.78,0.0,27,off-target no pert
+500,0.78,0.17,27,target no pert
+500,1.1,0.0,28,off-target
+500,1.22,0.347,28,target
+500,1.22,0.0,28,off-target no pert
+500,1.22,0.498,28,target no pert
+500,1.02,0.0,29,off-target
+500,1.1800000000000002,0.974,29,target
+500,1.1800000000000002,0.0,29,off-target no pert
+500,1.1800000000000002,0.611,29,target no pert
+500,1.3,0.0,30,off-target
+500,1.1800000000000002,0.866,30,target
+500,1.1800000000000002,0.0,30,off-target no pert
+500,1.1800000000000002,0.632,30,target no pert
+500,0.62,0.0,31,off-target
+500,0.94,0.485,31,target
+500,0.94,0.0,31,off-target no pert
+500,0.94,0.972,31,target no pert
+500,0.58,0.0,32,off-target
+500,0.7,0.532,32,target
+500,0.7,0.0,32,off-target no pert
+500,0.7,0.785,32,target no pert
+500,0.5,0.0,33,off-target
+500,0.98,0.26,33,target
+500,0.98,0.0,33,off-target no pert
+500,0.98,0.538,33,target no pert
+500,0.8200000000000001,0.0,34,off-target
+500,1.46,0.634,34,target
+500,1.46,0.0,34,off-target no pert
+500,1.46,0.56,34,target no pert
+500,0.62,0.0,35,off-target
+500,0.94,0.249,35,target
+500,0.94,0.0,35,off-target no pert
+500,0.94,0.712,35,target no pert
+500,0.94,0.0,36,off-target
+500,1.5,0.425,36,target
+500,1.5,0.0,36,off-target no pert
+500,1.5,0.411,36,target no pert
+500,0.5,0.0,37,off-target
+500,1.26,0.317,37,target
+500,1.26,0.0,37,off-target no pert
+500,1.26,0.057,37,target no pert
+500,0.54,0.0,38,off-target
+500,1.1800000000000002,0.512,38,target
+500,1.1800000000000002,0.0,38,off-target no pert
+500,1.1800000000000002,0.838,38,target no pert
+500,0.5,0.0,39,off-target
+500,0.9,0.085,39,target
+500,0.9,0.0,39,off-target no pert
+500,0.9,0.625,39,target no pert
+500,0.62,0.0,40,off-target
+500,0.9,0.143,40,target
+500,0.9,0.0,40,off-target no pert
+500,0.9,0.521,40,target no pert
+500,0.8200000000000001,0.0,41,off-target
+500,1.06,0.757,41,target
+500,1.06,0.0,41,off-target no pert
+500,1.06,0.161,41,target no pert
+500,0.5,0.0,42,off-target
+500,0.9,0.895,42,target
+500,0.9,0.0,42,off-target no pert
+500,0.9,0.763,42,target no pert
+500,0.62,0.0,43,off-target
+500,0.62,0.776,43,target
+500,0.62,0.0,43,off-target no pert
+500,0.62,0.026,43,target no pert
+500,0.54,0.0,44,off-target
+500,0.98,0.265,44,target
+500,0.98,0.0,44,off-target no pert
+500,0.98,0.374,44,target no pert
+500,0.5,0.0,45,off-target
+500,1.3,0.723,45,target
+500,1.3,0.0,45,off-target no pert
+500,1.3,0.226,45,target no pert
+500,0.7,0.0,46,off-target
+500,1.3,0.847,46,target
+500,1.3,0.0,46,off-target no pert
+500,1.3,0.274,46,target no pert
+500,0.9,0.0,47,off-target
+500,1.3,0.79,47,target
+500,1.3,0.0,47,off-target no pert
+500,1.3,0.729,47,target no pert
+500,0.74,0.0,48,off-target
+500,0.98,0.587,48,target
+500,0.98,0.0,48,off-target no pert
+500,0.98,0.877,48,target no pert
+500,0.5,0.0,49,off-target
+500,1.1400000000000001,0.201,49,target
+500,1.1400000000000001,0.0,49,off-target no pert
+500,1.1400000000000001,0.379,49,target no pert
+500,0.54,0.0,50,off-target
+500,0.74,0.866,50,target
+500,0.74,0.0,50,off-target no pert
+500,0.74,0.125,50,target no pert
+500,0.54,0.0,51,off-target
+500,1.3,0.954,51,target
+500,1.3,0.0,51,off-target no pert
+500,1.3,0.533,51,target no pert
+500,0.74,0.0,52,off-target
+500,0.98,0.439,52,target
+500,0.98,0.0,52,off-target no pert
+500,0.98,0.248,52,target no pert
+500,0.74,0.0,53,off-target
+500,1.38,0.471,53,target
+500,1.38,0.0,53,off-target no pert
+500,1.38,0.728,53,target no pert
+500,1.06,0.001,54,off-target
+500,0.7,0.72,54,target
+500,0.7,0.0,54,off-target no pert
+500,0.7,0.046,54,target no pert
+500,0.66,0.0,55,off-target
+500,0.9,0.398,55,target
+500,0.9,0.0,55,off-target no pert
+500,0.9,0.144,55,target no pert
+500,0.94,0.0,56,off-target
+500,1.3,0.819,56,target
+500,1.3,0.0,56,off-target no pert
+500,1.3,0.161,56,target no pert
+500,0.5,0.0,57,off-target
+500,0.98,0.078,57,target
+500,0.98,0.0,57,off-target no pert
+500,0.98,0.023,57,target no pert
+500,0.5,0.0,58,off-target
+500,1.1,0.618,58,target
+500,1.1,0.0,58,off-target no pert
+500,1.1,0.532,58,target no pert
+500,0.7,0.0,59,off-target
+500,1.1,0.408,59,target
+500,1.1,0.0,59,off-target no pert
+500,1.1,0.848,59,target no pert
+500,0.7,0.0,60,off-target
+500,1.38,0.6,60,target
+500,1.38,0.0,60,off-target no pert
+500,1.38,0.573,60,target no pert
+500,0.8200000000000001,0.0,61,off-target
+500,0.62,0.506,61,target
+500,0.62,0.0,61,off-target no pert
+500,0.62,0.275,61,target no pert
+500,0.54,0.0,62,off-target
+500,0.86,0.967,62,target
+500,0.86,0.0,62,off-target no pert
+500,0.86,0.039,62,target no pert
+500,0.86,0.0,63,off-target
+500,1.26,0.105,63,target
+500,1.26,0.0,63,off-target no pert
+500,1.26,0.151,63,target no pert
+500,0.58,0.0,64,off-target
+500,1.5,0.341,64,target
+500,1.5,0.0,64,off-target no pert
+500,1.5,0.761,64,target no pert
+500,0.5,0.0,65,off-target
+500,0.94,0.419,65,target
+500,0.94,0.0,65,off-target no pert
+500,0.94,0.497,65,target no pert
+500,0.94,0.0,66,off-target
+500,1.1,0.295,66,target
+500,1.1,0.0,66,off-target no pert
+500,1.1,0.111,66,target no pert
+500,0.78,0.0,67,off-target
+500,0.86,0.594,67,target
+500,0.86,0.0,67,off-target no pert
+500,0.86,0.693,67,target no pert
+500,0.62,0.0,68,off-target
+500,0.8200000000000001,0.175,68,target
+500,0.8200000000000001,0.0,68,off-target no pert
+500,0.8200000000000001,0.167,68,target no pert
+500,1.1800000000000002,0.0,69,off-target
+500,1.3,0.96,69,target
+500,1.3,0.0,69,off-target no pert
+500,1.3,0.639,69,target no pert
+500,0.74,0.0,70,off-target
+500,1.46,0.558,70,target
+500,1.46,0.0,70,off-target no pert
+500,1.46,0.687,70,target no pert
+500,0.78,0.0,71,off-target
+500,1.06,0.192,71,target
+500,1.06,0.0,71,off-target no pert
+500,1.06,0.312,71,target no pert
+500,0.9,0.0,72,off-target
+500,0.74,0.31,72,target
+500,0.74,0.0,72,off-target no pert
+500,0.74,0.761,72,target no pert
+500,0.58,0.0,73,off-target
+500,1.42,0.775,73,target
+500,1.42,0.0,73,off-target no pert
+500,1.42,0.17,73,target no pert
+500,1.1,0.006,74,off-target
+500,0.58,0.389,74,target
+500,0.58,0.0,74,off-target no pert
+500,0.58,0.572,74,target no pert
+500,1.1800000000000002,0.0,75,off-target
+500,1.1800000000000002,0.32,75,target
+500,1.1800000000000002,0.0,75,off-target no pert
+500,1.1800000000000002,0.363,75,target no pert
+500,0.62,0.0,76,off-target
+500,1.3,0.512,76,target
+500,1.3,0.0,76,off-target no pert
+500,1.3,0.11,76,target no pert
+500,0.58,0.0,77,off-target
+500,1.02,0.872,77,target
+500,1.02,0.0,77,off-target no pert
+500,1.02,0.342,77,target no pert
+500,0.66,0.0,78,off-target
+500,0.98,0.523,78,target
+500,0.98,0.0,78,off-target no pert
+500,0.98,0.64,78,target no pert
+500,0.66,0.0,79,off-target
+500,1.26,0.735,79,target
+500,1.26,0.0,79,off-target no pert
+500,1.26,0.9,79,target no pert
+500,0.86,0.0,80,off-target
+500,1.42,0.76,80,target
+500,1.42,0.0,80,off-target no pert
+500,1.42,0.074,80,target no pert
+500,0.8200000000000001,0.0,81,off-target
+500,0.98,0.777,81,target
+500,0.98,0.0,81,off-target no pert
+500,0.98,0.215,81,target no pert
+500,0.9,0.0,82,off-target
+500,1.1800000000000002,0.049,82,target
+500,1.1800000000000002,0.0,82,off-target no pert
+500,1.1800000000000002,0.038,82,target no pert
+500,1.26,0.002,83,off-target
+500,0.66,0.968,83,target
+500,0.66,0.0,83,off-target no pert
+500,0.66,0.307,83,target no pert
+500,0.5,0.0,84,off-target
+500,1.38,0.996,84,target
+500,1.38,0.0,84,off-target no pert
+500,1.38,0.56,84,target no pert
+500,0.5,0.0,85,off-target
+500,1.42,0.247,85,target
+500,1.42,0.0,85,off-target no pert
+500,1.42,0.208,85,target no pert
+500,0.66,0.0,86,off-target
+500,1.3399999999999999,0.772,86,target
+500,1.3399999999999999,0.0,86,off-target no pert
+500,1.3399999999999999,0.394,86,target no pert
+500,0.62,0.0,87,off-target
+500,1.26,0.78,87,target
+500,1.26,0.0,87,off-target no pert
+500,1.26,0.064,87,target no pert
+500,1.38,0.0,88,off-target
+500,0.78,0.243,88,target
+500,0.78,0.0,88,off-target no pert
+500,0.78,0.468,88,target no pert
+500,0.86,0.0,89,off-target
+500,1.1800000000000002,0.464,89,target
+500,1.1800000000000002,0.0,89,off-target no pert
+500,1.1800000000000002,0.176,89,target no pert
+500,0.54,0.0,90,off-target
+500,0.94,0.552,90,target
+500,0.94,0.0,90,off-target no pert
+500,0.94,0.182,90,target no pert
+500,0.5,0.0,91,off-target
+500,1.22,0.431,91,target
+500,1.22,0.0,91,off-target no pert
+500,1.22,0.278,91,target no pert
+500,0.62,0.0,92,off-target
+500,1.06,0.894,92,target
+500,1.06,0.0,92,off-target no pert
+500,1.06,0.394,92,target no pert
+500,0.78,0.0,93,off-target
+500,1.42,0.057,93,target
+500,1.42,0.0,93,off-target no pert
+500,1.42,0.046,93,target no pert
+500,0.78,0.0,94,off-target
+500,1.38,0.353,94,target
+500,1.38,0.0,94,off-target no pert
+500,1.38,0.41,94,target no pert
+500,0.74,0.001,95,off-target
+500,0.78,0.896,95,target
+500,0.78,0.0,95,off-target no pert
+500,0.78,0.473,95,target no pert
+500,0.8200000000000001,0.0,96,off-target
+500,1.5,0.017,96,target
+500,1.5,0.0,96,off-target no pert
+500,1.5,0.641,96,target no pert
+500,0.58,0.0,97,off-target
+500,1.1400000000000001,0.349,97,target
+500,1.1400000000000001,0.0,97,off-target no pert
+500,1.1400000000000001,0.167,97,target no pert
+500,1.1400000000000001,0.0,98,off-target
+500,1.1800000000000002,0.557,98,target
+500,1.1800000000000002,0.0,98,off-target no pert
+500,1.1800000000000002,0.858,98,target no pert
+500,0.54,0.0,99,off-target
+500,1.1,0.594,99,target
+500,1.1,0.0,99,off-target no pert
+500,1.1,0.156,99,target no pert
+500,0.86,0.0,100,off-target
+500,1.5,0.223,100,target
+500,1.5,0.0,100,off-target no pert
+500,1.5,0.016,100,target no pert
+500,0.98,0.0,101,off-target
+500,1.38,0.167,101,target
+500,1.38,0.0,101,off-target no pert
+500,1.38,0.453,101,target no pert
+500,0.58,0.0,102,off-target
+500,1.1800000000000002,0.405,102,target
+500,1.1800000000000002,0.0,102,off-target no pert
+500,1.1800000000000002,0.049,102,target no pert
+500,0.7,0.001,103,off-target
+500,1.3,0.238,103,target
+500,1.3,0.0,103,off-target no pert
+500,1.3,0.433,103,target no pert
+500,0.78,0.0,104,off-target
+500,0.8200000000000001,0.91,104,target
+500,0.8200000000000001,0.0,104,off-target no pert
+500,0.8200000000000001,0.177,104,target no pert
+500,0.54,0.0,105,off-target
+500,1.5,0.435,105,target
+500,1.5,0.0,105,off-target no pert
+500,1.5,0.65,105,target no pert
+500,0.9,0.0,106,off-target
+500,1.3,0.854,106,target
+500,1.3,0.0,106,off-target no pert
+500,1.3,0.939,106,target no pert
+500,0.62,0.0,107,off-target
+500,0.58,0.882,107,target
+500,0.58,0.0,107,off-target no pert
+500,0.58,0.072,107,target no pert
+500,0.58,0.0,108,off-target
+500,1.06,0.948,108,target
+500,1.06,0.0,108,off-target no pert
+500,1.06,0.665,108,target no pert
+500,0.54,0.0,109,off-target
+500,1.02,0.202,109,target
+500,1.02,0.0,109,off-target no pert
+500,1.02,0.008,109,target no pert
+500,0.5,0.0,110,off-target
+500,1.3,0.85,110,target
+500,1.3,0.0,110,off-target no pert
+500,1.3,0.527,110,target no pert
+500,0.86,0.0,111,off-target
+500,0.86,0.969,111,target
+500,0.86,0.0,111,off-target no pert
+500,0.86,0.194,111,target no pert
+500,0.7,0.0,112,off-target
+500,1.1,0.438,112,target
+500,1.1,0.0,112,off-target no pert
+500,1.1,0.308,112,target no pert
+500,0.94,0.0,113,off-target
+500,1.46,0.983,113,target
+500,1.46,0.0,113,off-target no pert
+500,1.46,0.527,113,target no pert
+500,1.3,0.0,114,off-target
+500,0.78,0.069,114,target
+500,0.78,0.0,114,off-target no pert
+500,0.78,0.558,114,target no pert
+500,0.94,0.0,115,off-target
+500,1.02,0.058,115,target
+500,1.02,0.0,115,off-target no pert
+500,1.02,0.196,115,target no pert
+500,0.7,0.0,116,off-target
+500,1.42,0.921,116,target
+500,1.42,0.0,116,off-target no pert
+500,1.42,0.524,116,target no pert
+500,0.98,0.0,117,off-target
+500,0.98,0.012,117,target
+500,0.98,0.0,117,off-target no pert
+500,0.98,0.608,117,target no pert
+500,1.02,0.0,118,off-target
+500,1.22,0.986,118,target
+500,1.22,0.0,118,off-target no pert
+500,1.22,0.719,118,target no pert
+500,0.54,0.0,119,off-target
+500,1.02,0.447,119,target
+500,1.02,0.0,119,off-target no pert
+500,1.02,0.977,119,target no pert
+500,0.5,0.0,120,off-target
+500,1.38,0.593,120,target
+500,1.38,0.0,120,off-target no pert
+500,1.38,0.246,120,target no pert
+500,0.9,0.0,121,off-target
+500,1.06,0.127,121,target
+500,1.06,0.0,121,off-target no pert
+500,1.06,0.021,121,target no pert
+500,0.7,0.0,122,off-target
+500,1.06,0.795,122,target
+500,1.06,0.0,122,off-target no pert
+500,1.06,0.604,122,target no pert
+500,0.86,0.0,123,off-target
+500,0.86,0.804,123,target
+500,0.86,0.0,123,off-target no pert
+500,0.86,0.161,123,target no pert
+500,0.8200000000000001,0.0,124,off-target
+500,0.98,0.985,124,target
+500,0.98,0.0,124,off-target no pert
+500,0.98,0.3,124,target no pert
+500,0.58,0.0,125,off-target
+500,0.94,0.844,125,target
+500,0.94,0.0,125,off-target no pert
+500,0.94,0.281,125,target no pert
+500,0.62,0.0,126,off-target
+500,1.46,0.576,126,target
+500,1.46,0.0,126,off-target no pert
+500,1.46,0.161,126,target no pert
+500,1.3,0.0,127,off-target
+500,0.86,0.079,127,target
+500,0.86,0.0,127,off-target no pert
+500,0.86,0.813,127,target no pert
+500,0.7,0.0,128,off-target
+500,1.02,0.916,128,target
+500,1.02,0.0,128,off-target no pert
+500,1.02,0.48,128,target no pert
+500,0.7,0.0,129,off-target
+500,1.42,0.291,129,target
+500,1.42,0.0,129,off-target no pert
+500,1.42,0.347,129,target no pert
+500,0.74,0.0,130,off-target
+500,1.02,0.533,130,target
+500,1.02,0.0,130,off-target no pert
+500,1.02,0.82,130,target no pert
+500,1.06,0.0,131,off-target
+500,0.94,0.655,131,target
+500,0.94,0.0,131,off-target no pert
+500,0.94,0.805,131,target no pert
+500,0.66,0.0,132,off-target
+500,0.94,0.478,132,target
+500,0.94,0.0,132,off-target no pert
+500,0.94,0.842,132,target no pert
+500,0.94,0.0,133,off-target
+500,1.38,0.997,133,target
+500,1.38,0.0,133,off-target no pert
+500,1.38,0.251,133,target no pert
+500,0.54,0.0,134,off-target
+500,1.3,0.398,134,target
+500,1.3,0.0,134,off-target no pert
+500,1.3,0.039,134,target no pert
+500,0.8200000000000001,0.0,135,off-target
+500,1.06,0.908,135,target
+500,1.06,0.0,135,off-target no pert
+500,1.06,0.808,135,target no pert
+500,0.5,0.0,136,off-target
+500,0.5,0.251,136,target
+500,0.5,0.0,136,off-target no pert
+500,0.5,0.15,136,target no pert
+500,0.9,0.0,137,off-target
+500,0.58,0.647,137,target
+500,0.58,0.0,137,off-target no pert
+500,0.58,0.479,137,target no pert
+500,0.66,0.0,138,off-target
+500,1.06,0.352,138,target
+500,1.06,0.0,138,off-target no pert
+500,1.06,0.667,138,target no pert
+500,0.74,0.0,139,off-target
+500,1.42,0.215,139,target
+500,1.42,0.0,139,off-target no pert
+500,1.42,0.259,139,target no pert
+500,0.58,0.0,140,off-target
+500,1.38,0.785,140,target
+500,1.38,0.0,140,off-target no pert
+500,1.38,0.61,140,target no pert
+500,0.58,0.0,141,off-target
+500,0.62,0.357,141,target
+500,0.62,0.0,141,off-target no pert
+500,0.62,0.918,141,target no pert
+500,1.1,0.0,142,off-target
+500,1.22,0.386,142,target
+500,1.22,0.0,142,off-target no pert
+500,1.22,0.43,142,target no pert
+500,0.94,0.0,143,off-target
+500,0.86,0.063,143,target
+500,0.86,0.0,143,off-target no pert
+500,0.86,0.011,143,target no pert
+500,0.62,0.0,144,off-target
+500,0.7,0.333,144,target
+500,0.7,0.0,144,off-target no pert
+500,0.7,0.485,144,target no pert
+500,0.74,0.0,145,off-target
+500,0.78,0.725,145,target
+500,0.78,0.0,145,off-target no pert
+500,0.78,0.853,145,target no pert
+500,0.58,0.0,146,off-target
+500,1.22,0.586,146,target
+500,1.22,0.0,146,off-target no pert
+500,1.22,0.99,146,target no pert
+500,0.78,0.0,147,off-target
+500,0.7,0.517,147,target
+500,0.7,0.0,147,off-target no pert
+500,0.7,0.744,147,target no pert
+500,0.66,0.0,148,off-target
+500,1.42,0.075,148,target
+500,1.42,0.0,148,off-target no pert
+500,1.42,0.372,148,target no pert
+500,0.9,0.0,149,off-target
+500,1.3399999999999999,0.051,149,target
+500,1.3399999999999999,0.0,149,off-target no pert
+500,1.3399999999999999,0.46,149,target no pert
+500,0.5,0.0,150,off-target
+500,0.94,0.769,150,target
+500,0.94,0.0,150,off-target no pert
+500,0.94,0.855,150,target no pert
+500,0.5,0.0,151,off-target
+500,0.62,0.914,151,target
+500,0.62,0.0,151,off-target no pert
+500,0.62,0.342,151,target no pert
+500,1.02,0.0,152,off-target
+500,1.42,0.36,152,target
+500,1.42,0.0,152,off-target no pert
+500,1.42,0.425,152,target no pert
+500,0.9,0.0,153,off-target
+500,0.86,0.578,153,target
+500,0.86,0.0,153,off-target no pert
+500,0.86,0.945,153,target no pert
+500,0.66,0.0,154,off-target
+500,1.26,0.581,154,target
+500,1.26,0.0,154,off-target no pert
+500,1.26,0.669,154,target no pert
+500,0.54,0.0,155,off-target
+500,0.98,0.664,155,target
+500,0.98,0.0,155,off-target no pert
+500,0.98,0.083,155,target no pert
+500,0.62,0.0,156,off-target
+500,0.8200000000000001,0.894,156,target
+500,0.8200000000000001,0.0,156,off-target no pert
+500,0.8200000000000001,0.524,156,target no pert
+500,0.5,0.0,157,off-target
+500,1.46,0.112,157,target
+500,1.46,0.0,157,off-target no pert
+500,1.46,0.078,157,target no pert
+500,0.78,0.0,158,off-target
+500,1.26,0.199,158,target
+500,1.26,0.0,158,off-target no pert
+500,1.26,0.808,158,target no pert
+500,0.74,0.0,159,off-target
+500,0.62,0.215,159,target
+500,0.62,0.0,159,off-target no pert
+500,0.62,0.575,159,target no pert
+500,0.8200000000000001,0.0,160,off-target
+500,0.54,0.506,160,target
+500,0.54,0.0,160,off-target no pert
+500,0.54,0.274,160,target no pert
+500,0.62,0.0,161,off-target
+500,0.66,0.146,161,target
+500,0.66,0.0,161,off-target no pert
+500,0.66,0.952,161,target no pert
+500,0.8200000000000001,0.0,162,off-target
+500,0.78,0.259,162,target
+500,0.78,0.0,162,off-target no pert
+500,0.78,0.113,162,target no pert
+500,0.54,0.0,163,off-target
+500,1.1800000000000002,0.732,163,target
+500,1.1800000000000002,0.0,163,off-target no pert
+500,1.1800000000000002,0.353,163,target no pert
+500,0.54,0.0,164,off-target
+500,1.46,0.314,164,target
+500,1.46,0.0,164,off-target no pert
+500,1.46,0.265,164,target no pert
+500,0.78,0.0,165,off-target
+500,1.38,0.575,165,target
+500,1.38,0.0,165,off-target no pert
+500,1.38,0.299,165,target no pert
+500,1.06,0.0,166,off-target
+500,0.9,0.291,166,target
+500,0.9,0.0,166,off-target no pert
+500,0.9,0.112,166,target no pert
+500,0.58,0.0,167,off-target
+500,0.9,0.388,167,target
+500,0.9,0.0,167,off-target no pert
+500,0.9,0.971,167,target no pert
+500,0.78,0.0,168,off-target
+500,0.8200000000000001,0.951,168,target
+500,0.8200000000000001,0.0,168,off-target no pert
+500,0.8200000000000001,0.539,168,target no pert
+500,0.58,0.0,169,off-target
+500,1.26,0.161,169,target
+500,1.26,0.0,169,off-target no pert
+500,1.26,0.571,169,target no pert
+500,0.8200000000000001,0.0,170,off-target
+500,0.54,0.514,170,target
+500,0.54,0.0,170,off-target no pert
+500,0.54,0.395,170,target no pert
+500,0.9,0.0,171,off-target
+500,1.46,0.336,171,target
+500,1.46,0.0,171,off-target no pert
+500,1.46,0.023,171,target no pert
+500,0.5,0.0,172,off-target
+500,1.5,0.213,172,target
+500,1.5,0.0,172,off-target no pert
+500,1.5,0.347,172,target no pert
+500,0.74,0.0,173,off-target
+500,1.3399999999999999,0.712,173,target
+500,1.3399999999999999,0.0,173,off-target no pert
+500,1.3399999999999999,0.611,173,target no pert
+500,0.62,0.0,174,off-target
+500,0.78,0.293,174,target
+500,0.78,0.0,174,off-target no pert
+500,0.78,0.295,174,target no pert
+500,0.7,0.0,175,off-target
+500,0.7,0.119,175,target
+500,0.7,0.0,175,off-target no pert
+500,0.7,0.799,175,target no pert
+500,0.8200000000000001,0.0,176,off-target
+500,1.1,0.546,176,target
+500,1.1,0.0,176,off-target no pert
+500,1.1,0.384,176,target no pert
+500,0.5,0.0,177,off-target
+500,0.74,0.249,177,target
+500,0.74,0.0,177,off-target no pert
+500,0.74,0.525,177,target no pert
+500,1.3,0.0,178,off-target
+500,1.3,0.302,178,target
+500,1.3,0.0,178,off-target no pert
+500,1.3,0.027,178,target no pert
+500,0.74,0.0,179,off-target
+500,1.46,0.833,179,target
+500,1.46,0.0,179,off-target no pert
+500,1.46,0.723,179,target no pert
+500,0.5,0.0,180,off-target
+500,1.3,0.989,180,target
+500,1.3,0.0,180,off-target no pert
+500,1.3,0.692,180,target no pert
+500,0.66,0.0,181,off-target
+500,1.42,0.777,181,target
+500,1.42,0.0,181,off-target no pert
+500,1.42,0.79,181,target no pert
+500,0.9,0.0,182,off-target
+500,1.3,0.645,182,target
+500,1.3,0.0,182,off-target no pert
+500,1.3,0.61,182,target no pert
+500,0.58,0.0,183,off-target
+500,0.58,0.595,183,target
+500,0.58,0.0,183,off-target no pert
+500,0.58,0.925,183,target no pert
+500,0.66,0.0,184,off-target
+500,0.66,0.785,184,target
+500,0.66,0.0,184,off-target no pert
+500,0.66,0.862,184,target no pert
+500,0.66,0.0,185,off-target
+500,1.1800000000000002,0.35,185,target
+500,1.1800000000000002,0.0,185,off-target no pert
+500,1.1800000000000002,0.109,185,target no pert
+500,0.62,0.0,186,off-target
+500,1.1400000000000001,0.025,186,target
+500,1.1400000000000001,0.0,186,off-target no pert
+500,1.1400000000000001,0.436,186,target no pert
+500,0.58,0.0,187,off-target
+500,0.94,0.267,187,target
+500,0.94,0.0,187,off-target no pert
+500,0.94,0.462,187,target no pert
+500,0.58,0.0,188,off-target
+500,1.1800000000000002,0.276,188,target
+500,1.1800000000000002,0.0,188,off-target no pert
+500,1.1800000000000002,0.962,188,target no pert
+500,1.22,0.0,189,off-target
+500,1.38,0.639,189,target
+500,1.38,0.0,189,off-target no pert
+500,1.38,0.637,189,target no pert
+500,1.06,0.0,190,off-target
+500,1.3,0.554,190,target
+500,1.3,0.0,190,off-target no pert
+500,1.3,0.615,190,target no pert
+500,1.1800000000000002,0.0,191,off-target
+500,1.3,0.352,191,target
+500,1.3,0.0,191,off-target no pert
+500,1.3,0.264,191,target no pert
+500,0.5,0.0,192,off-target
+500,1.06,0.932,192,target
+500,1.06,0.0,192,off-target no pert
+500,1.06,0.939,192,target no pert
+500,0.78,0.0,193,off-target
+500,0.7,0.383,193,target
+500,0.7,0.0,193,off-target no pert
+500,0.7,0.911,193,target no pert
+500,0.5,0.0,194,off-target
+500,1.1,0.353,194,target
+500,1.1,0.0,194,off-target no pert
+500,1.1,0.383,194,target no pert
+500,0.8200000000000001,0.0,195,off-target
+500,1.42,0.423,195,target
+500,1.42,0.0,195,off-target no pert
+500,1.42,0.537,195,target no pert
+500,0.8200000000000001,0.0,196,off-target
+500,0.9,0.819,196,target
+500,0.9,0.0,196,off-target no pert
+500,0.9,0.382,196,target no pert
+500,0.54,0.0,197,off-target
+500,0.78,0.255,197,target
+500,0.78,0.0,197,off-target no pert
+500,0.78,0.745,197,target no pert
+500,1.1,0.0,198,off-target
+500,1.3399999999999999,0.407,198,target
+500,1.3399999999999999,0.0,198,off-target no pert
+500,1.3399999999999999,0.556,198,target no pert
+500,0.7,0.0,199,off-target
+500,1.3399999999999999,0.641,199,target
+500,1.3399999999999999,0.0,199,off-target no pert
+500,1.3399999999999999,0.54,199,target no pert
+500,0.62,0.002,200,off-target
+500,1.1800000000000002,0.537,200,target
+500,1.1800000000000002,0.0,200,off-target no pert
+500,1.1800000000000002,0.004,200,target no pert
+500,0.58,0.0,201,off-target
+500,0.8200000000000001,0.944,201,target
+500,0.8200000000000001,0.0,201,off-target no pert
+500,0.8200000000000001,0.96,201,target no pert
+500,0.5,0.0,202,off-target
+500,1.22,0.192,202,target
+500,1.22,0.0,202,off-target no pert
+500,1.22,0.5,202,target no pert
+500,0.7,0.0,203,off-target
+500,0.74,0.79,203,target
+500,0.74,0.0,203,off-target no pert
+500,0.74,0.455,203,target no pert
+500,0.58,0.0,204,off-target
+500,0.74,0.544,204,target
+500,0.74,0.0,204,off-target no pert
+500,0.74,0.686,204,target no pert
+500,0.7,0.0,205,off-target
+500,1.5,0.572,205,target
+500,1.5,0.0,205,off-target no pert
+500,1.5,0.581,205,target no pert
+500,0.58,0.0,206,off-target
+500,0.5,0.561,206,target
+500,0.5,0.0,206,off-target no pert
+500,0.5,0.324,206,target no pert
+500,0.66,0.0,207,off-target
+500,1.02,0.019,207,target
+500,1.02,0.0,207,off-target no pert
+500,1.02,0.553,207,target no pert
+500,0.7,0.0,208,off-target
+500,1.5,0.231,208,target
+500,1.5,0.0,208,off-target no pert
+500,1.5,0.393,208,target no pert
+500,0.54,0.0,209,off-target
+500,1.3,0.877,209,target
+500,1.3,0.0,209,off-target no pert
+500,1.3,0.546,209,target no pert
+500,0.74,0.0,210,off-target
+500,1.3399999999999999,0.089,210,target
+500,1.3399999999999999,0.0,210,off-target no pert
+500,1.3399999999999999,0.658,210,target no pert
+500,0.5,0.0,211,off-target
+500,1.46,0.253,211,target
+500,1.46,0.0,211,off-target no pert
+500,1.46,0.727,211,target no pert
+500,0.78,0.0,212,off-target
+500,1.26,0.335,212,target
+500,1.26,0.0,212,off-target no pert
+500,1.26,0.57,212,target no pert
+500,0.74,0.0,213,off-target
+500,0.86,0.171,213,target
+500,0.86,0.0,213,off-target no pert
+500,0.86,0.97,213,target no pert
+500,1.06,0.0,214,off-target
+500,0.78,0.853,214,target
+500,0.78,0.0,214,off-target no pert
+500,0.78,0.954,214,target no pert
+500,0.94,0.0,215,off-target
+500,0.78,0.343,215,target
+500,0.78,0.0,215,off-target no pert
+500,0.78,0.253,215,target no pert
+500,0.54,0.0,216,off-target
+500,1.26,0.844,216,target
+500,1.26,0.0,216,off-target no pert
+500,1.26,0.209,216,target no pert
+500,1.02,0.001,217,off-target
+500,1.3,0.58,217,target
+500,1.3,0.0,217,off-target no pert
+500,1.3,0.757,217,target no pert
+500,0.74,0.0,218,off-target
+500,0.5,0.744,218,target
+500,0.5,0.0,218,off-target no pert
+500,0.5,0.094,218,target no pert
+500,0.78,0.0,219,off-target
+500,0.8200000000000001,0.381,219,target
+500,0.8200000000000001,0.0,219,off-target no pert
+500,0.8200000000000001,0.153,219,target no pert
+500,1.06,0.0,220,off-target
+500,0.8200000000000001,0.324,220,target
+500,0.8200000000000001,0.0,220,off-target no pert
+500,0.8200000000000001,0.54,220,target no pert
+500,0.54,0.0,221,off-target
+500,1.1800000000000002,0.709,221,target
+500,1.1800000000000002,0.0,221,off-target no pert
+500,1.1800000000000002,0.065,221,target no pert
+500,0.74,0.0,222,off-target
+500,1.38,0.468,222,target
+500,1.38,0.0,222,off-target no pert
+500,1.38,0.856,222,target no pert
+500,1.1,0.0,223,off-target
+500,0.7,0.973,223,target
+500,0.7,0.0,223,off-target no pert
+500,0.7,0.353,223,target no pert
+500,0.58,0.0,224,off-target
+500,1.46,0.63,224,target
+500,1.46,0.0,224,off-target no pert
+500,1.46,0.487,224,target no pert
+500,0.5,0.0,225,off-target
+500,0.8200000000000001,0.617,225,target
+500,0.8200000000000001,0.0,225,off-target no pert
+500,0.8200000000000001,0.477,225,target no pert
+500,1.1,0.0,226,off-target
+500,1.1400000000000001,0.96,226,target
+500,1.1400000000000001,0.0,226,off-target no pert
+500,1.1400000000000001,0.504,226,target no pert
+500,0.54,0.0,227,off-target
+500,1.26,0.411,227,target
+500,1.26,0.0,227,off-target no pert
+500,1.26,0.322,227,target no pert
+500,0.74,0.0,228,off-target
+500,1.1400000000000001,0.475,228,target
+500,1.1400000000000001,0.0,228,off-target no pert
+500,1.1400000000000001,0.097,228,target no pert
+500,1.1400000000000001,0.0,229,off-target
+500,1.26,0.098,229,target
+500,1.26,0.0,229,off-target no pert
+500,1.26,0.21,229,target no pert
+500,0.66,0.0,230,off-target
+500,1.26,0.897,230,target
+500,1.26,0.0,230,off-target no pert
+500,1.26,0.652,230,target no pert
+500,0.78,0.0,231,off-target
+500,1.1,0.365,231,target
+500,1.1,0.0,231,off-target no pert
+500,1.1,0.082,231,target no pert
+500,0.8200000000000001,0.0,232,off-target
+500,1.46,0.409,232,target
+500,1.46,0.0,232,off-target no pert
+500,1.46,0.077,232,target no pert
+500,0.5,0.0,233,off-target
+500,1.38,0.311,233,target
+500,1.38,0.0,233,off-target no pert
+500,1.38,0.822,233,target no pert
+500,0.58,0.0,234,off-target
+500,1.22,0.387,234,target
+500,1.22,0.0,234,off-target no pert
+500,1.22,0.688,234,target no pert
+500,0.86,0.0,235,off-target
+500,1.3,0.319,235,target
+500,1.3,0.0,235,off-target no pert
+500,1.3,0.345,235,target no pert
+500,0.58,0.0,236,off-target
+500,1.1400000000000001,0.663,236,target
+500,1.1400000000000001,0.0,236,off-target no pert
+500,1.1400000000000001,0.382,236,target no pert
+500,0.7,0.0,237,off-target
+500,1.46,0.178,237,target
+500,1.46,0.0,237,off-target no pert
+500,1.46,0.912,237,target no pert
+500,0.78,0.0,238,off-target
+500,0.9,0.467,238,target
+500,0.9,0.0,238,off-target no pert
+500,0.9,0.951,238,target no pert
+500,0.9,0.0,239,off-target
+500,1.38,0.991,239,target
+500,1.38,0.0,239,off-target no pert
+500,1.38,0.905,239,target no pert
+500,0.8200000000000001,0.0,240,off-target
+500,1.42,0.567,240,target
+500,1.42,0.0,240,off-target no pert
+500,1.42,0.786,240,target no pert
+500,0.5,0.0,241,off-target
+500,0.7,0.128,241,target
+500,0.7,0.0,241,off-target no pert
+500,0.7,0.688,241,target no pert
+500,0.5,0.0,242,off-target
+500,1.1800000000000002,0.713,242,target
+500,1.1800000000000002,0.0,242,off-target no pert
+500,1.1800000000000002,0.803,242,target no pert
+500,0.54,0.0,243,off-target
+500,1.1400000000000001,0.205,243,target
+500,1.1400000000000001,0.0,243,off-target no pert
+500,1.1400000000000001,0.242,243,target no pert
+500,0.8200000000000001,0.0,244,off-target
+500,0.9,0.984,244,target
+500,0.9,0.0,244,off-target no pert
+500,0.9,0.908,244,target no pert
+500,0.78,0.0,245,off-target
+500,0.86,0.83,245,target
+500,0.86,0.0,245,off-target no pert
+500,0.86,0.498,245,target no pert
+500,1.02,0.0,246,off-target
+500,1.3,0.459,246,target
+500,1.3,0.0,246,off-target no pert
+500,1.3,0.523,246,target no pert
+500,1.06,0.0,247,off-target
+500,0.8200000000000001,0.182,247,target
+500,0.8200000000000001,0.0,247,off-target no pert
+500,0.8200000000000001,0.516,247,target no pert
+500,0.74,0.0,248,off-target
+500,1.3,0.55,248,target
+500,1.3,0.0,248,off-target no pert
+500,1.3,0.068,248,target no pert
+500,0.62,0.0,249,off-target
+500,1.02,0.253,249,target
+500,1.02,0.0,249,off-target no pert
+500,1.02,0.948,249,target no pert
+500,0.7,0.0,250,off-target
+500,1.5,0.98,250,target
+500,1.5,0.0,250,off-target no pert
+500,1.5,0.099,250,target no pert
+500,0.54,0.0,251,off-target
+500,1.38,0.146,251,target
+500,1.38,0.0,251,off-target no pert
+500,1.38,0.171,251,target no pert
+500,0.7,0.0,252,off-target
+500,0.94,0.642,252,target
+500,0.94,0.0,252,off-target no pert
+500,0.94,0.75,252,target no pert
+500,0.8200000000000001,0.0,253,off-target
+500,1.1,0.266,253,target
+500,1.1,0.0,253,off-target no pert
+500,1.1,0.377,253,target no pert
+500,0.78,0.0,254,off-target
+500,1.42,0.953,254,target
+500,1.42,0.0,254,off-target no pert
+500,1.42,0.704,254,target no pert
+500,0.78,0.0,255,off-target
+500,0.58,0.822,255,target
+500,0.58,0.0,255,off-target no pert
+500,0.58,0.79,255,target no pert
+500,0.78,0.0,256,off-target
+500,0.94,0.394,256,target
+500,0.94,0.0,256,off-target no pert
+500,0.94,0.731,256,target no pert
+500,1.1400000000000001,0.0,257,off-target
+500,0.86,0.141,257,target
+500,0.86,0.0,257,off-target no pert
+500,0.86,0.086,257,target no pert
+500,0.78,0.0,258,off-target
+500,1.38,0.98,258,target
+500,1.38,0.0,258,off-target no pert
+500,1.38,0.358,258,target no pert
+500,0.58,0.0,259,off-target
+500,0.62,0.314,259,target
+500,0.62,0.0,259,off-target no pert
+500,0.62,0.197,259,target no pert
+500,1.42,0.0,260,off-target
+500,1.3,0.199,260,target
+500,1.3,0.0,260,off-target no pert
+500,1.3,0.251,260,target no pert
+500,0.98,0.0,261,off-target
+500,1.22,0.27,261,target
+500,1.22,0.0,261,off-target no pert
+500,1.22,0.392,261,target no pert
+500,0.78,0.0,262,off-target
+500,1.1,0.211,262,target
+500,1.1,0.0,262,off-target no pert
+500,1.1,0.544,262,target no pert
+500,0.8200000000000001,0.0,263,off-target
+500,0.98,0.348,263,target
+500,0.98,0.0,263,off-target no pert
+500,0.98,0.688,263,target no pert
+500,0.66,0.0,264,off-target
+500,1.22,0.925,264,target
+500,1.22,0.0,264,off-target no pert
+500,1.22,0.935,264,target no pert
+500,0.98,0.0,265,off-target
+500,1.38,0.767,265,target
+500,1.38,0.0,265,off-target no pert
+500,1.38,0.699,265,target no pert
+500,0.74,0.0,266,off-target
+500,0.94,0.974,266,target
+500,0.94,0.0,266,off-target no pert
+500,0.94,0.914,266,target no pert
+500,0.66,0.0,267,off-target
+500,1.5,0.777,267,target
+500,1.5,0.0,267,off-target no pert
+500,1.5,0.311,267,target no pert
+500,0.7,0.0,268,off-target
+500,0.7,0.03,268,target
+500,0.7,0.0,268,off-target no pert
+500,0.7,0.413,268,target no pert
+500,0.58,0.0,269,off-target
+500,1.26,0.015,269,target
+500,1.26,0.0,269,off-target no pert
+500,1.26,0.771,269,target no pert
+500,0.58,0.0,270,off-target
+500,1.46,0.031,270,target
+500,1.46,0.0,270,off-target no pert
+500,1.46,0.31,270,target no pert
+500,0.66,0.0,271,off-target
+500,0.58,0.261,271,target
+500,0.58,0.0,271,off-target no pert
+500,0.58,0.266,271,target no pert
+500,0.66,0.0,272,off-target
+500,1.3399999999999999,0.163,272,target
+500,1.3399999999999999,0.0,272,off-target no pert
+500,1.3399999999999999,0.342,272,target no pert
+500,0.58,0.0,273,off-target
+500,1.02,0.216,273,target
+500,1.02,0.0,273,off-target no pert
+500,1.02,0.623,273,target no pert
+500,0.54,0.0,274,off-target
+500,1.38,0.995,274,target
+500,1.38,0.0,274,off-target no pert
+500,1.38,0.754,274,target no pert
+500,0.54,0.0,275,off-target
+500,1.38,0.524,275,target
+500,1.38,0.0,275,off-target no pert
+500,1.38,0.994,275,target no pert
+500,0.54,0.0,276,off-target
+500,0.98,0.321,276,target
+500,0.98,0.0,276,off-target no pert
+500,0.98,0.06,276,target no pert
+500,0.5,0.0,277,off-target
+500,1.1400000000000001,0.513,277,target
+500,1.1400000000000001,0.0,277,off-target no pert
+500,1.1400000000000001,0.23,277,target no pert
+500,0.58,0.0,278,off-target
+500,1.46,0.934,278,target
+500,1.46,0.0,278,off-target no pert
+500,1.46,0.724,278,target no pert
+500,0.74,0.0,279,off-target
+500,0.62,0.995,279,target
+500,0.62,0.0,279,off-target no pert
+500,0.62,0.068,279,target no pert
+500,0.5,0.0,280,off-target
+500,0.9,0.491,280,target
+500,0.9,0.0,280,off-target no pert
+500,0.9,0.828,280,target no pert
+500,0.58,0.0,281,off-target
+500,1.02,0.94,281,target
+500,1.02,0.0,281,off-target no pert
+500,1.02,0.401,281,target no pert
+500,1.1400000000000001,0.0,282,off-target
+500,1.1,0.039,282,target
+500,1.1,0.0,282,off-target no pert
+500,1.1,0.586,282,target no pert
+500,0.8200000000000001,0.0,283,off-target
+500,1.3,0.505,283,target
+500,1.3,0.0,283,off-target no pert
+500,1.3,0.255,283,target no pert
+500,0.62,0.0,284,off-target
+500,0.5,0.063,284,target
+500,0.5,0.0,284,off-target no pert
+500,0.5,0.729,284,target no pert
+500,0.7,0.0,285,off-target
+500,1.1400000000000001,0.989,285,target
+500,1.1400000000000001,0.0,285,off-target no pert
+500,1.1400000000000001,0.846,285,target no pert
+500,0.7,0.046,286,off-target
+500,0.78,0.475,286,target
+500,0.78,0.0,286,off-target no pert
+500,0.78,0.963,286,target no pert
+500,0.94,0.0,287,off-target
+500,0.54,0.91,287,target
+500,0.54,0.0,287,off-target no pert
+500,0.54,0.35,287,target no pert
+500,1.26,0.0,288,off-target
+500,1.22,0.749,288,target
+500,1.22,0.0,288,off-target no pert
+500,1.22,0.069,288,target no pert
+500,0.74,0.0,289,off-target
+500,1.1400000000000001,0.522,289,target
+500,1.1400000000000001,0.0,289,off-target no pert
+500,1.1400000000000001,0.938,289,target no pert
+500,0.66,0.0,290,off-target
+500,1.1800000000000002,0.072,290,target
+500,1.1800000000000002,0.0,290,off-target no pert
+500,1.1800000000000002,0.334,290,target no pert
+500,0.5,0.0,291,off-target
+500,0.62,0.566,291,target
+500,0.62,0.0,291,off-target no pert
+500,0.62,0.357,291,target no pert
+500,1.3,0.0,292,off-target
+500,0.98,0.204,292,target
+500,0.98,0.0,292,off-target no pert
+500,0.98,0.742,292,target no pert
+500,0.8200000000000001,0.0,293,off-target
+500,1.46,0.641,293,target
+500,1.46,0.0,293,off-target no pert
+500,1.46,0.903,293,target no pert
+500,1.1400000000000001,0.0,294,off-target
+500,1.06,0.05,294,target
+500,1.06,0.0,294,off-target no pert
+500,1.06,0.489,294,target no pert
+500,0.8200000000000001,0.0,295,off-target
+500,0.9,0.415,295,target
+500,0.9,0.0,295,off-target no pert
+500,0.9,0.877,295,target no pert
+500,0.54,0.0,296,off-target
+500,1.3,0.419,296,target
+500,1.3,0.0,296,off-target no pert
+500,1.3,0.123,296,target no pert
+500,0.94,0.0,297,off-target
+500,1.1,0.781,297,target
+500,1.1,0.0,297,off-target no pert
+500,1.1,0.35,297,target no pert
+500,0.54,0.0,298,off-target
+500,0.8200000000000001,0.209,298,target
+500,0.8200000000000001,0.0,298,off-target no pert
+500,0.8200000000000001,0.121,298,target no pert
+500,0.58,0.0,299,off-target
+500,0.5,0.867,299,target
+500,0.5,0.0,299,off-target no pert
+500,0.5,0.194,299,target no pert
+500,0.8200000000000001,0.0,300,off-target
+500,1.5,0.927,300,target
+500,1.5,0.0,300,off-target no pert
+500,1.5,0.622,300,target no pert
+500,1.26,0.0,301,off-target
+500,1.5,0.363,301,target
+500,1.5,0.0,301,off-target no pert
+500,1.5,0.812,301,target no pert
+500,0.7,0.0,302,off-target
+500,1.1,0.361,302,target
+500,1.1,0.0,302,off-target no pert
+500,1.1,0.572,302,target no pert
+500,0.58,0.0,303,off-target
+500,1.22,0.869,303,target
+500,1.22,0.0,303,off-target no pert
+500,1.22,0.651,303,target no pert
+500,1.26,0.0,304,off-target
+500,0.58,0.321,304,target
+500,0.58,0.0,304,off-target no pert
+500,0.58,0.269,304,target no pert
+500,0.5,0.0,305,off-target
+500,1.46,0.335,305,target
+500,1.46,0.0,305,off-target no pert
+500,1.46,0.683,305,target no pert
+500,0.54,0.0,306,off-target
+500,0.74,0.988,306,target
+500,0.74,0.0,306,off-target no pert
+500,0.74,0.573,306,target no pert
+500,0.54,0.0,307,off-target
+500,1.5,0.833,307,target
+500,1.5,0.0,307,off-target no pert
+500,1.5,0.318,307,target no pert
+500,0.7,0.0,308,off-target
+500,0.74,0.198,308,target
+500,0.74,0.0,308,off-target no pert
+500,0.74,0.924,308,target no pert
+500,0.8200000000000001,0.0,309,off-target
+500,1.02,0.282,309,target
+500,1.02,0.0,309,off-target no pert
+500,1.02,0.001,309,target no pert
+500,0.74,0.0,310,off-target
+500,1.46,0.129,310,target
+500,1.46,0.0,310,off-target no pert
+500,1.46,0.138,310,target no pert
+500,0.66,0.001,311,off-target
+500,1.5,0.933,311,target
+500,1.5,0.0,311,off-target no pert
+500,1.5,0.116,311,target no pert
+500,1.1,0.0,312,off-target
+500,1.3,0.031,312,target
+500,1.3,0.0,312,off-target no pert
+500,1.3,0.751,312,target no pert
+500,0.5,0.0,313,off-target
+500,0.94,0.937,313,target
+500,0.94,0.0,313,off-target no pert
+500,0.94,0.056,313,target no pert
+500,0.74,0.0,314,off-target
+500,1.38,0.706,314,target
+500,1.38,0.0,314,off-target no pert
+500,1.38,0.826,314,target no pert
+500,0.62,0.0,315,off-target
+500,1.42,0.753,315,target
+500,1.42,0.0,315,off-target no pert
+500,1.42,0.646,315,target no pert
+500,0.78,0.0,316,off-target
+500,0.86,0.418,316,target
+500,0.86,0.0,316,off-target no pert
+500,0.86,0.469,316,target no pert
+500,0.8200000000000001,0.0,317,off-target
+500,0.74,0.29,317,target
+500,0.74,0.0,317,off-target no pert
+500,0.74,0.568,317,target no pert
+500,0.58,0.0,318,off-target
+500,0.98,0.581,318,target
+500,0.98,0.0,318,off-target no pert
+500,0.98,0.225,318,target no pert
+500,0.54,0.0,319,off-target
+500,1.06,0.058,319,target
+500,1.06,0.0,319,off-target no pert
+500,1.06,0.706,319,target no pert
+500,0.58,0.0,320,off-target
+500,1.1800000000000002,0.648,320,target
+500,1.1800000000000002,0.0,320,off-target no pert
+500,1.1800000000000002,0.895,320,target no pert
+500,0.5,0.0,321,off-target
+500,1.26,0.065,321,target
+500,1.26,0.0,321,off-target no pert
+500,1.26,0.088,321,target no pert
+500,0.62,0.0,322,off-target
+500,1.5,0.377,322,target
+500,1.5,0.0,322,off-target no pert
+500,1.5,0.751,322,target no pert
+500,0.66,0.0,323,off-target
+500,1.22,0.132,323,target
+500,1.22,0.0,323,off-target no pert
+500,1.22,0.002,323,target no pert
+500,0.58,0.0,324,off-target
+500,0.98,0.702,324,target
+500,0.98,0.0,324,off-target no pert
+500,0.98,0.694,324,target no pert
+500,0.5,0.0,325,off-target
+500,1.1400000000000001,0.438,325,target
+500,1.1400000000000001,0.0,325,off-target no pert
+500,1.1400000000000001,0.04,325,target no pert
+500,0.74,0.0,326,off-target
+500,0.62,0.967,326,target
+500,0.62,0.0,326,off-target no pert
+500,0.62,0.51,326,target no pert
+500,0.58,0.0,327,off-target
+500,1.22,0.036,327,target
+500,1.22,0.0,327,off-target no pert
+500,1.22,0.041,327,target no pert
+500,0.58,0.0,328,off-target
+500,0.98,0.309,328,target
+500,0.98,0.0,328,off-target no pert
+500,0.98,0.053,328,target no pert
+500,0.74,0.0,329,off-target
+500,1.22,0.614,329,target
+500,1.22,0.0,329,off-target no pert
+500,1.22,0.161,329,target no pert
+500,1.02,0.0,330,off-target
+500,1.1400000000000001,0.931,330,target
+500,1.1400000000000001,0.0,330,off-target no pert
+500,1.1400000000000001,0.032,330,target no pert
+500,0.98,0.0,331,off-target
+500,1.3,0.83,331,target
+500,1.3,0.0,331,off-target no pert
+500,1.3,0.798,331,target no pert
+500,0.66,0.0,332,off-target
+500,1.46,0.109,332,target
+500,1.46,0.0,332,off-target no pert
+500,1.46,0.095,332,target no pert
+500,0.9,0.0,333,off-target
+500,1.38,0.005,333,target
+500,1.38,0.0,333,off-target no pert
+500,1.38,0.257,333,target no pert
+500,1.3399999999999999,0.0,334,off-target
+500,1.38,0.274,334,target
+500,1.38,0.0,334,off-target no pert
+500,1.38,0.707,334,target no pert
+500,0.8200000000000001,0.0,335,off-target
+500,0.98,0.97,335,target
+500,0.98,0.0,335,off-target no pert
+500,0.98,0.089,335,target no pert
+500,0.66,0.0,336,off-target
+500,0.9,0.985,336,target
+500,0.9,0.0,336,off-target no pert
+500,0.9,0.176,336,target no pert
+500,1.3,0.0,337,off-target
+500,1.06,0.376,337,target
+500,1.06,0.0,337,off-target no pert
+500,1.06,0.022,337,target no pert
+500,1.1800000000000002,0.0,338,off-target
+500,1.3399999999999999,0.587,338,target
+500,1.3399999999999999,0.0,338,off-target no pert
+500,1.3399999999999999,0.861,338,target no pert
+500,0.66,0.0,339,off-target
+500,1.42,0.471,339,target
+500,1.42,0.0,339,off-target no pert
+500,1.42,0.315,339,target no pert
+500,1.02,0.001,340,off-target
+500,1.1800000000000002,0.276,340,target
+500,1.1800000000000002,0.0,340,off-target no pert
+500,1.1800000000000002,0.166,340,target no pert
+500,0.78,0.0,341,off-target
+500,0.98,0.677,341,target
+500,0.98,0.0,341,off-target no pert
+500,0.98,0.725,341,target no pert
+500,0.74,0.0,342,off-target
+500,0.78,0.691,342,target
+500,0.78,0.0,342,off-target no pert
+500,0.78,0.677,342,target no pert
+500,0.7,0.0,343,off-target
+500,1.42,0.277,343,target
+500,1.42,0.0,343,off-target no pert
+500,1.42,0.103,343,target no pert
+500,0.62,0.0,344,off-target
+500,1.3399999999999999,0.885,344,target
+500,1.3399999999999999,0.0,344,off-target no pert
+500,1.3399999999999999,0.907,344,target no pert
+500,0.74,0.0,345,off-target
+500,1.46,0.149,345,target
+500,1.46,0.0,345,off-target no pert
+500,1.46,0.713,345,target no pert
+500,1.1,0.0,346,off-target
+500,0.98,0.371,346,target
+500,0.98,0.0,346,off-target no pert
+500,0.98,0.782,346,target no pert
+500,0.58,0.0,347,off-target
+500,1.22,0.61,347,target
+500,1.22,0.0,347,off-target no pert
+500,1.22,0.488,347,target no pert
+500,0.62,0.0,348,off-target
+500,1.46,0.87,348,target
+500,1.46,0.0,348,off-target no pert
+500,1.46,0.354,348,target no pert
+500,0.5,0.0,349,off-target
+500,1.46,0.669,349,target
+500,1.46,0.0,349,off-target no pert
+500,1.46,0.239,349,target no pert
+500,0.5,0.0,350,off-target
+500,1.22,0.991,350,target
+500,1.22,0.0,350,off-target no pert
+500,1.22,0.064,350,target no pert
+500,0.7,0.0,351,off-target
+500,1.22,0.516,351,target
+500,1.22,0.0,351,off-target no pert
+500,1.22,0.455,351,target no pert
+500,0.62,0.0,352,off-target
+500,0.7,0.596,352,target
+500,0.7,0.0,352,off-target no pert
+500,0.7,0.996,352,target no pert
+500,0.8200000000000001,0.0,353,off-target
+500,1.06,0.833,353,target
+500,1.06,0.0,353,off-target no pert
+500,1.06,0.744,353,target no pert
+500,0.5,0.0,354,off-target
+500,1.1400000000000001,0.76,354,target
+500,1.1400000000000001,0.0,354,off-target no pert
+500,1.1400000000000001,0.602,354,target no pert
+500,0.8200000000000001,0.0,355,off-target
+500,1.1400000000000001,0.413,355,target
+500,1.1400000000000001,0.0,355,off-target no pert
+500,1.1400000000000001,0.35,355,target no pert
+500,0.86,0.0,356,off-target
+500,1.02,0.483,356,target
+500,1.02,0.0,356,off-target no pert
+500,1.02,0.354,356,target no pert
+500,0.54,0.0,357,off-target
+500,1.5,0.303,357,target
+500,1.5,0.0,357,off-target no pert
+500,1.5,0.668,357,target no pert
+500,0.86,0.0,358,off-target
+500,1.02,0.978,358,target
+500,1.02,0.0,358,off-target no pert
+500,1.02,0.287,358,target no pert
+500,0.78,0.0,359,off-target
+500,1.1400000000000001,0.242,359,target
+500,1.1400000000000001,0.0,359,off-target no pert
+500,1.1400000000000001,0.797,359,target no pert
+500,0.8200000000000001,0.0,360,off-target
+500,1.38,0.143,360,target
+500,1.38,0.0,360,off-target no pert
+500,1.38,0.254,360,target no pert
+500,0.5,0.0,361,off-target
+500,1.1400000000000001,0.135,361,target
+500,1.1400000000000001,0.0,361,off-target no pert
+500,1.1400000000000001,0.64,361,target no pert
+500,1.06,0.0,362,off-target
+500,0.9,0.988,362,target
+500,0.9,0.0,362,off-target no pert
+500,0.9,0.535,362,target no pert
+500,0.5,0.0,363,off-target
+500,0.7,0.218,363,target
+500,0.7,0.0,363,off-target no pert
+500,0.7,0.965,363,target no pert
+500,0.9,0.0,364,off-target
+500,1.1400000000000001,0.893,364,target
+500,1.1400000000000001,0.0,364,off-target no pert
+500,1.1400000000000001,0.143,364,target no pert
+500,0.5,0.0,365,off-target
+500,1.22,0.442,365,target
+500,1.22,0.0,365,off-target no pert
+500,1.22,0.617,365,target no pert
+500,0.9,0.0,366,off-target
+500,1.1400000000000001,0.579,366,target
+500,1.1400000000000001,0.0,366,off-target no pert
+500,1.1400000000000001,0.926,366,target no pert
+500,0.58,0.0,367,off-target
+500,1.1400000000000001,0.437,367,target
+500,1.1400000000000001,0.0,367,off-target no pert
+500,1.1400000000000001,0.968,367,target no pert
+500,0.54,0.0,368,off-target
+500,1.1800000000000002,0.371,368,target
+500,1.1800000000000002,0.0,368,off-target no pert
+500,1.1800000000000002,0.365,368,target no pert
+500,0.58,0.0,369,off-target
+500,1.1,0.893,369,target
+500,1.1,0.0,369,off-target no pert
+500,1.1,0.281,369,target no pert
+500,0.7,0.0,370,off-target
+500,1.22,0.384,370,target
+500,1.22,0.0,370,off-target no pert
+500,1.22,0.799,370,target no pert
+500,0.78,0.0,371,off-target
+500,1.5,0.781,371,target
+500,1.5,0.0,371,off-target no pert
+500,1.5,0.074,371,target no pert
+500,1.1400000000000001,0.0,372,off-target
+500,0.66,0.082,372,target
+500,0.66,0.0,372,off-target no pert
+500,0.66,0.826,372,target no pert
+500,1.22,0.007,373,off-target
+500,0.94,0.53,373,target
+500,0.94,0.0,373,off-target no pert
+500,0.94,0.86,373,target no pert
+500,0.54,0.0,374,off-target
+500,1.5,0.199,374,target
+500,1.5,0.0,374,off-target no pert
+500,1.5,0.004,374,target no pert
+500,0.8200000000000001,0.0,375,off-target
+500,1.1800000000000002,0.394,375,target
+500,1.1800000000000002,0.0,375,off-target no pert
+500,1.1800000000000002,0.663,375,target no pert
+500,1.02,0.0,376,off-target
+500,1.3399999999999999,0.694,376,target
+500,1.3399999999999999,0.0,376,off-target no pert
+500,1.3399999999999999,0.744,376,target no pert
+500,0.7,0.0,377,off-target
+500,1.1800000000000002,0.94,377,target
+500,1.1800000000000002,0.0,377,off-target no pert
+500,1.1800000000000002,0.555,377,target no pert
+500,0.62,0.001,378,off-target
+500,1.38,0.438,378,target
+500,1.38,0.0,378,off-target no pert
+500,1.38,0.963,378,target no pert
+500,0.5,0.0,379,off-target
+500,0.86,0.201,379,target
+500,0.86,0.0,379,off-target no pert
+500,0.86,0.257,379,target no pert
+500,0.5,0.0,380,off-target
+500,1.38,0.673,380,target
+500,1.38,0.0,380,off-target no pert
+500,1.38,0.764,380,target no pert
+500,0.62,0.0,381,off-target
+500,0.54,0.561,381,target
+500,0.54,0.0,381,off-target no pert
+500,0.54,0.732,381,target no pert
+500,0.86,0.0,382,off-target
+500,0.9,0.704,382,target
+500,0.9,0.0,382,off-target no pert
+500,0.9,0.749,382,target no pert
+500,0.58,0.0,383,off-target
+500,1.1400000000000001,0.555,383,target
+500,1.1400000000000001,0.0,383,off-target no pert
+500,1.1400000000000001,0.714,383,target no pert
+500,0.58,0.0,384,off-target
+500,0.62,0.672,384,target
+500,0.62,0.0,384,off-target no pert
+500,0.62,0.731,384,target no pert
+500,0.54,0.0,385,off-target
+500,1.26,0.469,385,target
+500,1.26,0.0,385,off-target no pert
+500,1.26,0.845,385,target no pert
+500,0.74,0.0,386,off-target
+500,1.42,0.445,386,target
+500,1.42,0.0,386,off-target no pert
+500,1.42,0.801,386,target no pert
+500,0.8200000000000001,0.0,387,off-target
+500,0.54,0.237,387,target
+500,0.54,0.0,387,off-target no pert
+500,0.54,0.832,387,target no pert
+500,0.58,0.0,388,off-target
+500,1.46,0.22,388,target
+500,1.46,0.0,388,off-target no pert
+500,1.46,0.143,388,target no pert
+500,0.66,0.0,389,off-target
+500,0.62,0.467,389,target
+500,0.62,0.0,389,off-target no pert
+500,0.62,0.299,389,target no pert
+500,0.7,0.0,390,off-target
+500,1.3399999999999999,0.688,390,target
+500,1.3399999999999999,0.0,390,off-target no pert
+500,1.3399999999999999,0.786,390,target no pert
+500,0.78,0.0,391,off-target
+500,1.22,0.003,391,target
+500,1.22,0.0,391,off-target no pert
+500,1.22,0.026,391,target no pert
+500,1.22,0.001,392,off-target
+500,1.3399999999999999,0.593,392,target
+500,1.3399999999999999,0.0,392,off-target no pert
+500,1.3399999999999999,0.614,392,target no pert
+500,0.62,0.0,393,off-target
+500,1.3399999999999999,0.612,393,target
+500,1.3399999999999999,0.0,393,off-target no pert
+500,1.3399999999999999,0.053,393,target no pert
+500,0.5,0.0,394,off-target
+500,0.74,0.676,394,target
+500,0.74,0.0,394,off-target no pert
+500,0.74,0.699,394,target no pert
+500,0.7,0.0,395,off-target
+500,1.3399999999999999,0.418,395,target
+500,1.3399999999999999,0.0,395,off-target no pert
+500,1.3399999999999999,0.24,395,target no pert
+500,0.7,0.0,396,off-target
+500,1.26,0.126,396,target
+500,1.26,0.0,396,off-target no pert
+500,1.26,0.172,396,target no pert
+500,0.54,0.0,397,off-target
+500,0.98,0.212,397,target
+500,0.98,0.0,397,off-target no pert
+500,0.98,0.809,397,target no pert
+500,0.5,0.0,398,off-target
+500,0.98,0.893,398,target
+500,0.98,0.0,398,off-target no pert
+500,0.98,0.529,398,target no pert
+500,0.62,0.0,399,off-target
+500,1.46,0.64,399,target
+500,1.46,0.0,399,off-target no pert
+500,1.46,0.336,399,target no pert
+500,0.94,0.0,400,off-target
+500,0.86,0.523,400,target
+500,0.86,0.0,400,off-target no pert
+500,0.86,0.124,400,target no pert
+500,0.54,0.0,401,off-target
+500,1.3399999999999999,0.737,401,target
+500,1.3399999999999999,0.0,401,off-target no pert
+500,1.3399999999999999,0.701,401,target no pert
+500,0.86,0.0,402,off-target
+500,1.46,0.623,402,target
+500,1.46,0.0,402,off-target no pert
+500,1.46,0.673,402,target no pert
+500,0.58,0.0,403,off-target
+500,1.26,0.465,403,target
+500,1.26,0.0,403,off-target no pert
+500,1.26,0.287,403,target no pert
+500,0.54,0.0,404,off-target
+500,1.46,0.747,404,target
+500,1.46,0.0,404,off-target no pert
+500,1.46,0.479,404,target no pert
+500,0.66,0.0,405,off-target
+500,1.38,0.949,405,target
+500,1.38,0.0,405,off-target no pert
+500,1.38,0.189,405,target no pert
+500,1.3399999999999999,0.0,406,off-target
+500,1.3,0.941,406,target
+500,1.3,0.0,406,off-target no pert
+500,1.3,0.558,406,target no pert
+500,0.7,0.0,407,off-target
+500,1.1400000000000001,0.346,407,target
+500,1.1400000000000001,0.0,407,off-target no pert
+500,1.1400000000000001,0.445,407,target no pert
+500,1.06,0.0,408,off-target
+500,1.5,0.697,408,target
+500,1.5,0.0,408,off-target no pert
+500,1.5,0.339,408,target no pert
+500,1.1400000000000001,0.0,409,off-target
+500,1.5,0.622,409,target
+500,1.5,0.0,409,off-target no pert
+500,1.5,0.838,409,target no pert
+500,0.54,0.0,410,off-target
+500,1.5,0.788,410,target
+500,1.5,0.0,410,off-target no pert
+500,1.5,0.963,410,target no pert
+500,0.5,0.0,411,off-target
+500,1.06,0.695,411,target
+500,1.06,0.0,411,off-target no pert
+500,1.06,0.091,411,target no pert
+500,0.66,0.0,412,off-target
+500,1.1800000000000002,0.052,412,target
+500,1.1800000000000002,0.0,412,off-target no pert
+500,1.1800000000000002,0.979,412,target no pert
+500,0.58,0.0,413,off-target
+500,0.86,0.756,413,target
+500,0.86,0.0,413,off-target no pert
+500,0.86,0.417,413,target no pert
+500,0.74,0.0,414,off-target
+500,1.22,0.436,414,target
+500,1.22,0.0,414,off-target no pert
+500,1.22,0.289,414,target no pert
+500,0.5,0.0,415,off-target
+500,0.54,0.522,415,target
+500,0.54,0.0,415,off-target no pert
+500,0.54,0.893,415,target no pert
+500,0.8200000000000001,0.0,416,off-target
+500,1.1800000000000002,0.152,416,target
+500,1.1800000000000002,0.0,416,off-target no pert
+500,1.1800000000000002,0.674,416,target no pert
+500,0.54,0.0,417,off-target
+500,1.3,0.92,417,target
+500,1.3,0.0,417,off-target no pert
+500,1.3,0.186,417,target no pert
+500,0.54,0.0,418,off-target
+500,1.3399999999999999,0.432,418,target
+500,1.3399999999999999,0.0,418,off-target no pert
+500,1.3399999999999999,0.622,418,target no pert
+500,0.54,0.0,419,off-target
+500,0.94,0.077,419,target
+500,0.94,0.0,419,off-target no pert
+500,0.94,0.047,419,target no pert
+500,0.62,0.001,420,off-target
+500,0.66,0.767,420,target
+500,0.66,0.0,420,off-target no pert
+500,0.66,0.701,420,target no pert
+500,0.62,0.0,421,off-target
+500,0.54,0.348,421,target
+500,0.54,0.0,421,off-target no pert
+500,0.54,0.514,421,target no pert
+500,0.98,0.0,422,off-target
+500,0.8200000000000001,0.23,422,target
+500,0.8200000000000001,0.0,422,off-target no pert
+500,0.8200000000000001,0.92,422,target no pert
+500,0.86,0.0,423,off-target
+500,1.3399999999999999,0.206,423,target
+500,1.3399999999999999,0.0,423,off-target no pert
+500,1.3399999999999999,0.163,423,target no pert
+500,0.9,0.0,424,off-target
+500,1.26,0.146,424,target
+500,1.26,0.0,424,off-target no pert
+500,1.26,0.839,424,target no pert
+500,1.46,0.0,425,off-target
+500,1.22,0.489,425,target
+500,1.22,0.0,425,off-target no pert
+500,1.22,0.197,425,target no pert
+500,0.94,0.0,426,off-target
+500,1.1800000000000002,0.543,426,target
+500,1.1800000000000002,0.0,426,off-target no pert
+500,1.1800000000000002,0.451,426,target no pert
+500,0.5,0.0,427,off-target
+500,1.3399999999999999,0.243,427,target
+500,1.3399999999999999,0.0,427,off-target no pert
+500,1.3399999999999999,0.568,427,target no pert
+500,0.66,0.0,428,off-target
+500,1.1400000000000001,0.838,428,target
+500,1.1400000000000001,0.0,428,off-target no pert
+500,1.1400000000000001,0.676,428,target no pert
+500,0.74,0.0,429,off-target
+500,0.94,0.158,429,target
+500,0.94,0.0,429,off-target no pert
+500,0.94,0.117,429,target no pert
+500,0.94,0.0,430,off-target
+500,1.22,0.41,430,target
+500,1.22,0.0,430,off-target no pert
+500,1.22,0.716,430,target no pert
+500,0.7,0.0,431,off-target
+500,1.02,0.691,431,target
+500,1.02,0.0,431,off-target no pert
+500,1.02,0.571,431,target no pert
+500,0.5,0.0,432,off-target
+500,1.3,0.487,432,target
+500,1.3,0.0,432,off-target no pert
+500,1.3,0.677,432,target no pert
+500,0.5,0.0,433,off-target
+500,1.06,0.926,433,target
+500,1.06,0.0,433,off-target no pert
+500,1.06,0.367,433,target no pert
+500,0.74,0.0,434,off-target
+500,1.06,0.874,434,target
+500,1.06,0.0,434,off-target no pert
+500,1.06,0.205,434,target no pert
+500,0.5,0.0,435,off-target
+500,0.98,0.656,435,target
+500,0.98,0.0,435,off-target no pert
+500,0.98,0.664,435,target no pert
+500,0.58,0.0,436,off-target
+500,1.26,0.643,436,target
+500,1.26,0.0,436,off-target no pert
+500,1.26,0.694,436,target no pert
+500,0.54,0.0,437,off-target
+500,0.94,0.721,437,target
+500,0.94,0.0,437,off-target no pert
+500,0.94,0.701,437,target no pert
+500,0.54,0.0,438,off-target
+500,1.46,0.617,438,target
+500,1.46,0.0,438,off-target no pert
+500,1.46,0.167,438,target no pert
+500,0.5,0.0,439,off-target
+500,1.26,0.272,439,target
+500,1.26,0.0,439,off-target no pert
+500,1.26,0.25,439,target no pert
+500,0.58,0.0,440,off-target
+500,1.5,0.769,440,target
+500,1.5,0.0,440,off-target no pert
+500,1.5,0.56,440,target no pert
+500,0.66,0.0,441,off-target
+500,1.26,0.062,441,target
+500,1.26,0.0,441,off-target no pert
+500,1.26,0.913,441,target no pert
+500,1.02,0.0,442,off-target
+500,0.9,0.175,442,target
+500,0.9,0.0,442,off-target no pert
+500,0.9,0.255,442,target no pert
+500,0.54,0.0,443,off-target
+500,1.42,0.811,443,target
+500,1.42,0.0,443,off-target no pert
+500,1.42,0.231,443,target no pert
+500,0.54,0.001,444,off-target
+500,1.1,0.202,444,target
+500,1.1,0.0,444,off-target no pert
+500,1.1,0.717,444,target no pert
+500,0.54,0.0,445,off-target
+500,1.3399999999999999,0.083,445,target
+500,1.3399999999999999,0.0,445,off-target no pert
+500,1.3399999999999999,0.626,445,target no pert
+500,0.78,0.0,446,off-target
+500,1.42,0.666,446,target
+500,1.42,0.0,446,off-target no pert
+500,1.42,0.69,446,target no pert
+500,0.98,0.0,447,off-target
+500,1.42,0.006,447,target
+500,1.42,0.0,447,off-target no pert
+500,1.42,0.279,447,target no pert
+500,0.78,0.0,448,off-target
+500,0.5,0.951,448,target
+500,0.5,0.0,448,off-target no pert
+500,0.5,0.771,448,target no pert
+500,0.86,0.0,449,off-target
+500,1.1800000000000002,0.919,449,target
+500,1.1800000000000002,0.0,449,off-target no pert
+500,1.1800000000000002,0.023,449,target no pert
+500,0.58,0.0,450,off-target
+500,1.3399999999999999,0.328,450,target
+500,1.3399999999999999,0.0,450,off-target no pert
+500,1.3399999999999999,0.557,450,target no pert
+500,0.62,0.0,451,off-target
+500,1.1400000000000001,0.591,451,target
+500,1.1400000000000001,0.0,451,off-target no pert
+500,1.1400000000000001,0.953,451,target no pert
+500,0.54,0.0,452,off-target
+500,1.26,0.457,452,target
+500,1.26,0.0,452,off-target no pert
+500,1.26,0.9,452,target no pert
+500,0.86,0.0,453,off-target
+500,0.8200000000000001,0.755,453,target
+500,0.8200000000000001,0.0,453,off-target no pert
+500,0.8200000000000001,0.126,453,target no pert
+500,0.66,0.0,454,off-target
+500,1.3,0.628,454,target
+500,1.3,0.0,454,off-target no pert
+500,1.3,0.385,454,target no pert
+500,0.5,0.0,455,off-target
+500,1.06,0.588,455,target
+500,1.06,0.0,455,off-target no pert
+500,1.06,0.028,455,target no pert
+500,0.9,0.0,456,off-target
+500,1.3,0.1,456,target
+500,1.3,0.0,456,off-target no pert
+500,1.3,0.394,456,target no pert
+500,0.5,0.0,457,off-target
+500,0.8200000000000001,0.698,457,target
+500,0.8200000000000001,0.0,457,off-target no pert
+500,0.8200000000000001,0.969,457,target no pert
+500,1.42,0.0,458,off-target
+500,0.86,0.073,458,target
+500,0.86,0.0,458,off-target no pert
+500,0.86,0.265,458,target no pert
+500,0.66,0.001,459,off-target
+500,1.5,0.914,459,target
+500,1.5,0.0,459,off-target no pert
+500,1.5,0.16,459,target no pert
+500,0.58,0.0,460,off-target
+500,1.26,0.247,460,target
+500,1.26,0.0,460,off-target no pert
+500,1.26,0.582,460,target no pert
+500,0.7,0.0,461,off-target
+500,1.22,0.655,461,target
+500,1.22,0.0,461,off-target no pert
+500,1.22,0.516,461,target no pert
+500,1.26,0.0,462,off-target
+500,0.86,0.088,462,target
+500,0.86,0.0,462,off-target no pert
+500,0.86,0.518,462,target no pert
+500,0.54,0.0,463,off-target
+500,1.26,0.497,463,target
+500,1.26,0.0,463,off-target no pert
+500,1.26,0.9,463,target no pert
+500,0.86,0.0,464,off-target
+500,1.1800000000000002,0.665,464,target
+500,1.1800000000000002,0.0,464,off-target no pert
+500,1.1800000000000002,0.404,464,target no pert
+500,0.5,0.0,465,off-target
+500,1.5,0.353,465,target
+500,1.5,0.0,465,off-target no pert
+500,1.5,0.598,465,target no pert
+500,0.94,0.001,466,off-target
+500,1.38,0.254,466,target
+500,1.38,0.0,466,off-target no pert
+500,1.38,0.601,466,target no pert
+500,0.5,0.0,467,off-target
+500,0.66,0.057,467,target
+500,0.66,0.0,467,off-target no pert
+500,0.66,0.558,467,target no pert
+500,0.66,0.0,468,off-target
+500,1.02,0.294,468,target
+500,1.02,0.0,468,off-target no pert
+500,1.02,0.609,468,target no pert
+500,0.9,0.0,469,off-target
+500,0.78,0.355,469,target
+500,0.78,0.0,469,off-target no pert
+500,0.78,0.463,469,target no pert
+500,0.86,0.0,470,off-target
+500,1.46,0.88,470,target
+500,1.46,0.0,470,off-target no pert
+500,1.46,0.644,470,target no pert
+500,0.94,0.0,471,off-target
+500,1.42,0.942,471,target
+500,1.42,0.0,471,off-target no pert
+500,1.42,0.203,471,target no pert
+500,0.58,0.0,472,off-target
+500,0.86,0.093,472,target
+500,0.86,0.0,472,off-target no pert
+500,0.86,0.898,472,target no pert
+500,1.1800000000000002,0.0,473,off-target
+500,0.98,0.853,473,target
+500,0.98,0.0,473,off-target no pert
+500,0.98,0.267,473,target no pert
+500,0.86,0.0,474,off-target
+500,1.02,0.778,474,target
+500,1.02,0.0,474,off-target no pert
+500,1.02,0.104,474,target no pert
+500,0.74,0.0,475,off-target
+500,1.3399999999999999,0.647,475,target
+500,1.3399999999999999,0.0,475,off-target no pert
+500,1.3399999999999999,0.557,475,target no pert
+500,0.54,0.0,476,off-target
+500,0.58,0.242,476,target
+500,0.58,0.0,476,off-target no pert
+500,0.58,0.25,476,target no pert
+500,0.78,0.0,477,off-target
+500,0.86,0.816,477,target
+500,0.86,0.0,477,off-target no pert
+500,0.86,0.757,477,target no pert
+500,0.7,0.0,478,off-target
+500,1.5,0.957,478,target
+500,1.5,0.0,478,off-target no pert
+500,1.5,0.679,478,target no pert
+500,0.7,0.0,479,off-target
+500,1.46,0.464,479,target
+500,1.46,0.0,479,off-target no pert
+500,1.46,0.981,479,target no pert
+500,0.62,0.0,480,off-target
+500,0.9,0.275,480,target
+500,0.9,0.0,480,off-target no pert
+500,0.9,0.323,480,target no pert
+500,1.22,0.0,481,off-target
+500,1.02,0.158,481,target
+500,1.02,0.0,481,off-target no pert
+500,1.02,0.932,481,target no pert
+500,0.86,0.0,482,off-target
+500,1.1800000000000002,0.254,482,target
+500,1.1800000000000002,0.0,482,off-target no pert
+500,1.1800000000000002,0.299,482,target no pert
+500,0.78,0.0,483,off-target
+500,0.78,0.884,483,target
+500,0.78,0.0,483,off-target no pert
+500,0.78,0.903,483,target no pert
+500,0.66,0.0,484,off-target
+500,1.46,0.098,484,target
+500,1.46,0.0,484,off-target no pert
+500,1.46,0.075,484,target no pert
+500,0.8200000000000001,0.0,485,off-target
+500,0.54,0.869,485,target
+500,0.54,0.0,485,off-target no pert
+500,0.54,0.998,485,target no pert
+500,0.58,0.0,486,off-target
+500,1.1400000000000001,0.935,486,target
+500,1.1400000000000001,0.0,486,off-target no pert
+500,1.1400000000000001,0.558,486,target no pert
+500,0.62,0.0,487,off-target
+500,1.3399999999999999,0.586,487,target
+500,1.3399999999999999,0.0,487,off-target no pert
+500,1.3399999999999999,0.931,487,target no pert
+500,0.86,0.0,488,off-target
+500,1.22,0.979,488,target
+500,1.22,0.0,488,off-target no pert
+500,1.22,0.962,488,target no pert
+500,0.9,0.0,489,off-target
+500,1.26,0.004,489,target
+500,1.26,0.0,489,off-target no pert
+500,1.26,0.809,489,target no pert
+500,0.86,0.0,490,off-target
+500,1.46,0.648,490,target
+500,1.46,0.0,490,off-target no pert
+500,1.46,0.679,490,target no pert
+500,0.7,0.0,491,off-target
+500,1.06,0.398,491,target
+500,1.06,0.0,491,off-target no pert
+500,1.06,0.718,491,target no pert
+500,0.54,0.0,492,off-target
+500,1.3399999999999999,0.042,492,target
+500,1.3399999999999999,0.0,492,off-target no pert
+500,1.3399999999999999,0.486,492,target no pert
+500,0.98,0.0,493,off-target
+500,1.1,0.901,493,target
+500,1.1,0.0,493,off-target no pert
+500,1.1,0.593,493,target no pert
+500,0.8200000000000001,0.0,494,off-target
+500,1.1,0.925,494,target
+500,1.1,0.0,494,off-target no pert
+500,1.1,0.497,494,target no pert
+500,0.54,0.0,495,off-target
+500,1.26,0.186,495,target
+500,1.26,0.0,495,off-target no pert
+500,1.26,0.498,495,target no pert
+500,0.54,0.0,496,off-target
+500,0.62,0.06,496,target
+500,0.62,0.0,496,off-target no pert
+500,0.62,0.854,496,target no pert
+500,0.78,0.0,497,off-target
+500,1.1800000000000002,0.748,497,target
+500,1.1800000000000002,0.0,497,off-target no pert
+500,1.1800000000000002,0.519,497,target no pert
+500,0.62,0.0,498,off-target
+500,1.3399999999999999,0.923,498,target
+500,1.3399999999999999,0.0,498,off-target no pert
+500,1.3399999999999999,0.832,498,target no pert
+500,0.5,0.0,499,off-target
+500,1.22,0.331,499,target
+500,1.22,0.0,499,off-target no pert
+500,1.22,0.088,499,target no pert

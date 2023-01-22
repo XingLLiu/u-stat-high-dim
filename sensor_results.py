@@ -80,8 +80,6 @@ if MODEL == "modified":
         [0.10, 0.37],
         [0.26, 0.14],
         [0.85, 0.04],
-    #     [0.50, 0.30],
-    #     [0.30, 0.70]
     ])
 
     ModelClass = Sensor
@@ -152,8 +150,7 @@ def experiment(T, n, target_dist):
         multinom_samples_notrain = bootstrap_nopert.multinom.sample((nrep, num_boot)) # nrep x num_boot x n
 
         ## load, schuffle, and split data
-        # sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{seed+1}.csv", n, ntrain) #! use RAM_SEED
-        sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{RAM_SEED}.csv", n, ntrain) #! use RAM_SEED
+        sample_train, sample_test = load_preprocess_sensors(f"{path}{ram_scale}/seed{RAM_SEED}.csv", n, ntrain)
         sample_init = tf.concat([sample_train, sample_test], axis=0)
 
         ## KSD and pKSD 
@@ -345,7 +342,6 @@ def experiment(T, n, target_dist):
 
 
     # save original and perturbed particles for plots
-    # TODO change the name of the saved file
     pickle.dump(res_samples,
         open(f"res/sensors/sample_{model_name}_{ram_scale}_{method}_n{NSAMPLE}.pkl", "wb"),
     )

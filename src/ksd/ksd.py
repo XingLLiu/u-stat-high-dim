@@ -52,7 +52,7 @@ class KSD:
       score_Y = self.p.grad_log(Y_cp) # m x dim
       assert score_X.shape == X_cp.shape
 
-    # median heuristic #TODO using pre-specified bandwidth
+    # median heuristic
     if self.k.med_heuristic:
       self.k.bandwidth(X, Y)
 
@@ -63,7 +63,7 @@ class KSD:
     # term 1
     term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
     # term 2
-    if dim <= 4000: # TODO use grad_second_prod for all cases
+    if dim <= 4000:
       grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
       term2_mat = tf.expand_dims(score_X, -2) * grad_K_Y # n x m x dim
       term2_mat = tf.reduce_sum(term2_mat, axis=-1)
@@ -351,20 +351,20 @@ class MPKSD(PKSD):
           x_t = tf.expand_dims(x_t, -1)
 
       # compute scaled ksd
-      # x_t = tf.stack([xtrain, x_t], axis=0) # 2 x n x dim
-      # _, ksd_val = self.h1_var(
-      #   X=x_t,
-      #   Y=tf.identity(x_t),
-      #   return_scaled_ksd=True,
-      # )
-      
-      # TODO use pKSD to select jump scale
+      x_t = tf.stack([xtrain, x_t], axis=0) # 2 x n x dim
       _, ksd_val = self.h1_var(
         X=x_t,
         Y=tf.identity(x_t),
         return_scaled_ksd=True,
-        optim_mode=True,
       )
+      
+      # # TODO use pKSD to select jump scale
+      # _, ksd_val = self.h1_var(
+      #   X=x_t,
+      #   Y=tf.identity(x_t),
+      #   return_scaled_ksd=True,
+      #   optim_mode=True,
+      # )
 
       scaled_ksd_vals.append(ksd_val)
 
@@ -408,8 +408,6 @@ class MPKSD(PKSD):
         x_t = tf.expand_dims(x_t, -1)
 
     x_t = tf.stack([x_0, x_t], axis=0) # 2 x n x dim
-    # TODO
-    self.x_t = x_t
 
     # get multinomial sample
     # Sampling can be slow. initialise separately for faster implementation

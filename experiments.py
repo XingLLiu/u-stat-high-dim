@@ -19,8 +19,6 @@ import kgof
 import kgof.density as kgof_density
 import kgof.goftest as kgof_gof
 
-import time
-
 
 def run_bootstrap_experiment(
     nrep,
@@ -283,7 +281,7 @@ if __name__ == "__main__":
 
         loc = rdg.uniform((nmodes, dim), minval=-tf.ones((dim,))*20, maxval=tf.ones((dim,))*20) # uniform in [-20, 20]^d
 
-        b = 0.003 # 0.03
+        b = 0.003
         create_target_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_target, loc=loc, b=b,
             nbanana=nbanana, std=args.t_std, return_logprob=True)
         create_sample_model = models.create_mixture_t_banana(dim=dim, ratio=ratio_sample, loc=loc, b=b,
