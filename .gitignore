@@ -25,4 +25,4 @@ mnist/
 
 # results
 /res/*
-/archive/res
+/archive/fast-mcmc/res
