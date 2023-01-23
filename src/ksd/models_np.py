@@ -254,6 +254,7 @@ def create_rbm(
   Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
   The entries of the matrix B are perturbed.
   This experiment was first proposed by Liu et al., 2016 (Section 6)
+
   Args:
     m: number of samples
     c: (dh,) either tf.Tensor or set to tf.zeros((dh,)) by default
@@ -276,24 +277,22 @@ def create_rbm(
 def create_rbm_std(
   B: anp.array=8.,
   c: anp.array=0.,
-  dx: int=50,
-  dh: int=40,
+  b: anp.array=0.,
 ):
   """
   Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
   The entries of the matrix B are perturbed.
   This experiment was first proposed by Liu et al., 2016 (Section 6)
+
   Args:
     m: number of samples
     c: (dh,) either tf.Tensor or set to tf.zeros((dh,)) by default
     sigma: standard deviation of Gaussian noise
-    dx: dimension of observed output variable
-    dh: dimension of binary latent variable
     burnin_number: number of burn-in iterations for Gibbs sampler
   """
   # Model p
   B = anp.array(B, dtype=anp.float64)
-  b = anp.zeros(dx)
+  b = anp.array(b, dtype=anp.float64)
   c = anp.array(c, dtype=anp.float64)
 
   dist = kgof_density.GaussBernRBM(B, b, c)

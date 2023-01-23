@@ -83,7 +83,7 @@ method=all
 # echo "$(date +"%T") finished B scale" >> $hist_file
 
 # perturbation to B
-for std in 0.5 1.0 # 0. 0.01 0.02 0.04 0.06 0.08 0.1 1.2
+for std in 0. 0.01 0.02 0.04 0.06 0.08 0.1 0.5 1.0 1.2
 do
   CUDA_VISIBLE_DEVICES="" taskset -c 0-20 python3 \
     experiments.py --model=rbmStd --dim=50 --dh=5 --shift=1. --T=50 --n=1000 --nrep=100 --rand_start=10. --noise_std=$std --method=$method &

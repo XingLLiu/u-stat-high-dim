@@ -267,8 +267,8 @@ def create_rbm(
   Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
   The entries of the matrix B are perturbed.
   This experiment was first proposed by Liu et al., 2016 (Section 6)
+ 
   Args:
-    m: number of samples
     c: (dh,) either tf.Tensor or set to tf.zeros((dh,)) by default
     sigma: standard deviation of Gaussian noise
     dx: dimension of observed output variable
@@ -283,11 +283,6 @@ def create_rbm(
   dist = density.GaussBernRBM(B, b, c, burnin_number)
   dist.log_prob = dist.log_den
 
-  # # sample function
-  # ds = dist.get_datasource()
-  # ds.burnin = burnin_number
-  # dist.sample = lambda shape: tf.cast(ds.sample(shape).data(), dtype=tf.float32) #TODO not setting seed!
-
   if not return_logprob:
     return dist
   else:
@@ -298,24 +293,21 @@ def create_rbm(
 def create_rbm_std(
   B: tf.Tensor=8.,
   c: tf.Tensor=0.,
-  dx: int=50,
-  dh: int=40,
+  b: tf.Tensor=0.,
   burnin_number: int=2000,
   return_logprob: bool=False):
   """
   Generate data for the Gaussian-Bernoulli Restricted Boltzmann Machine (RBM) experiment.
   The entries of the matrix B are perturbed.
   This experiment was first proposed by Liu et al., 2016 (Section 6)
+
   Args:
-    m: number of samples
     c: (dh,) either tf.Tensor or set to tf.zeros((dh,)) by default
     sigma: standard deviation of Gaussian noise
-    dx: dimension of observed output variable
-    dh: dimension of binary latent variable
     burnin_number: number of burn-in iterations for Gibbs sampler
   """
-  # Model p
-  b = tf.zeros(dx)
+  # # Model p # TODO
+  # b = tf.zeros(dx)
 
   dist = density.GaussBernRBM(B, b, c, burnin_number)
   dist.log_prob = dist.log_den

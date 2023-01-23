@@ -319,13 +319,14 @@ if __name__ == "__main__":
         ) * 2. - 1
         B_sample = B_target + tf.random.normal([dim, dh]) * noise_std
         c = tf.random.normal((dh,))
+        b = tf.random.normal((dim,)) * 0.1 # tf.zeros((dim,))
 
         model_name = f"{method}_steps{T}_seed{seed}_dim{dim}_dh{dh}_n{n}_noise{noise_std}"
-        create_target_model = models.create_rbm_std(B=B_target, c=c, dx=dim, dh=dh, burnin_number=4000, return_logprob=True)
-        create_sample_model = models.create_rbm_std(B=B_sample, c=c, dx=dim, dh=dh, burnin_number=4000, return_logprob=True)
+        create_target_model = models.create_rbm_std(B=B_target, c=c, b=b, burnin_number=4000, return_logprob=True)
+        create_sample_model = models.create_rbm_std(B=B_sample, c=c, b=b, burnin_number=4000, return_logprob=True)
 
         # numpy version
-        log_prob_fn_np = models_np.create_rbm_std(B=B_target, c=c, dx=dim, dh=dh)
+        log_prob_fn_np = models_np.create_rbm_std(B=B_target, c=c, b=b)
 
     elif model == "laplace":
         model_name = f"{method}_steps{T}_seed{seed}_dim{dim}_n{n}"
