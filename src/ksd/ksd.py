@@ -357,14 +357,6 @@ class MPKSD(PKSD):
         Y=tf.identity(x_t),
         return_scaled_ksd=True,
       )
-      
-      # # TODO use pKSD to select jump scale
-      # _, ksd_val = self.h1_var(
-      #   X=x_t,
-      #   Y=tf.identity(x_t),
-      #   return_scaled_ksd=True,
-      #   optim_mode=True,
-      # )
 
       scaled_ksd_vals.append(ksd_val)
 
