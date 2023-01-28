@@ -1,5 +1,6 @@
 
 from src.ksd.ksd import KSD
+from src.mmd.mmd import MMD
 from src.ksd.bootstrap import Bootstrap
 
 import numpy as np
@@ -7,7 +8,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 from tqdm import tqdm, trange
-from scipy.stats import norm
+from scipy.stats import norm, gamma
 
 
 def ksd_gaussians(d, bandwidth, delta):
@@ -94,8 +95,8 @@ def compute_population_quantities(
     for d in tqdm(dims):
         # sample data
         # TODO
-        # target_dist, sample_dist = generate_target_proposal(d, delta)
-        target_dist, sample_dist = generate_target_proposal_t(d, delta)
+        target_dist, sample_dist = generate_target_proposal(d, delta)
+        # target_dist, sample_dist = generate_target_proposal_t(d, delta)
         X = sample_dist.sample((npop,))
         
         # initialise KSD
@@ -478,7 +479,7 @@ def bootstrap_quantile(
             multinom_sample_j = multinom_samples[j]
             X_j = X[j]
 
-            u_p = bootstrap.compute_test_statistic(X_j, None, None)
+            u_p = bootstrap.compute_test_statistic(X_j)
 
             bootstrap.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_sample_j)
 
@@ -488,3 +489,90 @@ def bootstrap_quantile(
 
     return res
     
+
+class LimitDistExperiment:
+    def __init__(
+        self,
+        empirical_vals,
+        res_analytical,
+        n,
+        ts,
+    ):
+        self.empirical_vals = empirical_vals 
+        self.res_analytical = res_analytical
+        self.n = n
+        self.ts = ts
+        
+        self.val = self.res_analytical["ksd"]
+        self.m2 = self.res_analytical["cond_var"]
+        self.M2 = self.res_analytical["full_var"]
+
+    def compute_empirical_prob(self, t):
+        return np.mean(self.empirical_vals >= t)
+
+    def compute_normal_cond_prob(self, t):
+        res = 1 - norm.cdf(
+            np.sqrt(self.n) * (t - self.val) / (2 * self.m2**0.5)
+        )
+        return res
+
+    def compute_normal_full_prob(self, t):
+        res = 1 - norm.cdf(
+            self.n * (t - self.val) / (2 * self.M2)**0.5
+        )
+        return res
+
+    def compute_normal_sum_prob(self, t):
+        res = 1 - norm.cdf(
+            np.sqrt(self.n) * (t - self.val) / np.sqrt(4 * self.m2 + 2 * self.M2 / self.n)
+        )
+        return res
+
+    def compute_mm_full_prob(self, t):
+        var_Dn =  2 * self.M2 / self.n**2 # 4 * self.m2 / self.n + 2 * self.M2 / self.n**2
+        alpha = self.val**2 / var_Dn
+        beta = self.val / var_Dn # self.M2**0.5 / (self.n * (self.n - 1)) * self.val / var_Dn
+        res = 1 - gamma.cdf(
+            np.sqrt(self.n * (self.n - 1)) * t / self.M2**0.5,
+            a=alpha,
+            scale=1/beta,
+        )
+        return res
+
+    def run(self, bound):
+        """
+        Plot power and bounds as a function of decision threshold t.
+        """
+        res = {
+            "bound": [], #[bound] * len(self.ts),
+            "n": [], #[self.n] * len(self.ts),
+            "probs": [],
+        }
+        
+        for t in self.ts:
+            if bound == "probs":
+                # compute empirical probs
+                res["probs"].append(self.compute_empirical_prob(t))
+                res["bound"].append("empirical")
+
+            elif bound == "cond":
+                # compute gaussian cond var
+                res["probs"].append(self.compute_normal_cond_prob(t))
+                res["bound"].append("cond")
+
+            elif bound == "full":
+                # compute gaussian full var
+                res["probs"].append(self.compute_normal_full_prob(t))
+                res["bound"].append("full")
+
+            elif bound == "sum":
+                # compute gaussian sum var
+                res["probs"].append(self.compute_normal_sum_prob(t))
+                res["bound"].append("sum")
+
+            elif bound == "mm_full":
+                # compute moment matching full var
+                res["probs"].append(self.compute_mm_full_prob(t))
+                res["bound"].append("mm_full")
+
+        return res

@@ -12,6 +12,9 @@ class MMD:
             Y: (m, d)
         """
         assert X.shape[-2] == Y.shape[-2], "Sample sizes must be equal"
+
+        # TODO median heuristic needs to be computed separately as 
+        # it requires both samples
         
         K_XX = self.k(X, X) # n x n
         K_YY = self.k(Y, Y) # m x m

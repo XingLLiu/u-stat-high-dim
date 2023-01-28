@@ -224,3 +224,26 @@ class IMQ(tf.Module):
         ) * tf.pow(K, self.beta-2) # n x m
 
         return gradgrad_tr
+
+class Linear(tf.Module):
+    """Implement the linear kernel: k(x, y) = x^T y
+        forward: kernel evaluation k(x, y)
+        grad_first: grad_x k(x, y)
+        grad_second: grad_y k(x, y)
+        gradgrad: grad_x grad_y k(x, y)
+    """
+
+    def __init__(self, sigma_sq, med_heuristic=False):
+        super().__init__()
+        self.sigma_sq = sigma_sq
+        self.med_heuristic = med_heuristic
+    
+    def __call__(self, X, Y):
+        """
+        Args:
+            Xr: tf.Tensor of shape (..., n, dim)
+            Yr: tf.Tensor of shape (..., m, dim)
+        Output:
+            tf.Tensor of shape (..., n, m)
+        """
+        return tf.linalg.matmul(X, Y, transpose_b=True) # n x m
