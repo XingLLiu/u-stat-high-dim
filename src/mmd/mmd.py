@@ -33,6 +33,25 @@ class MMD:
 
         elif output_dim == 2:
             return u_mat_nodiag
+
+    def m3_test(self, X, Y):
+        K_XX = self.k(X, X) # n x n
+        K_YY = self.k(Y, Y) # m x m
+        K_XY = self.k(X, Y) # n x m
+        K_YX = self.k(Y, X) # m x n
+
+        u_mat = K_XX + K_YY - K_XY - K_YX # n x n
+        n = X.shape[0]
+        res = 0.
+        count = 0.
+        for i in range(n):
+            for j in range(n):
+                for k in range(n):
+                    if i != j and j != k and k != i:
+                        res += u_mat[i] * u_mat[j] * u_mat[k]
+                        count += 1
+
+        return res / count
     
     def abs_cond_central_moment(self, X: tf.Tensor, Y: tf.Tensor, k: int, center: bool=True):
         n = X.shape[-2]
@@ -67,10 +86,6 @@ class MMDAnalytical:
         res = 2 * (self.lmda / (2 + self.lmda))**(self.d / 2) * (
             1 - tf.exp(- 1 / (2 * (2 + self.lmda)) * self.mu_norm_sq)
         )
-        
-#         res = 2 * (self.lmda / (1 + self.lmda))**(self.d / 2) * (
-#             1 - tf.exp(- 1 / (4 * (1 + self.lmda)) * self.mu_norm_sq)
-#         )
         return res
 
     def m2_ub(self):

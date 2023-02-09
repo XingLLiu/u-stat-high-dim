@@ -63,7 +63,7 @@ class KSD:
     # term 1
     term1_mat = tf.linalg.matmul(score_X, score_Y, transpose_b=True) * K_XY # n x m
     # term 2
-    if dim <= 4000:
+    if dim <= 10:
       grad_K_Y = self.k.grad_second(X, Y) # n x m x dim
       term2_mat = tf.expand_dims(score_X, -2) * grad_K_Y # n x m x dim
       term2_mat = tf.reduce_sum(term2_mat, axis=-1)
@@ -71,7 +71,7 @@ class KSD:
       term2_mat = self.k.grad_second_prod(X, Y, score_X)
 
     # term3
-    if dim <= 4000:
+    if dim <= 10:
       grad_K_X = self.k.grad_first(X, Y) # n x m x dim
       term3_mat = tf.expand_dims(score_Y, -3) * grad_K_X # n x m x dim
       term3_mat = tf.reduce_sum(term3_mat, axis=-1)
@@ -121,7 +121,7 @@ class KSD:
 
     Mk = tf.math.reduce_sum(
       tf.math.abs(u_p - ksd)**k
-    ) / X.shape[-2]
+    ) / X.shape[-2]**2
     return Mk
 
   def beta_k(self, X: tf.Tensor, Y: tf.Tensor, k: int):
