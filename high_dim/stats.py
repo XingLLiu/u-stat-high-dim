@@ -9,7 +9,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--DIR", type=str, default="res/high_dim")
-parser.add_argument("--DELTA", type=float, default=0.1,)
+parser.add_argument("--DELTA", type=float, default=2.,)
 parser.add_argument("--R", type=float, default=1., help="bandwidth power")
 parser.add_argument("--GAM_SCALE", type=float, default=2., help="bandwidth scale")
 parser.add_argument("--STAT", type=str)
@@ -53,12 +53,21 @@ if EXTRA == "_ld":
     ns = [1000]
 
 elif EXTRA == "_quad":
-    dims = [1, 2, 4, 25, 50, 100, 250, 500, 1000]
-    ns = [max(2, int(d**1.2)) for d in dims]
+    # dims = [1, 2, 4, 25, 50, 100, 250, 500, 1000]
+    # ns = [max(2, int(d**1.2)) for d in dims]
+    dims = [1, 2, 4, 25, 50, 100]
+    ns = [max(2, int(d**2)) for d in dims]
+
+elif EXTRA == "_quad100":
+    # dims = [1, 2, 4, 25, 50, 100, 250, 500, 1000]
+    # ns = [max(2, int(d**1.2)) for d in dims]
+    dims = [1, 2, 4, 25, 50, 100]
+    ns = [max(2, int(d**2)) for d in dims]
 
 elif EXTRA == "_sqrt":
     dims = [1, 2, 4, 25, 50, 100, 250, 500, 1000, 2000]
-    ns = [25 * int(d**0.5) for d in dims]
+    # ns = [25 * int(d**0.5) for d in dims]
+    ns = [max(2, int(d**0.5)) for d in dims]
 
 elif EXTRA == "_sqrt_large":
     dims = [1, 2, 4, 25, 50, 100, 250, 500, 1000, 2000]
@@ -85,11 +94,17 @@ elif EXTRA == "_gamma":
     ns = [50] * len(dims)
 
 elif EXTRA == "_gammaksd":
-    dims = [5]
+    dims = [27]
     ns = [50] * len(dims)
+
+elif EXTRA == "_gammammd":
+    dims = [27]
+    ns = [20] * len(dims)
 
 if __name__ == "__main__":
     # D_n values
+    print("dims:", dims)
+    print("n:", ns)
     STATS_VALS_DIR = f"{args.DIR}/stats_res_rep_{SUFFIX}.p"
     statistic_res_list = hd.compute_statistic_rep(
         nexperiments=N_EXP,

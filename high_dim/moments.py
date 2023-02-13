@@ -44,14 +44,15 @@ if KERNEL == Linear:
 else:
     dims = [1, 2, 4, 25, 50, 100, 250, 500, 1000, 2000]
 
-
 if EXTRA == "_gamma":
     dims = [50]
 
 elif EXTRA == "_gammaksd":
-    dims = [5]
-    ns = [50] * len(dims)
-
+    dims = [27]
+    
+elif EXTRA == "_gammammd":
+    dims = [27]
+    
 if __name__ == "__main__":
     # ground-truth moments
     MOMENTS_DIR = f"{args.DIR}/res_analytical_{SUFFIX}.csv"

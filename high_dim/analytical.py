@@ -184,7 +184,6 @@ class MMDLinearAnalytical(Analytical):
         return self.mu_norm_sq
     
     def cond_var(self):
-        print(self.mu_sigma_mu)
         return 2 * self.mu_sigma_mu
 
     def full_var(self):
