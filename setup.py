@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="pksd",
+    name="high-dim",
     
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -13,7 +13,7 @@ setup(
     license="MIT",
 
     # What does your project relate to?
-    keywords="hypothesis-test kernel-methods machine-learning AI goodness-of-fit",
+    keywords="high-dimensional-statistics U-statistics hypothesis-test kernel-methods machine-learning",
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().

@@ -13,56 +13,6 @@ from tqdm import tqdm, trange
 import scipy.stats as spy_stats
 
 
-def ksd_gaussians(d, bandwidth, delta):
-    lmda = bandwidth / 2.
-    
-    mean1 = tf.eye(d)[:, 0] * delta
-    mean1_norm_sq = np.sum(mean1**2)
-    
-    res = (lmda / (lmda + 2))**(d/2) * mean1_norm_sq
-
-    return res
-
-def h1_var_gaussians(d, bandwidth, delta):
-    lmda = bandwidth / 2.
-    
-    mean1 = tf.eye(d)[:, 0] * delta
-    mean1_norm_sq = np.sum(mean1**2)
-
-    # analytical form
-    var_exp_up = (lmda / (lmda + 1))**(d/2) * (lmda / (lmda + 2))**(d/2) * (
-        (lmda + 2) / (lmda + 1) * mean1_norm_sq + mean1_norm_sq**2
-    )
-    res = var_exp_up - ksd_gaussians(
-        d=d, bandwidth=bandwidth, delta=delta
-    )**2
-    
-    return res
-
-def up_sq_gaussians(d, bandwidth, delta):
-    lmda = bandwidth / 2.
-    
-    mean1 = tf.eye(d)[:, 0] * delta
-    mean1_norm_sq = np.sum(mean1**2)
-
-    res = (lmda / (lmda + 4))**(d/2) * (
-        7 * d**2 / lmda + d + 6 * d / lmda * mean1_norm_sq + 2 * mean1_norm_sq + mean1_norm_sq**2
-    )
-    return res
-
-# class MultivariateNormal(tfd.MultivariateNormalDiag):
-#     """
-#     Multivariate Gaussian with diagonal covariance matrix. If used
-#     for KSD, the covariance matrix must be identity.
-#     """
-#     def __init__(self, mean, **kwargs):
-#         super().__init__(mean, **kwargs)
-#         self.mean = mean
-        
-#     def grad_log(self, x):
-#         return - (x - self.mean)
-
-
 class MultivariateNormal(tfd.Distribution):
     """
     Multivariate Gaussian with diagonal covariance matrix. If used
@@ -82,6 +32,10 @@ class MultivariateNormal(tfd.Distribution):
         return - (x - self.mean)
 
 def generate_target_proposal(dim, delta):
+    """Gaussian mean-shift setup.
+
+    Q = N(\mu, I_d), P = N(0, I_d)
+    """
     # single gaussians
     
     mean1 = tf.eye(dim)[:, 0] * delta
@@ -95,13 +49,13 @@ def generate_target_proposal(dim, delta):
     
     return target, proposal_off
 
-# # TODO non-id cov matrix
 def generate_target_proposal_general_cov(dim, delta):
-    """
-        Mean for the alternative is \mu_1 = (0, delta, 0, ..., 0)^T
+    """Gaussian mean-shift setup with a **non-identity** covariance matrix.
 
-        Cov matrix \Sigma is diagonal with \Sigma_{ii} = 0.5*d
-        and \Sigma_{jj} = 0.5 for j > 1.
+    Q = N(\mu, \Sigma), P = N(\mu, \Sigma), where
+        - \mu = (0, delta, 0, ..., 0)^T
+        - \Sigma is diagonal with \Sigma_{ii} = 0.5*d and 
+            \Sigma_{jj} = 0.5 for j > 1.
     """    
     mean1 = tf.eye(dim)[:, 1] * delta
     mean2 = tf.zeros(dim)
@@ -112,25 +66,6 @@ def generate_target_proposal_general_cov(dim, delta):
 
     target = tfd.MultivariateNormalDiag(mean1, scale_diag=diag_mat)
     proposal_off = tfd.MultivariateNormalDiag(mean2, scale_diag=diag_mat)
-
-    return target, proposal_off
-
-def generate_target_proposal_t(dim, delta, df=5):
-    # single gaussians
-    
-    mean1 = tf.eye(dim)[:, 0] * delta
-    mean2 = tf.zeros(dim)
-
-    target = tfd.MultivariateStudentTLinearOperator(
-        df=df,
-        loc=mean1,
-        scale=tf.linalg.LinearOperatorLowerTriangular(tf.eye(dim)),
-    )
-    proposal_off = tfd.MultivariateStudentTLinearOperator(
-        df=df,
-        loc=mean2,
-        scale=tf.linalg.LinearOperatorLowerTriangular(tf.eye(dim)),
-    )
 
     return target, proposal_off
 
@@ -157,7 +92,6 @@ def compute_population_quantities(
         kernel = kernel_class(sigma_sq=bandwidth)
         
         # sample data
-        # TODO
         if kernel_class.__name__ == "RBF":
             target_dist, sample_dist = generate_target_proposal(d, delta)
             # target_dist, sample_dist = generate_target_proposal_t(d, delta)
@@ -203,72 +137,6 @@ def compute_population_quantities(
 
     return res
 
-def compute_population_quantities_exact(
-    dims: int,
-    bandwidth_order: float,
-    kernel_class,
-    delta: float=2.,
-    statistic: str="ksd",
-    bandwidth_scale: float=2.,
-):
-    res = {
-        "expectation": [],
-        "cond_var": [],
-        "full_var": [],
-        "bandwidth": [],
-    }
-    
-    for d in tqdm(dims):
-        # initialise kernel with median heuristic
-        bandwidth = bandwidth_scale*d**bandwidth_order
-        kernel = kernel_class(sigma_sq=bandwidth)
-        
-        # sample data
-        # TODO
-        if kernel_class.__name__ == "RBF":
-            target_dist, sample_dist = generate_target_proposal(d, delta)
-            # target_dist, sample_dist = generate_target_proposal_t(d, delta)
-        elif kernel_class.__name__ == "Linear":
-            target_dist, sample_dist = generate_target_proposal_general_cov(d, delta)
-
-        if statistic == "ksd":
-            stat_ana = hd_ana.KSDAnalytical(
-                dim=d,
-                mu_norm=delta,
-                bandwidth_power=bandwidth_order,
-                bandwidth_scale=bandwidth_scale,
-            )
-
-        elif statistic == "mmd":
-            if kernel_class.__name__ == "RBF":
-                stat_ana = hd_ana.MMDAnalytical(
-                    dim=d,
-                    mu_norm=delta,
-                    bandwidth_power=bandwidth_order,
-                    bandwidth_scale=bandwidth_scale,
-                )
-
-            elif kernel_class.__name__ == "Linear":
-                # TODO change with non-standard Gaussian model
-                mu = np.eye(d)[:, 1] * delta
-
-                sigma_mat = np.eye(d, dtype=np.float32) * 0.5
-                sigma_mat[0, 0] = 0.5 * d
-                
-                stat_ana =  hd_ana.MMDLinearAnalytical(
-                    dim=d,
-                    mu=mu,
-                    Sigma=sigma_mat,
-                )
-            
-        # store
-        res["expectation"].append(stat_ana.mean())
-        res["cond_var"].append(stat_ana.cond_var())
-        res["full_var"].append(stat_ana.full_var())
-        res["bandwidth"].append(bandwidth)
-
-    return res
-
 def compute_statistic(
     ns,
     dims,
@@ -295,10 +163,8 @@ def compute_statistic(
         kernel = kernel_class(sigma_sq=bandwidth)
 
         # sample data
-        # TODO
         if kernel_class.__name__ == "RBF":
             target_dist, sample_dist = generate_target_proposal(d, delta)
-            # target_dist, sample_dist = generate_target_proposal_t(d, delta)
         elif kernel_class.__name__ == "Linear":
             target_dist, sample_dist = generate_target_proposal_general_cov(d, delta)
 
@@ -363,334 +229,12 @@ def compute_statistic_rep(
     
     return res_list
 
-def compute_analytical_power_bounds(
-    n,
-    dim,
-    gamma,
-    ksd,
-    cond_var,
-    full_var,
-):
-    upper_bd = (
-        4 * cond_var / (n**(1 - 2*gamma) * ksd**2) + 
-        4 * full_var / (n**(2 - 2*gamma) * ksd**2)
-    )
-
-    lower_bd = 1 - upper_bd
-    
-    return lower_bd, upper_bd
-
-def compute_analytical_markov_bounds(
-    n,
-    t_lb,
-    t_ub,
-    ksd,
-    m2,
-    M2,
-):
-    upper_bd = (
-        m2 / (n * (t_lb - ksd)**2) +
-        M2 / (n * (n - 1) * ((t_lb - ksd)**2))
-    )
-    lower_bd = 1 - (
-        m2 / (n * (t_ub - ksd)**2) +
-        M2 / (n * (n - 1) * ((t_ub - ksd)**2))
-    )
-    
-    return lower_bd, upper_bd
-
-def compute_analytical_BE_bounds(
-    n,
-    t_lb,
-    t_ub,
-    ksd,
-    m2,
-    m3,
-    M2,
-):
-    upper_bd = (
-        spy_stats.norm.cdf(np.sqrt(n) * (ksd - t_ub) / (2 * m2**0.5)) +
-        m2 / (n*(n - 1) * (t_ub - ksd)**2) +
-        M2**0.5 * m2 / (n**(3/2) * (n - 1)**0.5 * (t_ub - ksd)**3) +
-        m3 / (n**2 * (t_ub - ksd)**3)
-    )
-
-    lower_bd = 1 - (
-        spy_stats.norm.cdf(np.sqrt(n) * (t_lb - ksd) / (2 * m2**0.5)) +
-        m2 / (n*(n - 1) * (t_lb - ksd)**2) +
-        M2**0.5 * m2 / (n**(3/2) * (n - 1)**0.5 * np.abs(t_lb - ksd)**3) +
-        m3 / (n**2 * np.abs(  - ksd)**3)
-    )
-
-    return lower_bd, upper_bd
-
-def compute_analytical_new_full_bounds(
-    n,
-    t_lb,
-    t_ub,
-    ksd,
-    m2,
-    m3,
-    M2,
-):
-    upper_bd = (
-        spy_stats.norm.cdf(n * (ksd - t_ub) / (2 * M2)**0.5)
-    )
-
-    lower_bd = 1 - (
-        spy_stats.norm.cdf(n * (t_lb - ksd) / (2 * M2)**0.5)
-    )
-
-    return lower_bd, upper_bd
-
-def compute_analytical_new_cond_bounds(
-    n,
-    t_lb,
-    t_ub,
-    ksd,
-    m2,
-    m3,
-    M2,
-):
-    upper_bd = (
-        spy_stats.norm.cdf(np.sqrt(n) * (ksd - t_ub) / (2 * m2**0.5))
-    )
-
-    lower_bd = 1 - (
-        spy_stats.norm.cdf(np.sqrt(n) * (t_lb - ksd) / (2 * m2**0.5))
-    )
-
-    return lower_bd, upper_bd
-
-def compute_analytical_new_sum_bounds(
-    n,
-    t_lb,
-    t_ub,
-    ksd,
-    m2,
-    m3,
-    M2,
-):
-    upper_bd = (
-        spy_stats.norm.cdf(np.sqrt(n) * (ksd - t_ub) / np.sqrt(4 * m2 + 2 * M2 / n))
-    )
-
-    lower_bd = 1 - (
-        spy_stats.norm.cdf(np.sqrt(n) * (t_lb - ksd) / np.sqrt(4 * m2 + 2 * M2 / n))
-    )
-
-    return lower_bd, upper_bd
-
-def power_experiment(
-    ksd_res,
-    res_analytical,
-    ns,
-    dims,
-    ts_lb,
-    ts_ub,
-    bound: str="markov",
-):
-    """
-    Args:
-        t_ratio: t = (1 - n^{-\gamma}) * KSD * t_ratio. Must
-            lie in (0, 1)
-        gamma: Must lie in (0, 1/2)
-    """
-    dims = np.array(dims)
-    
-    res = {
-        "dim": dims,
-        "n": ns,
-        "probs_u": [],
-        "probs_l": [],
-        "u_bd": [],
-        "l_bd": [],
-        "t_u": [],
-        "t_l": [],
-    }
-    
-    for i, d in enumerate(tqdm(dims)):        
-        n = ns[i]
-        t_lb = ts_lb[i]
-        t_ub = ts_ub[i]
-        
-        # compute analytical bounds
-        if bound == "markov":
-            l_bd, u_bd = compute_analytical_markov_bounds(
-                n,
-                t_lb,
-                t_ub,
-                ksd=res_analytical["ksd"][i],
-                m2=res_analytical["cond_var"][i],
-                M2=res_analytical["full_var"][i],
-            )
-
-        elif bound == "be":
-            l_bd, u_bd = compute_analytical_BE_bounds(
-                n,
-                t_lb,
-                t_ub,
-                ksd=res_analytical["ksd"][i],
-                m2=res_analytical["cond_var"][i],
-                m3=res_analytical["m3"][i],
-                M2=res_analytical["full_var"][i],
-            )
-        
-        
-        res["l_bd"].append(l_bd)
-        res["u_bd"].append(u_bd)
-        
-        # choose t
-        res["t_l"].append(t_lb)
-        res["t_u"].append(t_ub)
-
-        # compute empirical probs
-        ksd_vals = ksd_res[d]
-        res["probs_l"].append(np.mean(ksd_vals >= t_lb))
-        res["probs_u"].append(np.mean(ksd_vals >= t_ub))
-
-    return res
-
-
-def power_experiment_t(
-    ksd_vals,
-    res_analytical,
-    n,
-    ts_lb,
-    ts_ub,
-    bound: str="markov",
-):
-    """
-    Plot power and bounds as a function of decision threshold t.
-    """    
-    res = {
-        "bound": [bound] * len(ts_lb),
-        "n": [n] * len(ts_lb),
-        "probs_u": [],
-        "probs_l": [],
-        "u_bd": [],
-        "l_bd": [],
-        "t_u": [],
-        "t_l": [],
-    }
-    
-    for i, t_lb in enumerate(tqdm(ts_lb)):
-        t_ub = ts_ub[i]
-        
-        if bound == "markov":
-            l_bd, u_bd = compute_analytical_markov_bounds(
-                n,
-                t_lb,
-                t_ub,
-                ksd=res_analytical["ksd"],
-                m2=res_analytical["cond_var"],
-                M2=res_analytical["full_var"],
-            )
-
-        elif bound == "be":
-            l_bd, u_bd = compute_analytical_BE_bounds(
-                n,
-                t_lb,
-                t_ub,
-                ksd=res_analytical["ksd"],
-                m2=res_analytical["cond_var"],
-                m3=res_analytical["m3"],
-                M2=res_analytical["full_var"],
-            )
-
-        elif bound == "new_full":
-            l_bd, u_bd = compute_analytical_new_full_bounds(
-                n,
-                t_lb,
-                t_ub,
-                ksd=res_analytical["ksd"],
-                m2=res_analytical["cond_var"],
-                m3=res_analytical["m3"],
-                M2=res_analytical["full_var"],
-            )
-
-        elif bound == "new_cond":
-            l_bd, u_bd = compute_analytical_new_cond_bounds(
-                n,
-                t_lb,
-                t_ub,
-                ksd=res_analytical["ksd"],
-                m2=res_analytical["cond_var"],
-                m3=res_analytical["m3"],
-                M2=res_analytical["full_var"],
-            )
-
-        elif bound == "new_sum":
-            l_bd, u_bd = compute_analytical_new_sum_bounds(
-                n,
-                t_lb,
-                t_ub,
-                ksd=res_analytical["ksd"],
-                m2=res_analytical["cond_var"],
-                m3=res_analytical["m3"],
-                M2=res_analytical["full_var"],
-            )
-
-        res["l_bd"].append(l_bd)
-        res["u_bd"].append(u_bd)
-        
-        # save t
-        res["t_l"].append(t_lb)
-        res["t_u"].append(t_ub)
-
-        # compute empirical probs
-        res["probs_l"].append(np.mean(ksd_vals >= t_lb))
-        res["probs_u"].append(np.mean(ksd_vals >= t_ub))
-
-    return res
-
-def bootstrap_quantile(
-    dims,
-    ns,
-    num_boot,
-    nreps,
-    kernel_class,
-    bandwidth_order,
-    delta: float=2.,
-):
-    """Not in use!"""
-    assert ValueError("Not in use!")
-    res = {d: [] for d in dims}
-
-    iterator = trange(len(ns))
-    for i in iterator:
-        n = ns[i]
-        d = dims[i]
-
-        target_dist, sample_dist = generate_target_proposal(d, delta)
-        X = sample_dist.sample((nreps, n))
-        
-        # initialise KSD
-        kernel = kernel_class(sigma_sq=2.*d**bandwidth_order)
-        ksd = KSD(kernel=kernel, log_prob=target_dist.log_prob)
-        
-        bootstrap = Bootstrap(ksd, n)
-        # (num_boot - 1) because the test statistic is also included 
-        multinom_samples = bootstrap.multinom.sample((nreps, num_boot-1,)) # num_boot x ntest
-        
-        for j in range(nreps):
-            iterator.set_description(f"[{j+1} / {nreps}]")
-
-            multinom_sample_j = multinom_samples[j]
-            X_j = X[j]
-
-            u_p = bootstrap.compute_test_statistic(X_j)
-
-            bootstrap.compute_bootstrap(num_boot=num_boot, u_p=u_p, multinom_samples=multinom_sample_j)
-
-            _, q, _ = bootstrap._test_once(alpha=0.05)
-
-            res[d].append(q)
-
-    return res
-    
 
 class LimitDistExperiment:
+    """
+    Limiting distribution experiment with a single dimension, a single 
+    sample size and a single repetition.
+    """
     def __init__(
         self,
         empirical_vals,
@@ -752,8 +296,8 @@ class LimitDistExperiment:
         Plot power and bounds as a function of decision threshold t.
         """
         res = {
-            "bound": [], #[bound] * len(self.ts),
-            "n": [], #[self.n] * len(self.ts),
+            "bound": [],
+            "n": [],
             "probs": [],
         }
         
