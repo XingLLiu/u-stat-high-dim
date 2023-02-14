@@ -13,6 +13,11 @@ class MMD:
         """
         assert X.shape[-2] == Y.shape[-2], "Sample sizes must be equal"
 
+        # median heuristic
+        if self.k.med_heuristic:
+            Z = tf.concat([X, Y], axis=-2)
+            self.k.bandwidth(Z, tf.identity(Z))
+
         # TODO median heuristic needs to be computed separately as 
         # it requires both samples
         

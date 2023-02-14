@@ -1,15 +1,14 @@
 
 from src.ksd.ksd import KSD
 from src.mmd.mmd import MMD
-from src.ksd.bootstrap import Bootstrap
-import high_dim.analytical as hd_ana
+import src.high_dim.analytical as hd_ana
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
-from tqdm import tqdm, trange
+from tqdm import tqdm
 import scipy.stats as spy_stats
 
 
@@ -69,7 +68,7 @@ def generate_target_proposal_general_cov(dim, delta):
 
     return target, proposal_off
 
-def compute_population_quantities(
+def compute_population_moments(
     dims: int,
     bandwidth_order: float,
     kernel_class,
@@ -88,8 +87,12 @@ def compute_population_quantities(
     
     for d in tqdm(dims):
         # initialise kernel with median heuristic
-        bandwidth = bandwidth_scale*d**bandwidth_order
-        kernel = kernel_class(sigma_sq=bandwidth)
+        if bandwidth_order == -1:
+            bandwidth = -1 # med heuristic
+            kernel = kernel_class(sigma_sq=None, med_heuristic=True)
+        else:
+            bandwidth = bandwidth_scale*d**bandwidth_order
+            kernel = kernel_class(sigma_sq=bandwidth)
         
         # sample data
         if kernel_class.__name__ == "RBF":
@@ -137,6 +140,70 @@ def compute_population_quantities(
 
     return res
 
+def compute_population_moments_exact(
+    dims: int,
+    bandwidth_order: float,
+    kernel_class,
+    delta: float=2.,
+    statistic: str="ksd",
+    bandwidth_scale: float=2.,
+):
+    """Compute moments using derived analytical formulae."""
+    res = {
+        "expectation": [],
+        "cond_var": [],
+        "full_var": [],
+        "bandwidth": [],
+    }
+    
+    for d in tqdm(dims):
+        # initialise kernel with median heuristic
+        if bandwidth_order == -1:
+            # med heuristic
+            bandwidth_order = 1.
+            bandwidth_scale = 2.
+            bandwidth = bandwidth_scale * d**bandwidth_order
+        else:
+            bandwidth = bandwidth_scale*d**bandwidth_order
+
+        if statistic == "ksd":
+            stat_ana = hd_ana.KSDAnalytical(
+                dim=d,
+                mu_norm=delta,
+                bandwidth_power=bandwidth_order,
+                bandwidth_scale=bandwidth_scale,
+            )
+
+        elif statistic == "mmd":
+            if kernel_class.__name__ == "RBF":
+                stat_ana = hd_ana.MMDAnalytical(
+                    dim=d,
+                    mu_norm=delta,
+                    bandwidth_power=bandwidth_order,
+                    bandwidth_scale=bandwidth_scale,
+                )
+
+            elif kernel_class.__name__ == "Linear":
+                # TODO change with generate_target_proposal_general_cov
+                mu = np.eye(d)[:, 1] * delta
+
+                sigma_mat = np.eye(d, dtype=np.float32) * 0.5
+                sigma_mat[0, 0] = 0.5 * d
+                
+                stat_ana =  hd_ana.MMDLinearAnalytical(
+                    dim=d,
+                    mu=mu,
+                    Sigma=sigma_mat,
+                )
+            
+        # store
+        res["expectation"].append(stat_ana.mean())
+        res["cond_var"].append(stat_ana.cond_var())
+        res["full_var"].append(stat_ana.full_var())
+        res["bandwidth"].append(bandwidth)
+
+    return res
+
 def compute_statistic(
     ns,
     dims,
@@ -159,8 +226,12 @@ def compute_statistic(
 
     for d, n in iterator:
         # initialise kernel with median heuristic
-        bandwidth = bandwidth_scale*d**bandwidth_order
-        kernel = kernel_class(sigma_sq=bandwidth)
+        if bandwidth_order == -1:
+            bandwidth = -1 # med heuristic
+            kernel = kernel_class(sigma_sq=None, med_heuristic=True)
+        else:
+            bandwidth = bandwidth_scale*d**bandwidth_order
+            kernel = kernel_class(sigma_sq=bandwidth)
 
         # sample data
         if kernel_class.__name__ == "RBF":

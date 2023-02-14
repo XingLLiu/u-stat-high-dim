@@ -1,9 +1,8 @@
 # Source code
 ```bash
 .
-├── kgof                    # Code for KSDAgg and RBM model, adapted from ./kgof of https://github.com/wittawatj/kernel-gof 
-├── ksd                     # Source code for pKSD and models
-├── sensors_locations.R     # Rscript for reproducing the sensors location example of Tak et al. 2016
-├── sensors_results.py      # Run pKSD and benchmarks on sensors location example
+├── high_dim                # Source code for running high-dim experiments of U-statistics
+├── ksd                     # Source code for KSD and kernels
+├── mmd                     # Source code for MMD
 └── README.md
 ```

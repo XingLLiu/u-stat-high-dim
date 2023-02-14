@@ -238,6 +238,11 @@ class Linear(tf.Module):
         self.sigma_sq = sigma_sq
         self.med_heuristic = med_heuristic
     
+    def bandwidth(self, X, Y):
+        """Linear kernel does not have a bandwidth.
+        """
+        pass
+    
     def __call__(self, X, Y):
         """
         Args:

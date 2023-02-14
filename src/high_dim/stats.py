@@ -1,5 +1,5 @@
 from src.ksd.kernel import IMQ, RBF, Linear
-import high_dim_power as hd
+import src.high_dim.experiments as hd
 
 import numpy as np
 import tensorflow as tf
@@ -8,9 +8,9 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--DIR", type=str, default="res/high_dim")
+parser.add_argument("--DIR", type=str, default="res")
 parser.add_argument("--DELTA", type=float, default=2.,)
-parser.add_argument("--R", type=float, default=1., help="bandwidth power")
+parser.add_argument("--R", type=float, default=1., help="bandwidth power; if -1, med heuristic is used")
 parser.add_argument("--GAM_SCALE", type=float, default=2., help="bandwidth scale")
 parser.add_argument("--STAT", type=str)
 parser.add_argument("--KERNEL", type=str)

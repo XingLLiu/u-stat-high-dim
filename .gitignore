@@ -5,7 +5,7 @@
 /src/*/__pycache__/*
 /*/__pycache__/*
 __pycache__/*
-/high_dim/.ipynb_checkpoints/
+/figs_code/.ipynb_checkpoints/
 
 # vscode
 /.vscode/
