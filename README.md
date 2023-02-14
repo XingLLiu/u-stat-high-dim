@@ -1,10 +1,10 @@
 # Code for A High-dimensional Convergence Theorem for U-statistics with Applications to Kernel-based Testing
-This repo contains the code for the experiments in the paper:
+This repo contains the code for the experiments in the paper ([link](https://arxiv.org/abs/2302.05686)):
 
-> [Huang, Kevin H. and Liu, Xing and Duncan, Andrew B. and Gandy, Axel (2023). A High-dimensional Convergence Theorem for U-statistics with Applications to Kernel-based Testing. arXiv preprint arXiv: 2302.05686](https://arxiv.org/abs/2302.05686)
+Huang, Kevin H. and Liu, Xing and Duncan, Andrew B. and Gandy, Axel (2023). **A High-dimensional Convergence Theorem for U-statistics with Applications to Kernel-based Testing**. arXiv preprint arXiv: 2302.05686.
 
 ## How to install?
-Packages that this programme depends on are listed in `setup.py`. Before running any scripts, run the following to install the current package and the dependencies
+Dependencies are listed in `setup.py`. Before running any scripts, run the following to install this repo as a package and download all dependencies:
 ```bash
 pip install -e .
 ```
