@@ -15,7 +15,10 @@ __pycache__/*
 
 # figs
 /figs/*
-/figs_code/*
+# /figs_code/*
+
+# DS store
+/.DS_Store
 
 # egg-info
 *.egg-info/*

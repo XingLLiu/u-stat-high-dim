@@ -11,7 +11,7 @@ To reproduce results in the paper, run e.g.,
 # generate results for the intro plot
 sh run.sh
 ```
-Results will be stored in `res/`. The plots can then be made using the jupyter notebook files in `figs_code`. E.g., the intro plot Figure 1 can be made using `figs_code/intro.ipynb`.
+Results will be stored in `res/`. Plots can then be made using the jupyter notebooks in `figs_code`. E.g., the intro plot Figure 1 can be made using `figs_code/intro.ipynb`.
 
 ## Folder structure
 
