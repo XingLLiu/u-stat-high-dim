@@ -10,12 +10,14 @@ pip install -e .
 ```
 
 ## Examples
-To reproduce results in the paper, run e.g.,
+To reproduce results in the paper, run the code in `run.sh`. Results will be stored in `res/`. Plots can then be made using the jupyter notebooks in `figs_code`. 
+
+E.g., to generate the intro plot Figure 1 in the paper, first run
 ```bash
 # generate results for the intro plot
 sh run.sh
 ```
-Results will be stored in `res/`. Plots can then be made using the jupyter notebooks in `figs_code`. E.g., the intro plot Figure 1 can be made using `figs_code/intro.ipynb`.
+to generate the results, and run `figs_code/intro.ipynb` to produce the plot.
 
 ## Folder structure
 
